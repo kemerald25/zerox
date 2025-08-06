@@ -2,6 +2,7 @@
 
 import { useScoreboard } from '@/lib/useScoreboard';
 import React, { useState, useCallback, useEffect } from 'react';
+import { sdk } from '@farcaster/miniapp-sdk';
 import GameBoard from './components/game/GameBoard';
 import GameControls from './components/game/GameControls';
 import GameStatus from './components/game/GameStatus';
@@ -9,6 +10,9 @@ import { Scoreboard } from './components/game/Scoreboard';
 import { WalletCheck } from './components/WalletCheck';
 
 export default function Home() {
+  useEffect(() => {
+    sdk.actions.ready();
+  }, []);
   const [board, setBoard] = useState<Array<string | null>>(Array(9).fill(null));
   const [playerSymbol, setPlayerSymbol] = useState<'X' | 'O' | null>(null);
   const [difficulty, setDifficulty] = useState<'easy' | 'hard' | null>(null);
