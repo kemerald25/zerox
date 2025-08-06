@@ -4,6 +4,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Navbar } from "./components/Navbar";
+import { MiniAppReadyProvider } from "./components/MiniAppReadyProvider";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -45,10 +46,12 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-background">
         <Providers>
-          <Navbar />
-          <main className="pt-16">
-            {children}
-          </main>
+          <MiniAppReadyProvider>
+            <Navbar />
+            <main className="pt-16">
+              {children}
+            </main>
+          </MiniAppReadyProvider>
         </Providers>
       </body>
     </html>
