@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useMiniApp } from '@coinbase/onchainkit/miniapp';
+import { useMiniApp } from '@coinbase/onchainkit/minikit';
 
 export function useMiniAppReady() {
   const sdk = useMiniApp();
