@@ -1,11 +1,23 @@
-# MiniKit Template
+# Blockchain Tic-Tac-Toe
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-onchain --mini`](), configured with:
+A decentralized Tic-Tac-Toe game built with Next.js and blockchain technology. Play against friends and track your scores on the blockchain!
 
-- [MiniKit](https://docs.base.org/builderkits/minikit/overview)
-- [OnchainKit](https://www.base.org/builders/onchainkit)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Next.js](https://nextjs.org/docs)
+## Features
+
+- 🎮 Classic Tic-Tac-Toe gameplay
+- ⛓️ Blockchain-based score tracking
+- 👛 Wallet integration for player identification
+- 🏆 Persistent scoreboard using smart contracts
+- 🔔 Real-time notifications for game events
+- 🌓 Dark/light mode support
+
+## Tech Stack
+
+- [Next.js](https://nextjs.org) - React framework for the frontend
+- [MiniKit](https://docs.base.org/builderkits/minikit/overview) - Base blockchain integration
+- [OnchainKit](https://www.base.org/builders/onchainkit) - Blockchain utilities
+- [Tailwind CSS](https://tailwindcss.com) - Styling
+- Solidity Smart Contracts - For scoreboard functionality
 
 ## Getting Started
 
@@ -20,15 +32,8 @@ pnpm install
 bun install
 ```
 
-2. Verify environment variables, these will be set up by the `npx create-onchain --mini` command:
-
-You can regenerate the FARCASTER Account Association environment variables by running `npx create-onchain --manifest` in your project directory.
-
-The environment variables enable the following features:
-
-- Frame metadata - Sets up the Frame Embed that will be shown when you cast your frame
-- Account association - Allows users to add your frame to their account, enables notifications
-- Redis API keys - Enable Webhooks and background notifications for your application by storing users notification details
+2. Set up environment variables:
+Copy `.env.example` to `.env.local` and fill in the required values:
 
 ```bash
 # Shared/OnchainKit variables
@@ -53,7 +58,7 @@ NEXT_PUBLIC_APP_OG_TITLE=
 NEXT_PUBLIC_APP_OG_DESCRIPTION=
 NEXT_PUBLIC_APP_OG_IMAGE=
 
-# Redis config
+# Redis config for notifications
 REDIS_URL=
 REDIS_TOKEN=
 ```
@@ -63,46 +68,40 @@ REDIS_TOKEN=
 npm run dev
 ```
 
-## Template Features
+The game will be available at [http://localhost:3000](http://localhost:3000).
 
-### Frame Configuration
-- `.well-known/farcaster.json` endpoint configured for Frame metadata and account association
-- Frame metadata automatically added to page headers in `layout.tsx`
+## Game Components
 
-### Background Notifications
-- Redis-backed notification system using Upstash
-- Ready-to-use notification endpoints in `api/notify` and `api/webhook`
-- Notification client utilities in `lib/notification-client.ts`
+- `GameBoard.tsx` - The main game board interface
+- `GameControls.tsx` - Game control buttons and player actions
+- `GameStatus.tsx` - Current game state display
+- `Scoreboard.tsx` - Blockchain-based score tracking
+- `WalletCheck.tsx` - Wallet connection management
 
-### Theming
-- Custom theme defined in `theme.css` with OnchainKit variables
-- Pixel font integration with Pixelify Sans
-- Dark/light mode support through OnchainKit
+## Smart Contracts
 
-### MiniKit Provider
-The app is wrapped with `MiniKitProvider` in `providers.tsx`, configured with:
-- OnchainKit integration
-- Access to Frames context
-- Sets up Wagmi Connectors
-- Sets up Frame SDK listeners
-- Applies Safe Area Insets
+The game uses the `TicTacToeScoreboard.sol` smart contract to track player scores on the blockchain. The contract includes:
 
-## Customization
+- Player statistics tracking
+- Win/loss/draw recording
+- Historical game data storage
 
-To get started building your own frame, follow these steps:
+## Notifications
 
-1. Remove the DemoComponents:
-   - Delete `components/DemoComponents.tsx`
-   - Remove demo-related imports from `page.tsx`
+The game includes a Redis-backed notification system that alerts players about:
 
-2. Start building your Frame:
-   - Modify `page.tsx` to create your Frame UI
-   - Update theme variables in `theme.css`
-   - Adjust MiniKit configuration in `providers.tsx`
+- Game turns
+- Game completion
+- Score updates
+- Opponent actions
 
-3. Add your frame to your account:
-   - Cast your frame to see it in action
-   - Share your frame with others to start building your community
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is open source and available under the MIT license.
 
 ## Learn More
 
