@@ -15,7 +15,7 @@ export const config = createConfig({
   chains: [SELECTED_CHAIN],
   transports: {
     [base.id]: http(PUBLIC_RPC),
-    [baseSepolia.id]: http(PUBLIC_RPC),
+    [baseSepolia.id]: http(PUBLIC_RPC)
   },
   connectors: [farcasterMiniApp()],
 });
