@@ -125,9 +125,14 @@ export default function Home() {
 
           const winner = checkWinner(newBoard);
           if (winner) {
-            setGameStatus(winner === playerSymbol ? 'won' : 'lost');
+            const didPlayerWin = winner === playerSymbol;
+            setGameStatus(didPlayerWin ? 'won' : 'lost');
+            // Record AI-determined outcome
+            recordResult(didPlayerWin ? 'win' : 'loss');
           } else if (getAvailableMoves(newBoard).length === 0) {
             setGameStatus('draw');
+            // Record draw when determined on AI turn
+            recordResult('draw');
           }
         }
         setIsPlayerTurn(true);
@@ -158,6 +163,25 @@ export default function Home() {
     // Reset sound
     playReset();
   };
+
+  // Start a new round automatically after game ends, preserving symbol and difficulty
+  const startNextRound = useCallback(() => {
+    setBoard(Array(9).fill(null));
+    setGameStatus('playing');
+    setIsPlayerTurn(true);
+  }, []);
+
+  useEffect(() => {
+    if (gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') {
+      const nextRoundTimer = setTimeout(() => {
+        // Only auto-continue if the player already chose symbol and difficulty
+        if (playerSymbol && difficulty) {
+          startNextRound();
+        }
+      }, 2000);
+      return () => clearTimeout(nextRoundTimer);
+    }
+  }, [gameStatus, playerSymbol, difficulty, startNextRound]);
 
   return (
     <main className="min-h-screen p-4 flex flex-col items-center justify-center">
