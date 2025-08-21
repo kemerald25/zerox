@@ -9,6 +9,7 @@ import GameStatus from './components/game/GameStatus';
 import { Scoreboard } from './components/game/Scoreboard';
 import { WalletCheck } from './components/WalletCheck';
 import { playMove, playAIMove, playWin, playLoss, playDraw, playReset, resumeAudio } from '@/lib/sound';
+import { useAccount, useSendTransaction } from 'wagmi';
 
 export default function Home() {
   useEffect(() => {
@@ -19,6 +20,10 @@ export default function Home() {
   const [difficulty, setDifficulty] = useState<'easy' | 'hard' | null>(null);
   const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost' | 'draw'>('playing');
   const [isPlayerTurn, setIsPlayerTurn] = useState(true);
+  const [outcomeHandled, setOutcomeHandled] = useState(false);
+
+  const { address } = useAccount();
+  const { sendTransactionAsync } = useSendTransaction();
 
   const checkWinner = (squares: Array<string | null>): string | null => {
     const lines = [
@@ -153,12 +158,49 @@ export default function Home() {
     }
   }, [gameStatus]);
 
+  // Payout/charge handling on game end
+  useEffect(() => {
+    const handleWinPayout = async (playerAddress: string) => {
+      try {
+        await fetch('/api/payout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: playerAddress }),
+        });
+      } catch {}
+    };
+
+    const handleLossCharge = async (playerAddress: string) => {
+      try {
+        const res = await fetch('/api/charge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: playerAddress }),
+        });
+        const data = await res.json();
+        if (data?.to && data?.value) {
+          await sendTransactionAsync({ to: data.to as `0x${string}`, value: BigInt(data.value) });
+        }
+      } catch {}
+    };
+
+    if ((gameStatus === 'won' || gameStatus === 'lost') && !outcomeHandled && address) {
+      setOutcomeHandled(true);
+      if (gameStatus === 'won') {
+        handleWinPayout(address);
+      } else if (gameStatus === 'lost') {
+        handleLossCharge(address);
+      }
+    }
+  }, [gameStatus, address, outcomeHandled, sendTransactionAsync]);
+
   const handleReset = () => {
     setBoard(Array(9).fill(null));
     setGameStatus('playing');
     setIsPlayerTurn(true);
     setPlayerSymbol(null);
     setDifficulty(null);
+    setOutcomeHandled(false);
 
     // Reset sound
     playReset();
@@ -169,6 +211,7 @@ export default function Home() {
     setBoard(Array(9).fill(null));
     setGameStatus('playing');
     setIsPlayerTurn(true);
+    setOutcomeHandled(false);
   }, []);
 
   useEffect(() => {
