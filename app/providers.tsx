@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { base } from "wagmi/chains";
+import { SELECTED_CHAIN } from '@/lib/wagmi';
 import { MiniKitProvider } from "@coinbase/onchainkit/minikit";
 import { WagmiConfig } from 'wagmi';
 import { config } from '@/lib/wagmi';
@@ -11,7 +11,7 @@ export function Providers(props: { children: ReactNode }) {
     <WagmiConfig config={config}>
       <MiniKitProvider
       apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
-      chain={base}
+      chain={SELECTED_CHAIN}
       config={{
         appearance: {
           mode: "auto",
