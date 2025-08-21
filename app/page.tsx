@@ -8,6 +8,7 @@ import GameControls from './components/game/GameControls';
 import GameStatus from './components/game/GameStatus';
 import { Scoreboard } from './components/game/Scoreboard';
 import { WalletCheck } from './components/WalletCheck';
+import { playMove, playAIMove, playWin, playLoss, playDraw, playReset, resumeAudio } from '@/lib/sound';
 
 export default function Home() {
   useEffect(() => {
@@ -85,10 +86,16 @@ export default function Home() {
   const handleCellClick = (index: number) => {
     if (!isPlayerTurn || board[index] || gameStatus !== 'playing') return;
 
+    // Ensure audio is unlocked on user gesture
+    resumeAudio();
+
     const newBoard = [...board];
     newBoard[index] = playerSymbol;
     setBoard(newBoard);
     setIsPlayerTurn(false);
+
+    // Player move sound
+    playMove();
 
     const winner = checkWinner(newBoard);
     if (winner) {
@@ -113,6 +120,9 @@ export default function Home() {
           newBoard[aiMove] = playerSymbol === 'X' ? 'O' : 'X';
           setBoard(newBoard);
 
+          // AI move sound
+          playAIMove();
+
           const winner = checkWinner(newBoard);
           if (winner) {
             setGameStatus(winner === playerSymbol ? 'won' : 'lost');
@@ -127,12 +137,26 @@ export default function Home() {
     }
   }, [board, isPlayerTurn, playerSymbol, getAIMove, gameStatus]);
 
+  // Outcome sounds
+  useEffect(() => {
+    if (gameStatus === 'won') {
+      playWin();
+    } else if (gameStatus === 'lost') {
+      playLoss();
+    } else if (gameStatus === 'draw') {
+      playDraw();
+    }
+  }, [gameStatus]);
+
   const handleReset = () => {
     setBoard(Array(9).fill(null));
     setGameStatus('playing');
     setIsPlayerTurn(true);
     setPlayerSymbol(null);
     setDifficulty(null);
+
+    // Reset sound
+    playReset();
   };
 
   return (
