@@ -14,7 +14,9 @@ const PUBLIC_RPC = process.env.NEXT_PUBLIC_RPC_URL;
 export const config = createConfig({
   chains: [SELECTED_CHAIN],
   transports: {
-    [SELECTED_CHAIN.id]: http(PUBLIC_RPC),
+    [base.id]: http(PUBLIC_RPC),
+    [baseSepolia.id]: http(PUBLIC_RPC),
+    [mainnet.id]: http(PUBLIC_RPC),
   },
   connectors: [farcasterMiniApp()],
 });
