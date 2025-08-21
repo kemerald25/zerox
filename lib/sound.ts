@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Simple sound helpers using the Web Audio API. No assets required.
 // All functions are safe to call multiple times; the audio context is created lazily on first use.
 
