@@ -6,7 +6,6 @@ const CHAIN_ENV = process.env.NEXT_PUBLIC_CHAIN || 'base-sepolia';
 export const SELECTED_CHAIN = CHAIN_ENV === 'base'
   ? base
   : CHAIN_ENV === 'mainnet'
-
     : baseSepolia;
 
 const PUBLIC_RPC = process.env.NEXT_PUBLIC_RPC_URL;
