@@ -45,7 +45,7 @@ export default function Home() {
       cell === null ? [...moves, index] : moves, []);
   };
 
-  const minimax = (squares: Array<string | null>, isMax: boolean): number => {
+  const minimax = useCallback((squares: Array<string | null>, isMax: boolean): number => {
     const winner = checkWinner(squares);
     if (winner === playerSymbol) return -1;
     if (winner === (playerSymbol === 'X' ? 'O' : 'X')) return 1;
@@ -59,7 +59,7 @@ export default function Home() {
     });
 
     return isMax ? Math.max(...scores) : Math.min(...scores);
-  };
+  }, [playerSymbol, checkWinner, getAvailableMoves]);
 
   const getAIMove = useCallback((squares: Array<string | null>): number => {
     const availableMoves = getAvailableMoves(squares);
@@ -84,7 +84,7 @@ export default function Home() {
     }
 
     return bestMove;
-  }, [difficulty, playerSymbol]);
+  }, [difficulty, playerSymbol, minimax, getAvailableMoves]);
 
   const { recordResult } = useScoreboard();
 
