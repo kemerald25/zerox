@@ -25,7 +25,7 @@ export default function Home() {
   const { address } = useAccount();
   const { sendTransactionAsync } = useSendTransaction();
 
-  const checkWinner = (squares: Array<string | null>): string | null => {
+  const checkWinner = useCallback((squares: Array<string | null>): string | null => {
     const lines = [
       [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
       [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
@@ -38,12 +38,12 @@ export default function Home() {
       }
     }
     return null;
-  };
+  }, []);
 
-  const getAvailableMoves = (squares: Array<string | null>): number[] => {
-    return squares.reduce<number[]>((moves, cell, index) => 
+  const getAvailableMoves = useCallback((squares: Array<string | null>): number[] => {
+    return squares.reduce<number[]>((moves, cell, index) =>
       cell === null ? [...moves, index] : moves, []);
-  };
+  }, []);
 
   const minimax = useCallback((squares: Array<string | null>, isMax: boolean): number => {
     const winner = checkWinner(squares);
