@@ -1,5 +1,5 @@
 import { http, createConfig } from 'wagmi';
-import { base, baseSepolia, mainnet } from 'wagmi/chains';
+import { base, baseSepolia } from 'wagmi/chains';
 import { farcasterMiniApp } from '@farcaster/miniapp-wagmi-connector';
 
 const CHAIN_ENV = process.env.NEXT_PUBLIC_CHAIN || 'base-sepolia';
