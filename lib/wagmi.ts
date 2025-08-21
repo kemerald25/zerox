@@ -3,7 +3,7 @@ import { base, baseSepolia, mainnet } from 'wagmi/chains';
 import { farcasterMiniApp } from '@farcaster/miniapp-wagmi-connector';
 
 const CHAIN_ENV = process.env.NEXT_PUBLIC_CHAIN || 'base-sepolia';
-const SELECTED_CHAIN = CHAIN_ENV === 'base'
+export const SELECTED_CHAIN = CHAIN_ENV === 'base'
   ? base
   : CHAIN_ENV === 'mainnet'
     ? mainnet
