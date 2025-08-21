@@ -16,7 +16,6 @@ export const config = createConfig({
   transports: {
     [base.id]: http(PUBLIC_RPC),
     [baseSepolia.id]: http(PUBLIC_RPC),
-    [mainnet.id]: http(PUBLIC_RPC),
   },
   connectors: [farcasterMiniApp()],
 });
