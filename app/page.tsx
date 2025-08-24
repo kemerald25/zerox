@@ -271,7 +271,7 @@ export default function Home() {
   useEffect(() => {
     if (!isPlayerTurn && gameStatus === 'playing') {
       if (mustSettle) return;
-      const timer = setTimeout(() => {
+      const timer = setTimeout(async () => {
         const aiMove = getAIMove(board);
         if (aiMove !== -1) {
           const newBoard = [...board];
