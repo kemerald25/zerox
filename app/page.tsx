@@ -915,6 +915,7 @@ export default function Home() {
       {currentTab === 'leaderboard' && (
         <>
           <LeaderboardTab />
+          <BracketsSection />
           <SprintSection />
         </>
       )}
