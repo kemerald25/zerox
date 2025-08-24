@@ -67,6 +67,16 @@ export default function Home() {
     if (!isFrameReady) setFrameReady();
   }, [isFrameReady, setFrameReady]);
 
+  // Prompt to add Mini App after ~5s if not already added
+  const [showAddPrompt, setShowAddPrompt] = useState(false);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (isInMiniApp && context?.client && context.client.added === false) {
+      timer = setTimeout(() => setShowAddPrompt(true), 5000);
+    }
+    return () => { if (timer) clearTimeout(timer); };
+  }, [isInMiniApp, context]);
+
   // Share handlers reused in main UI and modal
   const handleShareResult = useCallback(async () => {
     const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
@@ -520,6 +530,34 @@ export default function Home() {
         <h1 className="text-4xl font-bold mb-8" style={{ color: '#66c800' }}>
           Tic Tac Toe
         </h1>
+
+        {showAddPrompt && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl w-80 text-center">
+              <div className="text-lg font-bold mb-2" style={{ color: '#66c800' }}>Add this Mini App?</div>
+              <div className="text-sm mb-4" style={{ color: '#66c800' }}>
+                Quickly access Tic Tac Toe from your apps screen.
+              </div>
+              <div className="flex gap-3 justify-center">
+                <button
+                  className="px-4 py-2 rounded-lg bg-[#66c800] text-white"
+                  onClick={async () => {
+                    try { await sdk.actions.addMiniApp(); } catch {}
+                    setShowAddPrompt(false);
+                  }}
+                >
+                  Add Mini App
+                </button>
+                <button
+                  className="px-4 py-2 rounded-lg bg-[#b6f569] text-[#66c800] border border-[#66c800]"
+                  onClick={() => setShowAddPrompt(false)}
+                >
+                  Not now
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         
       {currentTab === 'play' && (
         <>
