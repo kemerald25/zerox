@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 type LeaderboardEntry = {
   address: string;
   alias?: string;
+  pfp_url?: string | null;
   wins: number;
   draws: number;
   losses: number;
