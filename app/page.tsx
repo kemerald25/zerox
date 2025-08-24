@@ -38,6 +38,15 @@ export default function Home() {
   const [streak, setStreak] = useState(0);
   const [achievements, setAchievements] = useState<string[]>([]);
   const [dailySeed, setDailySeed] = useState<string | null>(null);
+  // Power-ups state
+  const [hintIndex, setHintIndex] = useState<number | null>(null);
+  const [blockedCellIndex, setBlockedCellIndex] = useState<number | null>(null);
+  const [selectingBlock, setSelectingBlock] = useState(false);
+  const [doubleActive, setDoubleActive] = useState(false);
+  const [doublePendingSecond, setDoublePendingSecond] = useState(false);
+  const [usedBlock, setUsedBlock] = useState(false);
+  const [usedHint, setUsedHint] = useState(false);
+  const [usedDouble, setUsedDouble] = useState(false);
   const pathname = usePathname();
   const currentTab: 'play' | 'daily' | 'leaderboard' = pathname?.startsWith('/daily')
     ? 'daily'
@@ -54,6 +63,15 @@ export default function Home() {
     setSecondsLeft(computeTurnLimit());
     setOutcomeHandled(false);
     setSessionId(null);
+    // reset power-ups
+    setHintIndex(null);
+    setBlockedCellIndex(null);
+    setSelectingBlock(false);
+    setDoubleActive(false);
+    setDoublePendingSecond(false);
+    setUsedBlock(false);
+    setUsedHint(false);
+    setUsedDouble(false);
   }, [boardSize, computeTurnLimit]);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
@@ -234,7 +252,10 @@ export default function Home() {
   }, [playerSymbol, checkWinner, getAvailableMoves, misere]);
 
   const getAIMove = useCallback((squares: Array<string | null>): number => {
-    const availableMoves = getAvailableMoves(squares);
+    let availableMoves = getAvailableMoves(squares);
+    if (blockedCellIndex !== null) {
+      availableMoves = availableMoves.filter((i) => i !== blockedCellIndex);
+    }
     if (availableMoves.length === 0) return -1;
 
     if (difficulty === 'easy') {
@@ -256,13 +277,39 @@ export default function Home() {
     }
 
     return bestMove;
-  }, [difficulty, playerSymbol, minimax, getAvailableMoves]);
+  }, [difficulty, playerSymbol, minimax, getAvailableMoves, blockedCellIndex]);
+
+  const getBestPlayerMove = useCallback((squares: Array<string | null>): number => {
+    const moves = getAvailableMoves(squares);
+    if (moves.length === 0) return -1;
+    // Evaluate from player's perspective: choose move minimizing AI advantage
+    let best = moves[0];
+    let bestScore = Infinity;
+    for (const m of moves) {
+      const next = [...squares];
+      next[m] = playerSymbol;
+      const score = minimax(next, true);
+      if (score < bestScore) { bestScore = score; best = m; }
+    }
+    return best;
+  }, [getAvailableMoves, playerSymbol, minimax]);
 
   const { recordResult } = useScoreboard();
 
   const handleCellClick = async (index: number) => {
     if (mustSettle) return;
-    if (!isPlayerTurn || board[index] || gameStatus !== 'playing') return;
+    if (gameStatus !== 'playing') return;
+
+    // If selecting a block target before ending turn
+    if (selectingBlock && isPlayerTurn && !board[index] && blockedCellIndex === null) {
+      setBlockedCellIndex(index);
+      setSelectingBlock(false);
+      setUsedBlock(true);
+      playWarning();
+      return;
+    }
+
+    if (!isPlayerTurn || board[index]) return;
 
     // Ensure audio is unlocked on user gesture
     resumeAudio();
@@ -277,6 +324,78 @@ export default function Home() {
       } catch {}
     }
 
+    // Double move logic
+    if (doubleActive && !doublePendingSecond) {
+      const newBoard = [...board];
+      newBoard[index] = playerSymbol;
+      setBoard(newBoard);
+      playMove();
+      // If this immediately ends the game, finish now
+      const winner = checkWinner(newBoard);
+      if (winner) {
+        const isWin = winner === playerSymbol;
+        setGameStatus(isWin ? 'won' : 'lost');
+        recordResult(isWin ? 'win' : 'loss');
+        if (sessionId) {
+          try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: isWin ? 'win' : 'loss', settled: isWin }) }); } catch {}
+        }
+        setDoubleActive(false);
+        setDoublePendingSecond(false);
+        return;
+      }
+      if (getAvailableMoves(newBoard).length === 0) {
+        setGameStatus('draw');
+        recordResult('draw');
+        if (sessionId) {
+          try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: 'draw', settled: true }) }); } catch {}
+        }
+        setDoubleActive(false);
+        setDoublePendingSecond(false);
+        return;
+      }
+      // Stay on player's turn for second move
+      setDoublePendingSecond(true);
+      return;
+    }
+
+    if (doubleActive && doublePendingSecond) {
+      if (board[index]) return;
+      const temp = [...board];
+      temp[index] = playerSymbol;
+      // Cannot win on 2nd move
+      if (checkWinner(temp) === playerSymbol) {
+        playWarning();
+        return;
+      }
+      setBoard(temp);
+      setIsPlayerTurn(false);
+      setDoubleActive(false);
+      setDoublePendingSecond(false);
+      setUsedDouble(true);
+      playMove();
+
+      const winner2 = checkWinner(temp);
+      if (winner2) {
+        const isWin = winner2 === playerSymbol;
+        setGameStatus(isWin ? 'won' : 'lost');
+        recordResult(isWin ? 'win' : 'loss');
+        if (sessionId) {
+          try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: isWin ? 'win' : 'loss', settled: isWin }) }); } catch {}
+        }
+        return;
+      }
+      if (getAvailableMoves(temp).length === 0) {
+        setGameStatus('draw');
+        recordResult('draw');
+        if (sessionId) {
+          try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: 'draw', settled: true }) }); } catch {}
+        }
+        return;
+      }
+      return;
+    }
+
+    // Normal single-move flow
     const newBoard = [...board];
     newBoard[index] = playerSymbol;
     setBoard(newBoard);
@@ -317,6 +436,8 @@ export default function Home() {
           const newBoard = [...board];
           newBoard[aiMove] = playerSymbol === 'X' ? 'O' : 'X';
           setBoard(newBoard);
+          // Clear one-turn block after AI moves
+          if (blockedCellIndex !== null) setBlockedCellIndex(null);
 
           // AI move sound
           playAIMove();
@@ -344,7 +465,7 @@ export default function Home() {
 
       return () => clearTimeout(timer);
     }
-  }, [board, isPlayerTurn, playerSymbol, getAIMove, gameStatus, checkWinner, getAvailableMoves, recordResult, mustSettle, sessionId]);
+  }, [board, isPlayerTurn, playerSymbol, getAIMove, gameStatus, checkWinner, getAvailableMoves, recordResult, mustSettle, sessionId, blockedCellIndex]);
 
   // Outcome sounds
   useEffect(() => {
@@ -632,12 +753,43 @@ export default function Home() {
             </select>
           </div>
           <GameStatus status={gameStatus} isPlayerTurn={isPlayerTurn} secondsLeft={secondsLeft ?? null} />
+          {/* Power-ups */}
+          <div className="mb-2 flex items-center justify-center gap-2 flex-wrap" style={{ color: '#66c800' }}>
+            <button
+              className={`px-3 py-1 rounded border ${selectingBlock ? 'bg-[#66c800] text-white' : 'bg-white text-[#66c800]'} border-[#66c800] disabled:opacity-50`}
+              disabled={usedBlock || !isPlayerTurn || gameStatus !== 'playing'}
+              onClick={() => { if (!usedBlock) setSelectingBlock((v) => !v); }}
+            >
+              Block
+            </button>
+            <button
+              className="px-3 py-1 rounded border bg-white text-[#66c800] border-[#66c800] disabled:opacity-50"
+              disabled={usedHint || !isPlayerTurn || gameStatus !== 'playing'}
+              onClick={() => {
+                const idx = getBestPlayerMove(board);
+                if (idx !== -1) { setHintIndex(idx); setUsedHint(true); setTimeout(() => setHintIndex(null), 3000); }
+              }}
+            >
+              Hint
+            </button>
+            <button
+              className={`px-3 py-1 rounded border ${doubleActive ? 'bg-[#66c800] text-white' : 'bg-white text-[#66c800]'} border-[#66c800] disabled:opacity-50`}
+              disabled={usedDouble || !isPlayerTurn || gameStatus !== 'playing' || doublePendingSecond}
+              onClick={() => { if (!usedDouble && !doublePendingSecond) setDoubleActive((v) => !v); }}
+            >
+              Double Move
+            </button>
+            {selectingBlock && <span className="text-xs">Tap a cell to block AI</span>}
+            {doublePendingSecond && <span className="text-xs">Place your second move</span>}
+          </div>
           <GameBoard
             board={board}
             onCellClick={handleCellClick}
             isPlayerTurn={isPlayerTurn}
             winningLine={winningLine}
             size={boardSize}
+            hintIndex={hintIndex}
+            disabledCells={!isPlayerTurn && blockedCellIndex !== null ? [blockedCellIndex] : []}
           />
           {/* Social actions */}
           {(gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') && (
