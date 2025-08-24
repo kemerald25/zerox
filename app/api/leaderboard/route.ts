@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     const delta = { win: { w: 1, d: 0, l: 0, p: 3 }, draw: { w: 0, d: 1, l: 0, p: 1 }, loss: { w: 0, d: 0, l: 1, p: 0 } }[result];
 
     const raw = await redis.hget<string>(keyUsers, addr);
-    let stats: LeaderboardEntry = raw ? JSON.parse(raw) as LeaderboardEntry : { address: addr, alias: undefined, wins: 0, draws: 0, losses: 0, points: 0 };
+    const stats: LeaderboardEntry = raw ? JSON.parse(raw) as LeaderboardEntry : { address: addr, alias: undefined, wins: 0, draws: 0, losses: 0, points: 0 };
     stats.wins += delta.w;
     stats.draws += delta.d;
     stats.losses += delta.l;
