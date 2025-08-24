@@ -734,7 +734,7 @@ function SprintSection() {
   const [endsIn, setEndsIn] = React.useState<string>('');
 
   useEffect(() => {
-    let timer: any;
+    let timer: ReturnType<typeof setInterval> | undefined;
     const load = async () => {
       try {
         const res = await fetch('/api/sprint');
@@ -750,14 +750,14 @@ function SprintSection() {
             setEndsIn(`${m}m ${s}s`);
           };
           tick();
-          clearInterval(timer);
+          if (timer) clearInterval(timer);
           timer = setInterval(tick, 1000);
         }
       } catch {}
     };
     load();
     const poll = setInterval(load, 5000);
-    return () => { clearInterval(poll); clearInterval(timer); };
+    return () => { clearInterval(poll); if (timer) clearInterval(timer); };
   }, []);
 
   return (
