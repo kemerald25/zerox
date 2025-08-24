@@ -46,13 +46,21 @@ export function Navbar() {
           context = (sdk as any).context;
         }
 
-        const user = context?.user;
+        // Materialize to a plain object to avoid proxy path traps
+        let plainContext = context;
+        try {
+          plainContext = typeof structuredClone === 'function'
+            ? structuredClone(context)
+            : JSON.parse(JSON.stringify(context));
+        } catch {}
+
+        const user = plainContext?.user;
         if (!cancelled && user?.fid) {
           setFcUser({
             fid: user.fid,
             username: user.username,
             displayName: user.displayName,
-            pfpUrl: user.pfpUrl,
+            pfpUrl: typeof user.pfpUrl === 'string' ? user.pfpUrl : undefined,
           });
         }
       } catch {
@@ -87,7 +95,7 @@ export function Navbar() {
                   whileHover={{ scale: 1.03 }}
                   className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#66c800]/10 text-[#66c800] transition-colors"
                 >
-                  {fcUser.pfpUrl ? (
+                  {typeof fcUser.pfpUrl === 'string' ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={fcUser.pfpUrl} alt={fcUser.username || 'pfp'} className="w-8 h-8 rounded-full" />
                   ) : null}
