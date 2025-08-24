@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Faucet daily cap (per address): default 3 payouts/day unless overridden
-    const dailyCap = Number(process.env.FAUCET_DAILY_CAP || '3');
+    const dailyCap = Number(process.env.FAUCET_DAILY_CAP || '5');
     const today = new Date().toISOString().slice(0,10);
     if (supabase) {
       const { data: row } = await supabase
