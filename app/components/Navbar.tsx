@@ -5,6 +5,7 @@ import { motion, useScroll, useSpring } from 'framer-motion';
 import Link from 'next/link';
 import { useAccount, useConnect } from 'wagmi';
 import React, { useEffect, useState } from 'react';
+import { setMuted, toggleMute, setVolume, getVolume } from '@/lib/sound';
 import { useMiniKit, useIsInMiniApp } from '@coinbase/onchainkit/minikit';
 
 export function Navbar() {
@@ -63,6 +64,13 @@ export function Navbar() {
     });
   }, [isInMiniApp, context]);
 
+  const [isMuted, setIsMuted] = useState(false);
+  const [vol, setVol] = useState(getVolume());
+
+  useEffect(() => {
+    setVolume(vol);
+  }, [vol]);
+
   return (
     <>
       <motion.div
@@ -81,6 +89,21 @@ export function Navbar() {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
+              <div className="hidden sm:flex items-center gap-2 mr-2">
+                <button
+                  aria-label="Toggle mute"
+                  className="px-2 py-1 rounded bg-[#66c800]/10 text-[#66c800]"
+                  onClick={() => { toggleMute(); setIsMuted(!isMuted); }}
+                >{isMuted ? 'Unmute' : 'Mute'}</button>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={vol}
+                  onChange={(e) => setVol(parseFloat(e.target.value))}
+                />
+              </div>
               {fcUser ? (
                 <motion.div
                   whileHover={{ scale: 1.03 }}
