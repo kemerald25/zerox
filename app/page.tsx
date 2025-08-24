@@ -167,7 +167,7 @@ export default function Home() {
       } catch {}
     };
     post();
-  }, [address, gameStatus]);
+  }, [address, gameStatus, blitzPreset]);
 
   // Gate gameplay if an unpaid loss settlement exists
   const [mustSettle, setMustSettle] = useState(false);
