@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
     const next: any = existing ?? { address: addr, alias: alias ?? undefined, pfp_url: null, wins: 0, draws: 0, losses: 0, points: 0 };
     next.wins += delta.w; next.draws += delta.d; next.losses += delta.l; next.points += delta.p;
     if (alias && !next.alias) next.alias = alias;
+    if (body?.pfpUrl && !next.pfp_url) next.pfp_url = body.pfpUrl as string;
 
     const upsertPayload = { season, address: addr, alias: next.alias ?? null, pfp_url: next.pfp_url ?? null, wins: next.wins, draws: next.draws, losses: next.losses, points: next.points };
     const { error } = await supabase
