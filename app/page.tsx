@@ -81,6 +81,9 @@ export default function Home() {
   const { isInMiniApp } = useIsInMiniApp();
   const { composeCast } = useComposeCast();
   const viewProfile = useViewProfile();
+  // Simple toast
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = useCallback((msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2000); }, []);
 
   useEffect(() => {
     if (!isFrameReady) setFrameReady();
