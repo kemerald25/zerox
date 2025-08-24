@@ -361,8 +361,15 @@ export default function Home() {
         const data = await res.json();
         if (data?.to && data?.value) {
           await sendTransactionAsync({ to: data.to as `0x${string}`, value: BigInt(data.value) });
+          try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: playerAddress, required: false }) }); } catch {}
+        } else {
+          try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: playerAddress, required: true }) }); } catch {}
+          setMustSettle(true);
         }
-      } catch {}
+      } catch {
+        try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: playerAddress, required: true }) }); } catch {}
+        setMustSettle(true);
+      }
     };
 
     if ((gameStatus === 'won' || gameStatus === 'lost') && !outcomeHandled && address) {
