@@ -245,19 +245,7 @@ export default function Home() {
     }
   }, [gameStatus]);
 
-  // Series tracking and rematch modal
-  useEffect(() => {
-    if ((gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') && !seriesCounted) {
-      setSeriesActive(true);
-      setSeriesCounted(true);
-      if (gameStatus === 'won') {
-        setSeriesWins((w) => ({ ...w, player: w.player + 1 }));
-      } else if (gameStatus === 'lost') {
-        setSeriesWins((w) => ({ ...w, ai: w.ai + 1 }));
-      }
-      setShowRematchModal(true);
-    }
-  }, [gameStatus, seriesCounted]);
+  // Series removed
 
   // Update progress XP/streak/achievements
   useEffect(() => {
