@@ -48,6 +48,18 @@ export default function Home() {
     if (!isFrameReady) setFrameReady();
   }, [isFrameReady, setFrameReady]);
 
+  // Make Daily the default tab on first visit
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return;
+      const seen = window.localStorage.getItem('hasVisited');
+      if (!seen) {
+        setActiveTab('daily');
+        window.localStorage.setItem('hasVisited', '1');
+      }
+    } catch {}
+  }, []);
+
   // Share handlers reused in main UI and modal
   const handleShareResult = useCallback(async () => {
     const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
@@ -555,22 +567,31 @@ export default function Home() {
         <div className="mx-auto max-w-2xl">
           <div className="flex items-stretch justify-around bg-white/90 dark:bg-black/80 border-t border-[#b6f569]/30" style={{ paddingBottom: bottomInset }}>
             <button
-              className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'daily' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}
+              className={`flex-1 py-2 text-xs sm:text-sm font-semibold ${activeTab === 'daily' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}
               onClick={() => setActiveTab('daily')}
             >
-              Daily
+              <div className="flex flex-col items-center gap-0.5">
+                <span aria-hidden>🗓️</span>
+                <span>Daily</span>
+              </div>
             </button>
             <button
-              className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'play' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}
+              className={`flex-1 py-2 text-xs sm:text-sm font-semibold ${activeTab === 'play' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}
               onClick={() => setActiveTab('play')}
             >
-              Play
+              <div className="flex flex-col items-center gap-0.5">
+                <span aria-hidden>🎮</span>
+                <span>Play</span>
+              </div>
             </button>
             <button
-              className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'leaderboard' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}
+              className={`flex-1 py-2 text-xs sm:text-sm font-semibold ${activeTab === 'leaderboard' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}
               onClick={() => setActiveTab('leaderboard')}
             >
-              Leaderboard
+              <div className="flex flex-col items-center gap-0.5">
+                <span aria-hidden>🏆</span>
+                <span>Leaderboard</span>
+              </div>
             </button>
           </div>
         </div>
