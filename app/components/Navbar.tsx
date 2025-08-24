@@ -25,13 +25,43 @@ export function Navbar() {
   } | null>(null);
 
   useEffect(() => {
-    // If running inside Farcaster Mini App, sdk.context.user will be populated
-    try {
-      const user = (sdk as any)?.context?.user as typeof fcUser;
-      if (user && user.fid) {
-        setFcUser(user);
+    let cancelled = false;
+    (async () => {
+      try {
+        // Ensure SDK is ready
+        if ((sdk as any)?.actions?.ready) {
+          await (sdk as any).actions.ready();
+        }
+
+        // Detect mini app environment before accessing context
+        const isMini = Boolean((sdk as any)?.isMiniApp || (sdk as any)?.getCapabilities);
+
+        if (!isMini) return;
+
+        // Prefer getContext if available to avoid proxy traps
+        let context: any = null;
+        if (typeof (sdk as any)?.getContext === 'function') {
+          context = await (sdk as any).getContext();
+        } else if ((sdk as any)?.context) {
+          context = (sdk as any).context;
+        }
+
+        const user = context?.user;
+        if (!cancelled && user?.fid) {
+          setFcUser({
+            fid: user.fid,
+            username: user.username,
+            displayName: user.displayName,
+            pfpUrl: user.pfpUrl,
+          });
+        }
+      } catch {
+        // Ignore if not in mini app or context unavailable
       }
-    } catch {}
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
