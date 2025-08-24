@@ -539,7 +539,7 @@ export default function Home() {
       }
     };
     run();
-  }, [address, gameStatus]);
+  }, [address, gameStatus, blitzPreset]);
 
   // Daily challenge seed
   useEffect(() => {
