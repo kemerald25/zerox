@@ -2,6 +2,7 @@
 
 import { useScoreboard } from '@/lib/useScoreboard';
 import React, { useState, useCallback, useEffect } from 'react';
+import Image from 'next/image';
 import { sdk } from '@farcaster/miniapp-sdk';
 import GameBoard from './components/game/GameBoard';
 import GameControls from './components/game/GameControls';
@@ -442,9 +443,8 @@ export default function Home() {
             const pfp = typeof author.pfpUrl === 'string' ? author.pfpUrl : undefined;
             return (
               <div className="mt-4 p-3 rounded-lg bg-[#b6f569]/30 text-[#66c800] text-sm flex items-center gap-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 {pfp ? (
-                  <img src={pfp} alt={author.username || 'pfp'} className="w-6 h-6 rounded-full" />
+                  <Image src={pfp} alt={author.username || 'pfp'} width={24} height={24} className="rounded-full" />
                 ) : null}
                 <span>Shared by @{author.username || author.fid}</span>
                 <div className="ml-auto flex gap-2">
