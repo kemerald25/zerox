@@ -8,12 +8,15 @@ export const SELECTED_CHAIN = CHAIN_ENV === 'base-sepolia'
   : base;
 
 const PUBLIC_RPC = process.env.NEXT_PUBLIC_RPC_URL;
+const ACTIVE_RPC = PUBLIC_RPC || (SELECTED_CHAIN.id === base.id
+  ? 'https://mainnet.base.org'
+  : 'https://sepolia.base.org');
 
 export const config = createConfig({
   chains: [SELECTED_CHAIN],
   transports: {
-    [base.id]: http(PUBLIC_RPC),
-    [baseSepolia.id]: http(PUBLIC_RPC)
+    [base.id]: http(SELECTED_CHAIN.id === base.id ? ACTIVE_RPC : 'https://mainnet.base.org'),
+    [baseSepolia.id]: http(SELECTED_CHAIN.id === baseSepolia.id ? ACTIVE_RPC : 'https://sepolia.base.org')
   },
   connectors: [farcasterMiniApp()],
 });
