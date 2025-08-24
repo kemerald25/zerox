@@ -660,6 +660,11 @@ export default function Home() {
   return (
     <main className="min-h-screen p-4 flex flex-col items-center justify-center" style={{ paddingBottom: bottomNavHeight }}>
       <WalletCheck>
+        {toast && (
+          <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded bg-[#66c800] text-white shadow">
+            {toast}
+          </div>
+        )}
         <h1 className="text-4xl font-bold mb-8" style={{ color: '#66c800' }}>
           Tic Tac Toe
         </h1>
