@@ -7,9 +7,10 @@ interface GameBoardProps {
   board: Array<string | null>;
   onCellClick: (index: number) => void;
   isPlayerTurn: boolean;
+  winningLine?: number[] | null;
 }
 
-const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn }) => {
+const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn, winningLine }) => {
   // Brand colors
   const GREEN = '#66c800';
   const LIME_GREEN = '#b6f569';
@@ -28,7 +29,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn 
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
-        {board.map((cell, index) => (
+        {board.map((cell, index) => {
+          const isWinningCell = Array.isArray(winningLine) && winningLine.includes(index);
+          return (
           <motion.button
             key={index}
             onClick={() => isPlayerTurn && !cell && onCellClick(index)}
@@ -45,21 +48,22 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn 
               transition-colors duration-200
             `}
             style={{
-              backgroundColor: 'white',
+              backgroundColor: isWinningCell ? LIME_GREEN : 'white',
               color: GREEN,
-              border: `2px solid ${GREEN}`,
-              boxShadow: `0 0 10px ${GREEN}20`
+              border: `2px solid ${isWinningCell ? LIME_GREEN : GREEN}`,
+              boxShadow: isWinningCell ? `0 0 18px ${LIME_GREEN}80` : `0 0 10px ${GREEN}20`
             }}
           >
             <motion.span
               initial={cell ? { scale: 0, rotate: -180 } : { scale: 1 }}
               animate={cell ? { scale: 1, rotate: 0 } : { scale: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              style={{ filter: isWinningCell ? 'drop-shadow(0 0 6px rgba(182,245,105,0.8))' : 'none' }}
             >
               {cell}
             </motion.span>
           </motion.button>
-        ))}
+        );})}
       </motion.div>
     </div>
   );
