@@ -30,6 +30,11 @@ export default function Home() {
   const [seriesActive, setSeriesActive] = useState(false);
   const [showRematchModal, setShowRematchModal] = useState(false);
   const [seriesCounted, setSeriesCounted] = useState(false);
+  const [xp, setXp] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [streak, setStreak] = useState(0);
+  const [achievements, setAchievements] = useState<string[]>([]);
+  const [dailySeed, setDailySeed] = useState<string | null>(null);
 
   const { address } = useAccount();
   const { sendTransactionAsync } = useSendTransaction();
@@ -203,6 +208,53 @@ export default function Home() {
       setShowRematchModal(true);
     }
   }, [gameStatus, seriesCounted]);
+
+  // Update progress XP/streak/achievements
+  useEffect(() => {
+    const run = async () => {
+      if (!address) return;
+      if (gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') {
+        try {
+          const res = await fetch('/api/progress', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address, result: gameStatus === 'won' ? 'win' : gameStatus === 'lost' ? 'loss' : 'draw' })
+          });
+          const data = await res.json();
+          if (data?.xp != null) {
+            setXp(Number(data.xp));
+            setLevel(Number(data.level));
+            setStreak(Number(data.streak));
+            setAchievements(Array.isArray(data.achievements) ? data.achievements : []);
+          }
+        } catch {}
+      } else if (address) {
+        try {
+          const res = await fetch(`/api/progress?address=${address}`);
+          const data = await res.json();
+          if (data?.xp != null) {
+            setXp(Number(data.xp));
+            setLevel(Number(data.level));
+            setStreak(Number(data.streak));
+            setAchievements(Array.isArray(data.achievements) ? data.achievements : []);
+          }
+        } catch {}
+      }
+    };
+    run();
+  }, [address, gameStatus]);
+
+  // Daily challenge seed
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('/api/daily');
+        const data = await res.json();
+        if (typeof data?.seed === 'string') setDailySeed(data.seed);
+      } catch {}
+    };
+    load();
+  }, []);
 
   // Payout/charge handling on game end
   useEffect(() => {
@@ -434,6 +486,34 @@ export default function Home() {
             </div>
           )}
           <Scoreboard />
+          {/* Progress UI */}
+          <div className="mt-6 w-full max-w-md p-3 rounded-lg" style={{ backgroundColor: '#b6f569' }}>
+            <div className="flex justify-between" style={{ color: '#066c00' }}>
+              <div>Level {level}</div>
+              <div>XP {xp}</div>
+              <div>Streak {streak}🔥</div>
+            </div>
+            {achievements.length > 0 && (
+              <div className="mt-2 text-sm" style={{ color: '#066c00' }}>
+                Badges: {achievements.join(', ')}
+              </div>
+            )}
+          </div>
+          {/* Daily challenge */}
+          {dailySeed && (
+            <div className="mt-3 text-center">
+              <button
+                className="px-4 py-2 rounded-lg bg-[#66c800] text-white"
+                onClick={() => {
+                  const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
+                  const url = `${base}?seed=${dailySeed}&symbol=X&difficulty=hard`;
+                  window.location.href = url;
+                }}
+              >
+                Play Daily Challenge
+              </button>
+            </div>
+          )}
         </>
       )}
       </WalletCheck>
