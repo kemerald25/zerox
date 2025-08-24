@@ -1097,6 +1097,9 @@ function BracketsSection() {
   const [creating, setCreating] = React.useState(false);
   const [joining, setJoining] = React.useState<string | null>(null);
   const { composeCast } = useComposeCast();
+  const [selected, setSelected] = React.useState<string | null>(null);
+  const [detail, setDetail] = React.useState<null | { bracket: { id: string; name: string; status: string }; players: Array<{ seed: number; address: string; alias?: string | null; pfp_url?: string | null }>; matches: Array<{ id: string; round: number; p1_seed: number; p2_seed: number; p1_wins: number; p2_wins: number; status: string; winner_seed?: number | null }> }>(null);
+  const [loadingDetail, setLoadingDetail] = React.useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -1148,6 +1151,30 @@ function BracketsSection() {
     try { await navigator.clipboard.writeText(url); } catch {}
   };
 
+  const copyInviteLink = async (b: { id: string; name: string }) => {
+    const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
+    const url = `${base}/leaderboard?bracket_id=${b.id}&join=1`;
+    try { await navigator.clipboard.writeText(url); } catch {}
+  };
+
+  const loadDetail = async (id: string) => {
+    setSelected(id);
+    setLoadingDetail(true);
+    try {
+      const res = await fetch(`/api/bracket?id=${id}`);
+      const data = await res.json();
+      if (data?.bracket) setDetail({ bracket: data.bracket, players: data.players || [], matches: data.matches || [] });
+    } catch {}
+    setLoadingDetail(false);
+  };
+
+  const reportWin = async (matchId: string, winnerSeed: number) => {
+    try {
+      await fetch('/api/bracket', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'report', match_id: matchId, winner_seed: winnerSeed }) });
+      if (selected) await loadDetail(selected);
+    } catch {}
+  };
+
   return (
     <div className="w-full max-w-md mx-auto mt-4" style={{ color: '#66c800' }}>
       <div className="p-4 rounded-lg border border-[#66c800]/30 bg-white/60 dark:bg-black/40">
@@ -1165,10 +1192,11 @@ function BracketsSection() {
             {list.map((b) => (
               <div key={b.id} className="flex items-center justify-between p-2 rounded bg-[#b6f569]/20">
                 <div>
-                  <div className="font-semibold">{b.name}</div>
+                  <div className="font-semibold cursor-pointer" onClick={() => loadDetail(b.id)}>{b.name}</div>
                   <div className="text-xs">{b.status}</div>
                 </div>
                 <div className="flex gap-2">
+                  <button className="px-3 py-1 rounded bg-white text-[#66c800] border border-[#66c800]" onClick={() => copyInviteLink(b)}>Copy link</button>
                   <button className="px-3 py-1 rounded bg-white text-[#66c800] border border-[#66c800]" onClick={() => inviteToBracket(b)}>Invite</button>
                   <button className="px-3 py-1 rounded bg-[#66c800] text-white disabled:opacity-50" disabled={!address || joining === b.id || b.status === 'completed'} onClick={() => joinBracket(b.id)}>
                     {joining === b.id ? 'Joining…' : 'Join'}
@@ -1176,6 +1204,60 @@ function BracketsSection() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+        {selected && (
+          <div className="mt-4 p-3 rounded-lg border border-[#66c800]/30">
+            {loadingDetail || !detail ? (
+              <div className="text-sm opacity-80">Loading…</div>
+            ) : (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="font-semibold">{detail.bracket.name}</div>
+                  <button className="text-xs underline" onClick={() => setSelected(null)}>Close</button>
+                </div>
+                <div className="mb-3">
+                  <div className="font-semibold mb-1">Players</div>
+                  <div className="grid grid-cols-2 gap-1 text-xs">
+                    {detail.players.sort((a,b)=>a.seed-b.seed).map((p) => (
+                      <div key={p.seed} className="flex items-center gap-2">
+                        <span className="font-bold">#{p.seed}</span>
+                        <span>{p.alias ? `@${p.alias}` : `${p.address.slice(0,6)}…${p.address.slice(-4)}`}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {[1,2,3].map((round) => {
+                  const ms = detail.matches.filter((m)=>m.round===round);
+                  if (ms.length===0) return null;
+                  return (
+                    <div key={round} className="mb-3">
+                      <div className="font-semibold mb-1">{round===1?'Quarterfinals':round===2?'Semifinals':'Final'}</div>
+                      <div className="space-y-2">
+                        {ms.map((m)=>{
+                          const p1 = detail.players.find((p)=>p.seed===m.p1_seed);
+                          const p2 = detail.players.find((p)=>p.seed===m.p2_seed);
+                          return (
+                            <div key={m.id} className="p-2 rounded bg-[#b6f569]/20 flex items-center justify-between">
+                              <div className="text-xs">
+                                <div>{p1 ? (p1.alias?`@${p1.alias}`:`#${p1.seed}`) : `#${m.p1_seed}`} vs {p2 ? (p2.alias?`@${p2.alias}`:`#${p2.seed}`) : `#${m.p2_seed}`}</div>
+                                <div className="opacity-80">Score: {m.p1_wins} - {m.p2_wins} {m.status==='done'?'(done)':''}</div>
+                              </div>
+                              {m.status!=='done' && (
+                                <div className="flex gap-2">
+                                  <button className="px-2 py-1 rounded bg-white text-[#66c800] border border-[#66c800] text-xs" onClick={() => reportWin(m.id, m.p1_seed)}>+1 P1</button>
+                                  <button className="px-2 py-1 rounded bg-white text-[#66c800] border border-[#66c800] text-xs" onClick={() => reportWin(m.id, m.p2_seed)}>+1 P2</button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>
