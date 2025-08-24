@@ -498,9 +498,9 @@ export default function Home() {
     }
     // Initialize when player's turn starts
     if (isPlayerTurn) {
-      setSecondsLeft((prev) => (typeof prev === 'number' ? prev : TURN_LIMIT));
+      setSecondsLeft((prev) => (typeof prev === 'number' ? prev : computeTurnLimit()));
     }
-  }, [gameStatus, isPlayerTurn]);
+  }, [gameStatus, isPlayerTurn, computeTurnLimit]);
 
   useEffect(() => {
     if (gameStatus !== 'playing' || !isPlayerTurn || typeof secondsLeft !== 'number') return;
