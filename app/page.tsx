@@ -453,12 +453,36 @@ export default function Home() {
         
       {activeTab === 'play' && (
         <>
+        {mustSettle && (
+          <div className="mb-3 w-full max-w-md p-3 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm">
+            Payment required to continue. Please complete the previous loss transaction.
+            <div className="mt-2 flex justify-center">
+              <button
+                className="px-4 py-2 rounded bg-red-600 text-white"
+                onClick={async () => {
+                  if (!address) return;
+                  try {
+                    const res = await fetch('/api/charge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address }) });
+                    const data = await res.json();
+                    if (data?.to && data?.value) {
+                      await sendTransactionAsync({ to: data.to as `0x${string}`, value: BigInt(data.value) });
+                      try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address, required: false }) }); } catch {}
+                      setMustSettle(false);
+                    }
+                  } catch {}
+                }}
+              >
+                Complete previous transaction
+              </button>
+            </div>
+          </div>
+        )}
         <GameControls
-        onSymbolSelect={setPlayerSymbol}
-        onDifficultySelect={setDifficulty}
-        selectedSymbol={playerSymbol}
-        selectedDifficulty={difficulty}
-      />
+          onSymbolSelect={setPlayerSymbol}
+          onDifficultySelect={setDifficulty}
+          selectedSymbol={playerSymbol}
+          selectedDifficulty={selectedDifficulty}
+        />
       {playerSymbol && difficulty && (
         <>
           <div className="mb-2 flex items-center justify-center gap-2" style={{ color: '#66c800' }}>
