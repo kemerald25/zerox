@@ -467,7 +467,7 @@ export default function Home() {
         handleLossCharge(address);
       }
     }
-  }, [gameStatus, address, outcomeHandled, sendTransactionAsync, sessionId]);
+  }, [gameStatus, address, outcomeHandled, sendTransactionAsync, sessionId, startNewGameRound]);
 
   // handleReset no longer used after series removal
 
