@@ -6,7 +6,7 @@ import { base, baseSepolia } from 'viem/chains';
 const CHAIN_ENV = process.env.NEXT_PUBLIC_CHAIN || 'base-sepolia';
 const CHAIN = CHAIN_ENV === 'base' ? base : baseSepolia;
 
-const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL;
+const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || (CHAIN.id === base.id ? 'https://mainnet.base.org' : 'https://sepolia.base.org');
 const TREASURY_ADDRESS = process.env.TREASURY_ADDRESS as `0x${string}` | undefined;
 const CHARGE_AMOUNT_ETH = process.env.CHARGE_AMOUNT_ETH || process.env.PAYOUT_AMOUNT_ETH || '0.00002';
 
