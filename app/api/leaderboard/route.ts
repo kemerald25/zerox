@@ -35,16 +35,14 @@ export async function GET() {
   const keyUsers = `lb:${season}:users`;
   const keyZ = `lb:${season}:points`;
 
-  // Top 10 by score
-  // Upstash supports zrange with rev & withScores
-  // @ts-expect-error upstash types may differ slightly across versions
+  // Top 10 by score (Upstash supports zrange with rev & withScores)
   const z: Array<{ member: string; score: number }> = await (redis as any).zrange(keyZ, 0, 9, { rev: true, withScores: true });
   const top: Array<LeaderboardEntry & { rank: number }> = [];
   let rank = 1;
   for (const row of z || []) {
     const addr = row.member;
     const raw = await redis.hget<string>(keyUsers, addr);
-    let stats: LeaderboardEntry = { address: addr, wins: 0, draws: 0, losses: 0, points: 0 };
+    const stats: LeaderboardEntry = { address: addr, wins: 0, draws: 0, losses: 0, points: 0 };
     if (raw) {
       try { stats = { ...stats, ...(JSON.parse(raw) as LeaderboardEntry) }; } catch {}
     }
