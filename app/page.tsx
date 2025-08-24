@@ -43,6 +43,17 @@ export default function Home() {
     : pathname?.startsWith('/leaderboard')
       ? 'leaderboard'
       : 'play';
+
+  const startNewGameRound = useCallback(() => {
+    const n = boardSize;
+    setBoard(Array(n * n).fill(null));
+    setWinningLine(null);
+    setGameStatus('playing');
+    setIsPlayerTurn(true);
+    setSecondsLeft(TURN_LIMIT);
+    setOutcomeHandled(false);
+    setSessionId(null);
+  }, [boardSize]);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
   const { address } = useAccount();
@@ -430,6 +441,8 @@ export default function Home() {
           if (sessionId) {
             try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, settled: true, tx_hash: (data.hash ?? undefined) }) }); } catch {}
           }
+          // Auto-start a new round after successful settlement
+          startNewGameRound();
         } else {
           try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: playerAddress, required: true }) }); } catch {}
           setMustSettle(true);
