@@ -51,10 +51,10 @@ export default function Home() {
     setWinningLine(null);
     setGameStatus('playing');
     setIsPlayerTurn(true);
-    setSecondsLeft(TURN_LIMIT);
+    setSecondsLeft(computeTurnLimit());
     setOutcomeHandled(false);
     setSessionId(null);
-  }, [boardSize]);
+  }, [boardSize, computeTurnLimit]);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
   const { address } = useAccount();
