@@ -36,6 +36,7 @@ export default function Home() {
   const [achievements, setAchievements] = useState<string[]>([]);
   const [dailySeed, setDailySeed] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'play' | 'daily' | 'leaderboard'>('play');
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   const { address } = useAccount();
   const { sendTransactionAsync } = useSendTransaction();
@@ -219,13 +220,22 @@ export default function Home() {
 
   const { recordResult } = useScoreboard();
 
-  const handleCellClick = (index: number) => {
+  const handleCellClick = async (index: number) => {
     if (mustSettle) return;
     if (!isPlayerTurn || board[index] || gameStatus !== 'playing') return;
 
     // Ensure audio is unlocked on user gesture
     resumeAudio();
     hapticTap();
+
+    // Ensure a game session exists
+    if (!sessionId && address) {
+      try {
+        const res = await fetch('/api/gamesession', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address }) });
+        const data = await res.json();
+        if (data?.id) setSessionId(data.id as string);
+      } catch {}
+    }
 
     const newBoard = [...board];
     newBoard[index] = playerSymbol;
@@ -240,11 +250,20 @@ export default function Home() {
       const isWin = winner === playerSymbol;
       setGameStatus(isWin ? 'won' : 'lost');
       recordResult(isWin ? 'win' : 'loss');
+      // Update session on immediate result
+      if (sessionId) {
+        try {
+          await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: isWin ? 'win' : 'loss', settled: isWin }) });
+        } catch {}
+      }
       return;
     }
     if (getAvailableMoves(newBoard).length === 0) {
       setGameStatus('draw');
       recordResult('draw');
+      if (sessionId) {
+        try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: 'draw', settled: true }) }); } catch {}
+      }
       return;
     }
   };
@@ -268,10 +287,16 @@ export default function Home() {
             setGameStatus(didPlayerWin ? 'won' : 'lost');
             // Record AI-determined outcome
             recordResult(didPlayerWin ? 'win' : 'loss');
+            if (sessionId) {
+              try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: didPlayerWin ? 'win' : 'loss', settled: didPlayerWin }) }); } catch {}
+            }
           } else if (getAvailableMoves(newBoard).length === 0) {
             setGameStatus('draw');
             // Record draw when determined on AI turn
             recordResult('draw');
+            if (sessionId) {
+              try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: 'draw', settled: true }) }); } catch {}
+            }
           }
         }
         setIsPlayerTurn(true);
