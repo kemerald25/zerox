@@ -27,10 +27,7 @@ export default function Home() {
   const [winningLine, setWinningLine] = useState<number[] | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const TURN_LIMIT = 15;
-  const [seriesWins, setSeriesWins] = useState<{ player: number; ai: number }>({ player: 0, ai: 0 });
-  const [seriesActive, setSeriesActive] = useState(false);
-  const [showRematchModal, setShowRematchModal] = useState(false);
-  const [seriesCounted, setSeriesCounted] = useState(false);
+  // series state removed
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState(1);
   const [streak, setStreak] = useState(0);
@@ -372,26 +369,13 @@ export default function Home() {
     setOutcomeHandled(false);
     setWinningLine(null);
     setSecondsLeft(null);
-    setSeriesWins({ player: 0, ai: 0 });
-    setSeriesActive(false);
-    setShowRematchModal(false);
-    setSeriesCounted(false);
 
     // Reset sound
     playReset();
   };
 
   // Start a new round automatically after game ends, preserving symbol and difficulty
-  const startNextRound = useCallback(() => {
-    setBoard(Array(9).fill(null));
-    setGameStatus('playing');
-    setIsPlayerTurn(true);
-    setOutcomeHandled(false);
-    setWinningLine(null);
-    setSecondsLeft(TURN_LIMIT);
-    setShowRematchModal(false);
-    setSeriesCounted(false);
-  }, []);
+  // startNextRound removed
 
   // Turn timer logic
   useEffect(() => {
