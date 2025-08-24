@@ -25,6 +25,10 @@ export default function Home() {
   const [winningLine, setWinningLine] = useState<number[] | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const TURN_LIMIT = 15;
+  const [seriesWins, setSeriesWins] = useState<{ player: number; ai: number }>({ player: 0, ai: 0 });
+  const [seriesActive, setSeriesActive] = useState(false);
+  const [showRematchModal, setShowRematchModal] = useState(false);
+  const [seriesCounted, setSeriesCounted] = useState(false);
 
   const { address } = useAccount();
   const { sendTransactionAsync } = useSendTransaction();
@@ -166,6 +170,20 @@ export default function Home() {
     }
   }, [gameStatus]);
 
+  // Series tracking and rematch modal
+  useEffect(() => {
+    if ((gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') && !seriesCounted) {
+      setSeriesActive(true);
+      setSeriesCounted(true);
+      if (gameStatus === 'won') {
+        setSeriesWins((w) => ({ ...w, player: w.player + 1 }));
+      } else if (gameStatus === 'lost') {
+        setSeriesWins((w) => ({ ...w, ai: w.ai + 1 }));
+      }
+      setShowRematchModal(true);
+    }
+  }, [gameStatus, seriesCounted]);
+
   // Payout/charge handling on game end
   useEffect(() => {
     const handleWinPayout = async (playerAddress: string) => {
@@ -211,6 +229,10 @@ export default function Home() {
     setOutcomeHandled(false);
     setWinningLine(null);
     setSecondsLeft(null);
+    setSeriesWins({ player: 0, ai: 0 });
+    setSeriesActive(false);
+    setShowRematchModal(false);
+    setSeriesCounted(false);
 
     // Reset sound
     playReset();
@@ -224,6 +246,8 @@ export default function Home() {
     setOutcomeHandled(false);
     setWinningLine(null);
     setSecondsLeft(TURN_LIMIT);
+    setShowRematchModal(false);
+    setSeriesCounted(false);
   }, []);
 
   // Turn timer logic
@@ -255,17 +279,7 @@ export default function Home() {
     return () => clearTimeout(id);
   }, [secondsLeft, gameStatus, isPlayerTurn]);
 
-  useEffect(() => {
-    if (gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') {
-      const nextRoundTimer = setTimeout(() => {
-        // Only auto-continue if the player already chose symbol and difficulty
-        if (playerSymbol && difficulty) {
-          startNextRound();
-        }
-      }, 2000);
-      return () => clearTimeout(nextRoundTimer);
-    }
-  }, [gameStatus, playerSymbol, difficulty, startNextRound]);
+  // remove auto-advance; handled via rematch modal
 
   return (
     <main className="min-h-screen p-4 flex flex-col items-center justify-center">
