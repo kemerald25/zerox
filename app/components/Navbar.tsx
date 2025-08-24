@@ -3,6 +3,8 @@
 import { motion, useScroll, useSpring } from 'framer-motion';
 import Link from 'next/link';
 import { useAccount, useConnect } from 'wagmi';
+import React, { useEffect, useState } from 'react';
+import { sdk } from '@farcaster/miniapp-sdk';
 
 export function Navbar() {
   const { scrollYProgress } = useScroll();
@@ -13,6 +15,23 @@ export function Navbar() {
     damping: 30,
     restDelta: 0.001
   });
+
+  const [fcUser, setFcUser] = useState<{
+    fid: number;
+    username?: string;
+    displayName?: string;
+    pfpUrl?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    // If running inside Farcaster Mini App, sdk.context.user will be populated
+    try {
+      const user = (sdk as any)?.context?.user as typeof fcUser;
+      if (user && user.fid) {
+        setFcUser(user);
+      }
+    } catch {}
+  }, []);
 
   return (
     <>
@@ -32,7 +51,23 @@ export function Navbar() {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              {isConnected ? (
+              {fcUser ? (
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#66c800]/10 text-[#66c800] transition-colors"
+                >
+                  {fcUser.pfpUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={fcUser.pfpUrl} alt={fcUser.username || 'pfp'} className="w-8 h-8 rounded-full" />
+                  ) : null}
+                  <div className="leading-tight">
+                    <div className="font-semibold">{fcUser.displayName || fcUser.username || `fid:${fcUser.fid}`}</div>
+                    {fcUser.username ? (
+                      <div className="text-xs opacity-80">@{fcUser.username}</div>
+                    ) : null}
+                  </div>
+                </motion.div>
+              ) : isConnected ? (
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   className="px-4 py-2 rounded-lg bg-[#66c800]/10 text-[#66c800] transition-colors"
