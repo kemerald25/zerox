@@ -11,6 +11,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'imagedelivery.net' },
       { protocol: 'https', hostname: 'i.imgur.com' },
       { protocol: 'https', hostname: '**.warpcast.com' },
+      { protocol: 'https', hostname: 'api.dicebear.com' },
     ],
   },
 };
