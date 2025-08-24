@@ -94,7 +94,7 @@ export default function Home() {
         const alias = context?.user && typeof context.user.username === 'string' ? context.user.username : undefined;
         // Derive pfpUrl from context like in Navbar
         let pfpUrl: string | undefined;
-        const u: any = context?.user as any;
+        const u = context?.user as unknown as { pfpUrl?: unknown; pfp?: unknown; profile?: { pfp?: unknown; picture?: unknown } } | undefined;
         const maybePfp = u?.pfpUrl ?? u?.pfp ?? u?.profile?.pfp ?? u?.profile?.picture;
         if (typeof maybePfp === 'string') pfpUrl = maybePfp;
         else if (maybePfp && typeof maybePfp === 'object') {
