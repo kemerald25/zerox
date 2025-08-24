@@ -21,7 +21,8 @@
     "react": "^18",
     "react-dom": "^18",
     "viem": "^2.33.2",
-    "wagmi": "^2.16.1"
+    "wagmi": "^2.16.1",
+    "@supabase/supabase-js": "^2.45.4"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^6.1.0",
