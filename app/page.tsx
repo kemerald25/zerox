@@ -167,10 +167,11 @@ export default function Home() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ address, result: 'win' })
         });
+        try { showToast('Posted win to Sprint'); } catch {}
       } catch {}
     };
     post();
-  }, [address, gameStatus, blitzPreset]);
+  }, [address, gameStatus, blitzPreset, showToast]);
 
   // Gate gameplay if an unpaid loss settlement exists
   const [mustSettle, setMustSettle] = useState(false);
