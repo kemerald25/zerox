@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
-import { redis } from '@/lib/redis';
+import { supabase } from '@/lib/supabase';
 
 type LeaderboardEntry = {
   address: string;
@@ -29,27 +29,16 @@ function seasonEndISO(): string {
 
 export async function GET() {
   const season = seasonStartISO();
-  if (!redis) {
-    return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top: [] });
-  }
-  const keyUsers = `lb:${season}:users`;
-  const keyZ = `lb:${season}:points`;
-
-  // Top 10 by score (Upstash supports zrange with rev & withScores)
-  const z: Array<{ member: string; score: number }> = await (redis as any).zrange(keyZ, 0, 9, { rev: true, withScores: true });
-  const top: Array<LeaderboardEntry & { rank: number }> = [];
-  let rank = 1;
-  for (const row of z || []) {
-    const addr = row.member;
-    const raw = await redis.hget<string>(keyUsers, addr);
-    const stats: LeaderboardEntry = { address: addr, wins: 0, draws: 0, losses: 0, points: 0 };
-    if (raw) {
-      try { Object.assign(stats, (JSON.parse(raw) as LeaderboardEntry)); } catch {}
-    }
-    top.push({ ...stats, rank });
-    rank += 1;
-  }
-
+  if (!supabase) return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top: [] });
+  const { data, error } = await supabase
+    .from('leaderboard_entries')
+    .select('address,alias,wins,draws,losses,points')
+    .eq('season', season)
+    .order('points', { ascending: false })
+    .order('wins', { ascending: false })
+    .limit(10);
+  if (error) return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top: [] });
+  const top = (data || []).map((r, i) => ({ rank: i + 1, address: r.address, alias: r.alias ?? undefined, wins: r.wins, draws: r.draws, losses: r.losses, points: r.points }));
   return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top });
 }
 
@@ -60,28 +49,30 @@ export async function POST(req: NextRequest) {
     const result: 'win' | 'loss' | 'draw' | undefined = body?.result;
     const alias: string | undefined = body?.alias;
     if (!address || !result) return NextResponse.json({ error: 'address and result required' }, { status: 400 });
-    if (!redis) return NextResponse.json({ ok: true });
+    if (!supabase) return NextResponse.json({ ok: true });
 
     const addr = address.toLowerCase();
     const season = seasonStartISO();
-    const keyUsers = `lb:${season}:users`;
-    const keyZ = `lb:${season}:points`;
-
     const delta = { win: { w: 1, d: 0, l: 0, p: 3 }, draw: { w: 0, d: 1, l: 0, p: 1 }, loss: { w: 0, d: 0, l: 1, p: 0 } }[result];
 
-    const raw = await redis.hget<string>(keyUsers, addr);
-    const stats: LeaderboardEntry = raw ? JSON.parse(raw) as LeaderboardEntry : { address: addr, alias: undefined, wins: 0, draws: 0, losses: 0, points: 0 };
-    stats.wins += delta.w;
-    stats.draws += delta.d;
-    stats.losses += delta.l;
-    stats.points += delta.p;
-    if (alias && !stats.alias) stats.alias = alias;
+    // Upsert season row
+    const { data: rows } = await supabase
+      .from('leaderboard_entries')
+      .select('*')
+      .eq('season', season)
+      .eq('address', addr)
+      .limit(1);
+    const existing: LeaderboardEntry | null = rows && rows.length ? rows[0] as any : null;
+    const next: LeaderboardEntry = existing ?? { address: addr, alias: alias ?? undefined, wins: 0, draws: 0, losses: 0, points: 0 };
+    next.wins += delta.w; next.draws += delta.d; next.losses += delta.l; next.points += delta.p;
+    if (alias && !next.alias) next.alias = alias;
 
-    await redis.hset(keyUsers, { [addr]: JSON.stringify(stats) });
-    const score = stats.points * 1000 + stats.wins; // tie-breaker by wins
-    await redis.zadd(keyZ, { member: addr, score });
-
-    return NextResponse.json({ ok: true, season, entry: stats });
+    const upsertPayload = { season, address: addr, alias: next.alias ?? null, wins: next.wins, draws: next.draws, losses: next.losses, points: next.points };
+    const { error } = await supabase
+      .from('leaderboard_entries')
+      .upsert(upsertPayload, { onConflict: 'season,address' });
+    if (error) return NextResponse.json({ ok: false });
+    return NextResponse.json({ ok: true, season, entry: next });
   } catch {
     return NextResponse.json({ error: 'update failed' }, { status: 500 });
   }
