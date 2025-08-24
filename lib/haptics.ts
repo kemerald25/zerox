@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { sdk } from '@farcaster/miniapp-sdk';
 
 function hasHaptics(): boolean {
