@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const address: string | undefined = body?.address;
     const result: 'win' | 'loss' | 'draw' | undefined = body?.result;
+    const xpBonus: number = Number(body?.xpBonus || 0);
     if (!address || !result) return NextResponse.json({ error: 'address and result required' }, { status: 400 });
 
     const p = await readProgress(address);
@@ -65,6 +66,7 @@ export async function POST(req: NextRequest) {
 
     // XP awards
     if (result === 'win') p.xp += 10; else if (result === 'draw') p.xp += 3; else p.xp += 1;
+    if (Number.isFinite(xpBonus) && xpBonus > 0) p.xp += xpBonus;
     p.level = calcLevel(p.xp);
 
     // Win streak and achievements
