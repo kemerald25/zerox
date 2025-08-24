@@ -594,7 +594,7 @@ export default function Home() {
       />
       {playerSymbol && difficulty && (
         <>
-          <div className="mb-2 flex items-center justify-center gap-2" style={{ color: '#66c800' }}>
+          <div className="mb-2 flex items-center justify-center gap-2 flex-wrap" style={{ color: '#66c800' }}>
             <label className="text-sm">Size</label>
             <select
               className="border border-[#66c800] rounded px-2 py-1 text-sm bg-white/80"
@@ -615,6 +615,20 @@ export default function Home() {
               <input type="checkbox" checked={misere} onChange={(e) => { setMisere(e.target.checked); setGameStatus('playing'); setWinningLine(null); setBoard((b) => b.map(() => null)); }} />
               Misère
             </label>
+            <label className="ml-3 text-sm">Blitz</label>
+            <select
+              className="border border-[#66c800] rounded px-2 py-1 text-sm bg-white/80"
+              value={blitzPreset}
+              onChange={(e) => {
+                const v = e.target.value as 'off' | '7s' | '5s';
+                setBlitzPreset(v);
+                setSecondsLeft(null);
+              }}
+            >
+              <option value="off">Off</option>
+              <option value="7s">7s</option>
+              <option value="5s">5s</option>
+            </select>
           </div>
           <GameStatus status={gameStatus} isPlayerTurn={isPlayerTurn} secondsLeft={secondsLeft ?? null} />
           <GameBoard
