@@ -4,6 +4,8 @@ import { useScoreboard } from '@/lib/useScoreboard';
 import React, { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { sdk } from '@farcaster/miniapp-sdk';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import GameBoard from './components/game/GameBoard';
 import GameControls from './components/game/GameControls';
 import GameStatus from './components/game/GameStatus';
@@ -35,7 +37,12 @@ export default function Home() {
   const [streak, setStreak] = useState(0);
   const [achievements, setAchievements] = useState<string[]>([]);
   const [dailySeed, setDailySeed] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'play' | 'daily' | 'leaderboard'>('play');
+  const pathname = usePathname();
+  const currentTab: 'play' | 'daily' | 'leaderboard' = pathname?.startsWith('/daily')
+    ? 'daily'
+    : pathname?.startsWith('/leaderboard')
+      ? 'leaderboard'
+      : 'play';
   const [sessionId, setSessionId] = useState<string | null>(null);
 
   const { address } = useAccount();
@@ -485,7 +492,7 @@ export default function Home() {
           Tic Tac Toe
         </h1>
         
-      {activeTab === 'play' && (
+      {currentTab === 'play' && (
         <>
         {mustSettle && (
           <div className="mb-3 w-full max-w-md p-3 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm">
@@ -512,11 +519,11 @@ export default function Home() {
           </div>
         )}
         <GameControls
-          onSymbolSelect={setPlayerSymbol}
-          onDifficultySelect={setDifficulty}
-          selectedSymbol={playerSymbol}
-          selectedDifficulty={difficulty}
-        />
+        onSymbolSelect={setPlayerSymbol}
+        onDifficultySelect={setDifficulty}
+        selectedSymbol={playerSymbol}
+        selectedDifficulty={difficulty}
+      />
       {playerSymbol && difficulty && (
         <>
           <div className="mb-2 flex items-center justify-center gap-2" style={{ color: '#66c800' }}>
@@ -626,7 +633,7 @@ export default function Home() {
         </>
       )}
 
-      {activeTab === 'daily' && (
+      {currentTab === 'daily' && (
         <div className="w-full max-w-md text-center">
           <div className="p-4 rounded-lg shadow" style={{ backgroundColor: '#b6f569', color: '#066c00' }}>
             <div className="text-xl font-bold mb-2">Daily Challenge</div>
@@ -655,7 +662,7 @@ export default function Home() {
         </div>
       )}
 
-      {activeTab === 'leaderboard' && (
+      {currentTab === 'leaderboard' && (
         <>
           <LeaderboardTab />
           <SprintSection />
@@ -665,33 +672,24 @@ export default function Home() {
       <div className="fixed left-0 right-0 bottom-0 z-40">
         <div className="mx-auto max-w-2xl">
           <div className="flex items-stretch justify-around bg-white/90 dark:bg-black/80 border-t border-[#b6f569]/30" style={{ paddingBottom: bottomInset }}>
-            <button
-              className={`flex-1 py-2 text-xs sm:text-sm font-semibold ${activeTab === 'daily' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}
-              onClick={() => setActiveTab('daily')}
-            >
+            <Link href="/daily" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold ${currentTab === 'daily' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}>
               <div className="flex flex-col items-center gap-0.5">
                 <span aria-hidden>🗓️</span>
                 <span>Daily</span>
               </div>
-            </button>
-            <button
-              className={`flex-1 py-2 text-xs sm:text-sm font-semibold ${activeTab === 'play' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}
-              onClick={() => setActiveTab('play')}
-            >
+            </Link>
+            <Link href="/play" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold ${currentTab === 'play' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}>
               <div className="flex flex-col items-center gap-0.5">
                 <span aria-hidden>🎮</span>
                 <span>Play</span>
               </div>
-            </button>
-            <button
-              className={`flex-1 py-2 text-xs sm:text-sm font-semibold ${activeTab === 'leaderboard' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}
-              onClick={() => setActiveTab('leaderboard')}
-            >
+            </Link>
+            <Link href="/leaderboard" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold ${currentTab === 'leaderboard' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}>
               <div className="flex flex-col items-center gap-0.5">
                 <span aria-hidden>🏆</span>
                 <span>Leaderboard</span>
               </div>
-            </button>
+            </Link>
           </div>
         </div>
       </div>
