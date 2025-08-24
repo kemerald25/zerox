@@ -181,7 +181,7 @@ export default function Home() {
       } catch { setMustSettle(false); }
     };
     check();
-  }, [address, gameStatus]);
+  }, [address, gameStatus, blitzPreset]);
 
   // Read challenge params from URL to prefill
   useEffect(() => {
