@@ -728,3 +728,61 @@ function LeaderboardTab() {
     </div>
   );
 }
+
+function SprintSection() {
+  const [rows, setRows] = React.useState<Array<{ rank: number; address: string; wins: number }>>([]);
+  const [endsIn, setEndsIn] = React.useState<string>('');
+
+  useEffect(() => {
+    let timer: any;
+    const load = async () => {
+      try {
+        const res = await fetch('/api/sprint');
+        const data = await res.json();
+        if (Array.isArray(data?.top)) setRows(data.top);
+        const endIso = data?.window?.end;
+        if (endIso) {
+          const end = new Date(endIso).getTime();
+          const tick = () => {
+            const diff = Math.max(0, end - Date.now());
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            setEndsIn(`${m}m ${s}s`);
+          };
+          tick();
+          clearInterval(timer);
+          timer = setInterval(tick, 1000);
+        }
+      } catch {}
+    };
+    load();
+    const poll = setInterval(load, 5000);
+    return () => { clearInterval(poll); clearInterval(timer); };
+  }, []);
+
+  return (
+    <div className="w-full max-w-md mx-auto mt-4" style={{ color: '#66c800' }}>
+      <div className="p-4 rounded-lg border border-[#66c800]/30 bg-white/60 dark:bg-black/40">
+        <div className="flex items-center justify-between mb-2">
+          <div className="font-bold">Sprint (10 min)</div>
+          <div className="text-xs opacity-80">Ends in {endsIn}</div>
+        </div>
+        {rows.length === 0 ? (
+          <div className="text-sm opacity-80">No wins yet in this window.</div>
+        ) : (
+          <div className="space-y-2">
+            {rows.map((r) => (
+              <div key={r.rank} className={`flex items-center justify-between p-2 rounded bg-[#b6f569]/20`}>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 text-center font-bold">{r.rank}</div>
+                  <div className="font-semibold">{`${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
+                </div>
+                <div className="text-xs">{r.wins} wins</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
