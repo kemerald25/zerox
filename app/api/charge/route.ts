@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, createWalletClient, http, parseEther, isAddress } from 'viem';
-import { base, baseSepolia, mainnet } from 'viem/chains';
+import { base, baseSepolia } from 'viem/chains';
 
 const CHAIN_ENV = process.env.NEXT_PUBLIC_CHAIN || 'base-sepolia';
-const CHAIN = CHAIN_ENV === 'base' ? base : CHAIN_ENV === 'mainnet' ? mainnet : baseSepolia;
+const CHAIN = CHAIN_ENV === 'base' ? base : baseSepolia;
 
 const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL;
 const TREASURY_ADDRESS = process.env.TREASURY_ADDRESS as `0x${string}` | undefined;
