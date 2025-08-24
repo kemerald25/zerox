@@ -38,6 +38,20 @@ create table if not exists public.loss_settlements (
   updated_at timestamptz not null default now()
 );
 
+-- 4) Per-game sessions tracking
+create table if not exists public.game_sessions (
+  id uuid not null default gen_random_uuid(),
+  address text not null,
+  result text, -- 'win' | 'loss' | 'draw'
+  requires_settlement boolean not null default false,
+  settled boolean not null default false,
+  tx_hash text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint game_sessions_pkey primary key (id)
+);
+create index if not exists game_sessions_address_idx on public.game_sessions (address, created_at desc);
+
 -- Triggers to maintain updated_at columns
 create or replace function public.touch_updated_at()
 returns trigger language plpgsql as $$
@@ -76,12 +90,23 @@ do $$ begin
   end if;
 end $$;
 
+do $$ begin
+  if not exists (
+    select 1 from pg_trigger where tgname = 'trg_game_sessions_touch'
+  ) then
+    create trigger trg_game_sessions_touch
+      before update on public.game_sessions
+      for each row execute function public.touch_updated_at();
+  end if;
+end $$;
+
 -- RLS: Enable and allow anon read + upsert for MVP
 -- Note: For stricter security, switch server code to use the service role key
 --       and limit anon to SELECT only.
 alter table public.leaderboard_entries enable row level security;
 alter table public.sprint_entries enable row level security;
 alter table public.loss_settlements enable row level security;
+alter table public.game_sessions enable row level security;
 
 -- Policies (anon role)
 do $$ begin
@@ -111,6 +136,18 @@ do $$ begin
   if not exists (select 1 from pg_policies where policyname = 'settlement_upsert_anon') then
     create policy settlement_upsert_anon on public.loss_settlements for insert with check (true);
     create policy settlement_update_anon on public.loss_settlements for update using (true) with check (true);
+  end if;
+end $$;
+
+do $$ begin
+  if not exists (select 1 from pg_policies where policyname = 'games_select_by_address') then
+    create policy games_select_by_address on public.game_sessions for select using (true);
+  end if;
+  if not exists (select 1 from pg_policies where policyname = 'games_insert') then
+    create policy games_insert on public.game_sessions for insert with check (true);
+  end if;
+  if not exists (select 1 from pg_policies where policyname = 'games_update') then
+    create policy games_update on public.game_sessions for update using (true) with check (true);
   end if;
 end $$;
 
