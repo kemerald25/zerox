@@ -435,15 +435,16 @@ export default function Home() {
           Tic Tac Toe
         </h1>
         
-        <GameControls
-        onSymbolSelect={setPlayerSymbol}
-        onDifficultySelect={setDifficulty}
-        selectedSymbol={playerSymbol}
-        selectedDifficulty={difficulty}
-      />
-
-      {activeTab === 'play' && playerSymbol && difficulty && (
+      {activeTab === 'play' && (
         <>
+          <GameControls
+            onSymbolSelect={setPlayerSymbol}
+            onDifficultySelect={setDifficulty}
+            selectedSymbol={playerSymbol}
+            selectedDifficulty={difficulty}
+          />
+          {playerSymbol && difficulty && (
+            <>
           <GameStatus status={gameStatus} isPlayerTurn={isPlayerTurn} secondsLeft={secondsLeft ?? null} />
           <GameBoard
             board={board}
@@ -571,6 +572,8 @@ export default function Home() {
               </div>
             )}
           </div>
+            </>
+          )}
         </>
       )}
 
