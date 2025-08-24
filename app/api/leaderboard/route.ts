@@ -44,7 +44,7 @@ export async function GET() {
     const raw = await redis.hget<string>(keyUsers, addr);
     const stats: LeaderboardEntry = { address: addr, wins: 0, draws: 0, losses: 0, points: 0 };
     if (raw) {
-      try { stats = { ...stats, ...(JSON.parse(raw) as LeaderboardEntry) }; } catch {}
+      try { Object.assign(stats, (JSON.parse(raw) as LeaderboardEntry)); } catch {}
     }
     top.push({ ...stats, rank });
     rank += 1;
