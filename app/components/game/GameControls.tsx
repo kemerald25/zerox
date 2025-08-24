@@ -114,28 +114,7 @@ const GameControls: React.FC<GameControlsProps> = ({
           </motion.div>
         )}
 
-        {selectedSymbol && selectedDifficulty && (
-          <motion.button
-            onClick={onReset}
-            whileHover={{ 
-              scale: 1.05,
-              boxShadow: `0 0 15px ${LIME_GREEN}60`
-            }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="px-8 py-3 rounded-lg font-bold mx-auto block text-lg"
-            style={{
-              backgroundColor: LIME_GREEN,
-              color: GREEN,
-              border: `2px solid ${GREEN}`,
-              boxShadow: `0 0 10px ${LIME_GREEN}40`
-            }}
-          >
-            New Game
-          </motion.button>
-        )}
+        {/* New Game button removed per UX update; rematch handled via modal */}
       </motion.div>
     </div>
   );
