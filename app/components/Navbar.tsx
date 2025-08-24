@@ -5,7 +5,7 @@ import { motion, useScroll, useSpring } from 'framer-motion';
 import Link from 'next/link';
 import { useAccount, useConnect } from 'wagmi';
 import React, { useEffect, useState } from 'react';
-import { sdk } from '@farcaster/miniapp-sdk';
+import { useMiniKit, useIsInMiniApp } from '@coinbase/onchainkit/minikit';
 
 export function Navbar() {
   const { scrollYProgress } = useScroll();
@@ -24,80 +24,44 @@ export function Navbar() {
     pfpUrl?: string;
   } | null>(null);
 
+  const { context, isFrameReady, setFrameReady } = useMiniKit();
+  const { isInMiniApp } = useIsInMiniApp();
+
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        if ((sdk as any)?.actions?.ready) {
-          await (sdk as any).actions.ready();
+    if (!isFrameReady) {
+      setFrameReady();
+    }
+  }, [isFrameReady, setFrameReady]);
+
+  useEffect(() => {
+    if (!isInMiniApp || !context?.user) return;
+
+    const user: any = context.user as any;
+    const pickUrl = (val: unknown): string | undefined => {
+      if (typeof val === 'string') return val;
+      if (val && typeof val === 'object') {
+        const obj = val as Record<string, unknown>;
+        const keys = ['url', 'src', 'srcUrl', 'original', 'default', 'small', 'medium', 'large'];
+        for (const k of keys) {
+          const v = obj[k];
+          if (typeof v === 'string') return v;
         }
-
-        const isMini = Boolean((sdk as any)?.isMiniApp || (sdk as any)?.getCapabilities);
-        if (!isMini) return;
-
-        const pickUrl = (val: unknown): string | undefined => {
-          if (typeof val === 'string') return val;
-          if (val && typeof val === 'object') {
-            const obj = val as Record<string, unknown>;
-            const keys = ['url', 'src', 'srcUrl', 'original', 'default', 'small', 'medium', 'large'];
-            for (const k of keys) {
-              const v = obj[k];
-              if (typeof v === 'string') return v;
-            }
-          }
-          return undefined;
-        };
-
-        let attempts = 0;
-        const maxAttempts = 20; // retry ~4s total
-
-        const tryFetch = async (): Promise<void> => {
-          if (cancelled) return;
-          try {
-            let context: any = null;
-            if (typeof (sdk as any)?.getContext === 'function') {
-              context = await (sdk as any).getContext();
-            } else if ((sdk as any)?.context) {
-              context = (sdk as any).context;
-            }
-
-            let plainContext = context;
-            try {
-              plainContext = typeof structuredClone === 'function'
-                ? structuredClone(context)
-                : JSON.parse(JSON.stringify(context));
-            } catch {}
-
-            const user = plainContext?.user;
-            if (user?.fid) {
-              const maybePfp = (user as any)?.pfpUrl ?? (user as any)?.pfp ?? (user as any)?.profile?.pfp ?? (user as any)?.profile?.picture;
-              const pfpUrl = pickUrl(maybePfp);
-              const username = (user as any)?.username ?? (user as any)?.profile?.username;
-              if (!cancelled) {
-                setFcUser({
-                  fid: user.fid,
-                  username,
-                  displayName: (user as any)?.displayName ?? (user as any)?.profile?.displayName ?? (user as any)?.profile?.name,
-                  pfpUrl,
-                });
-              }
-              return;
-            }
-          } catch {}
-
-          attempts += 1;
-          if (attempts < maxAttempts) {
-            setTimeout(tryFetch, 200);
-          }
-        };
-
-        tryFetch();
-      } catch {}
-    })();
-    return () => {
-      cancelled = true;
+      }
+      return undefined;
     };
-  }, []);
+
+    const maybePfp = user.pfpUrl ?? user.pfp ?? user.profile?.pfp ?? user.profile?.picture;
+    const pfpUrl = pickUrl(maybePfp);
+    const username = user.username ?? user.profile?.username;
+    const displayName = user.displayName ?? user.profile?.displayName ?? user.profile?.name;
+
+    setFcUser({
+      fid: user.fid,
+      username,
+      displayName,
+      pfpUrl,
+    });
+  }, [isInMiniApp, context]);
 
   return (
     <>
