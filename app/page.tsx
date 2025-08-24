@@ -92,10 +92,21 @@ export default function Home() {
       if (!(gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw')) return;
       try {
         const alias = context?.user && typeof context.user.username === 'string' ? context.user.username : undefined;
+        // Derive pfpUrl from context like in Navbar
+        let pfpUrl: string | undefined;
+        const u: any = context?.user as any;
+        const maybePfp = u?.pfpUrl ?? u?.pfp ?? u?.profile?.pfp ?? u?.profile?.picture;
+        if (typeof maybePfp === 'string') pfpUrl = maybePfp;
+        else if (maybePfp && typeof maybePfp === 'object') {
+          const cand = (['url','src','original','default','small','medium','large'] as const)
+            .map((k) => (maybePfp as Record<string, unknown>)[k])
+            .find((v) => typeof v === 'string');
+          if (typeof cand === 'string') pfpUrl = cand;
+        }
         await fetch('/api/leaderboard', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address, result: gameStatus === 'won' ? 'win' : gameStatus === 'lost' ? 'loss' : 'draw', alias })
+          body: JSON.stringify({ address, result: gameStatus === 'won' ? 'win' : gameStatus === 'lost' ? 'loss' : 'draw', alias, pfpUrl })
         });
       } catch {}
     };
