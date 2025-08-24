@@ -719,12 +719,12 @@ export default function Home() {
                     const res = await fetch('/api/charge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address }) });
                     const data = await res.json();
                     if (data?.to && data?.value) {
-                      const { hash } = await sendTransactionAsync({ to: data.to as `0x${string}`, value: BigInt(data.value) });
+                      const txHash = await sendTransactionAsync({ to: data.to as `0x${string}`, value: BigInt(data.value) });
                       try { showToast('Loss settlement sent'); } catch {}
                       try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address, required: false }) }); } catch {}
                       setMustSettle(false);
                       // Optionally record tx on latest session
-                      if (sessionId) { try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, settled: true, tx_hash: hash }) }); } catch {} }
+                      if (sessionId) { try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, settled: true, tx_hash: txHash as string }) }); } catch {} }
                     } else {
                       try { showToast('Settlement quote unavailable'); } catch {}
                     }
