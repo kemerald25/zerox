@@ -360,39 +360,46 @@ export default function Home() {
             </div>
           )}
           {/* Attribution for cast embed entry */}
-          {isInMiniApp && context?.location?.type === 'cast_embed' && context.location.cast?.author && (
-            <div className="mt-4 p-3 rounded-lg bg-[#b6f569]/30 text-[#66c800] text-sm flex items-center gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {context.location.cast.author.pfpUrl ? (
-                <img src={context.location.cast.author.pfpUrl as any} alt={context.location.cast.author.username || 'pfp'} className="w-6 h-6 rounded-full" />
-              ) : null}
-              <span>Shared by @{context.location.cast.author.username || context.location.cast.author.fid}</span>
-              <div className="ml-auto flex gap-2">
-                <button
-                  className="px-3 py-1 rounded bg-[#66c800] text-white"
-                  onClick={async () => {
-                    try {
-                      const cast = context.location.cast as any;
-                      await composeCast({
-                        text: `Thanks @${cast.author?.username || cast.author?.fid} for sharing! 🙏`,
-                        parent: { type: 'cast', hash: cast.hash },
-                      } as any);
-                    } catch {}
-                  }}
-                >
-                  Thank them
-                </button>
-                <button
-                  className="px-3 py-1 rounded bg-[#66c800]/10 text-[#66c800] border border-[#66c800]"
-                  onClick={() => {
-                    try { viewProfile(context.location.cast.author.fid); } catch {}
-                  }}
-                >
-                  View profile
-                </button>
+          {(() => {
+            const loc = context?.location as unknown;
+            const isCastEmbed = !!(loc && typeof (loc as any).type === 'string' && (loc as any).type === 'cast_embed' && (loc as any).cast);
+            if (!isInMiniApp || !isCastEmbed) return null;
+            const cast = (loc as any).cast as { author: { fid: number; username?: string; pfpUrl?: unknown }; hash: string };
+            const author = cast.author;
+            const pfp = typeof author.pfpUrl === 'string' ? author.pfpUrl : undefined;
+            return (
+              <div className="mt-4 p-3 rounded-lg bg-[#b6f569]/30 text-[#66c800] text-sm flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {pfp ? (
+                  <img src={pfp} alt={author.username || 'pfp'} className="w-6 h-6 rounded-full" />
+                ) : null}
+                <span>Shared by @{author.username || author.fid}</span>
+                <div className="ml-auto flex gap-2">
+                  <button
+                    className="px-3 py-1 rounded bg-[#66c800] text-white"
+                    onClick={async () => {
+                      try {
+                        await composeCast({
+                          text: `Thanks @${author.username || author.fid} for sharing! 🙏`,
+                          parent: { type: 'cast', hash: cast.hash },
+                        });
+                      } catch {}
+                    }}
+                  >
+                    Thank them
+                  </button>
+                  <button
+                    className="px-3 py-1 rounded bg-[#66c800]/10 text-[#66c800] border border-[#66c800]"
+                    onClick={() => {
+                      try { viewProfile(author.fid); } catch {}
+                    }}
+                  >
+                    View profile
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
           {seriesActive && (
             <div className="mt-4 text-center" style={{ color: '#66c800' }}>
               Series: You {seriesWins.player} - {seriesWins.ai} AI
