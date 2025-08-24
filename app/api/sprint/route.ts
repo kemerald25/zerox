@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { redis } from '@/lib/redis';
+import { supabase } from '@/lib/supabase';
 
 const WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -15,14 +15,15 @@ function isoFromMs(ms: number): string {
 export async function GET() {
   const winStart = currentWindowStart();
   const winEnd = winStart + WINDOW_MS;
-  if (!redis) {
-    return NextResponse.json({ window: { start: isoFromMs(winStart), end: isoFromMs(winEnd) }, top: [] });
-  }
-
-  const keyZ = `sprint:${winStart}:wins`;
-  // Upstash supports zrange with rev & withScores; cast to known shape
-  const z: Array<{ member: string; score: number }> = await (redis as unknown as { zrange: (key: string, start: number, end: number, opts: { rev: boolean; withScores: boolean }) => Promise<Array<{ member: string; score: number }>> }).zrange(keyZ, 0, 9, { rev: true, withScores: true });
-  const top = (z || []).map((row, idx) => ({ rank: idx + 1, address: row.member, wins: Math.floor(row.score) }));
+  if (!supabase) return NextResponse.json({ window: { start: isoFromMs(winStart), end: isoFromMs(winEnd) }, top: [] });
+  const { data, error } = await supabase
+    .from('sprint_entries')
+    .select('address,wins')
+    .eq('window_start', winStart)
+    .order('wins', { ascending: false })
+    .limit(10);
+  if (error) return NextResponse.json({ window: { start: isoFromMs(winStart), end: isoFromMs(winEnd) }, top: [] });
+  const top = (data || []).map((r, idx) => ({ rank: idx + 1, address: r.address, wins: r.wins }));
 
   return NextResponse.json({ window: { start: isoFromMs(winStart), end: isoFromMs(winEnd) }, top });
 }
@@ -33,16 +34,20 @@ export async function POST(req: NextRequest) {
     const address: string | undefined = body?.address;
     const result: 'win' | 'loss' | 'draw' | undefined = body?.result;
     if (!address || result !== 'win') return NextResponse.json({ ok: true });
-    if (!redis) return NextResponse.json({ ok: true });
+    if (!supabase) return NextResponse.json({ ok: true });
 
     const winStart = currentWindowStart();
-    const keyZ = `sprint:${winStart}:wins`;
-    // increment by 1 win
-    await redis.zincrby(keyZ, 1, address.toLowerCase());
-    // expire the key slightly after window end (e.g., +2h)
-    if ((redis as unknown as { expire: (key: string, seconds: number) => Promise<void> }).expire) {
-      await (redis as unknown as { expire: (key: string, seconds: number) => Promise<void> }).expire(keyZ, 60 * 60 * 2);
-    }
+    const addr = address.toLowerCase();
+    const { data: rows } = await supabase
+      .from('sprint_entries')
+      .select('wins')
+      .eq('window_start', winStart)
+      .eq('address', addr)
+      .limit(1);
+    const wins = rows && rows.length ? (rows[0] as any).wins + 1 : 1;
+    await supabase
+      .from('sprint_entries')
+      .upsert({ window_start: winStart, address: addr, wins }, { onConflict: 'window_start,address' });
 
     return NextResponse.json({ ok: true, windowStart: isoFromMs(winStart) });
   } catch {
