@@ -28,59 +28,71 @@ export function Navbar() {
     let cancelled = false;
     (async () => {
       try {
-        // Ensure SDK is ready
         if ((sdk as any)?.actions?.ready) {
           await (sdk as any).actions.ready();
         }
 
-        // Detect mini app environment before accessing context
         const isMini = Boolean((sdk as any)?.isMiniApp || (sdk as any)?.getCapabilities);
-
         if (!isMini) return;
 
-        // Prefer getContext if available to avoid proxy traps
-        let context: any = null;
-        if (typeof (sdk as any)?.getContext === 'function') {
-          context = await (sdk as any).getContext();
-        } else if ((sdk as any)?.context) {
-          context = (sdk as any).context;
-        }
-
-        // Materialize to a plain object to avoid proxy path traps
-        let plainContext = context;
-        try {
-          plainContext = typeof structuredClone === 'function'
-            ? structuredClone(context)
-            : JSON.parse(JSON.stringify(context));
-        } catch {}
-
-        const user = plainContext?.user;
-        if (!cancelled && user?.fid) {
-          const maybePfp = (user as any)?.pfpUrl ?? (user as any)?.pfp ?? (user as any)?.profile?.pfp ?? (user as any)?.profile?.picture;
-          const pickUrl = (val: unknown): string | undefined => {
-            if (typeof val === 'string') return val;
-            if (val && typeof val === 'object') {
-              const obj = val as Record<string, unknown>;
-              const keys = ['url', 'src', 'srcUrl', 'original', 'default', 'small', 'medium', 'large'];
-              for (const k of keys) {
-                const v = obj[k];
-                if (typeof v === 'string') return v;
-              }
+        const pickUrl = (val: unknown): string | undefined => {
+          if (typeof val === 'string') return val;
+          if (val && typeof val === 'object') {
+            const obj = val as Record<string, unknown>;
+            const keys = ['url', 'src', 'srcUrl', 'original', 'default', 'small', 'medium', 'large'];
+            for (const k of keys) {
+              const v = obj[k];
+              if (typeof v === 'string') return v;
             }
-            return undefined;
-          };
-          const pfpUrl = pickUrl(maybePfp);
-          const username = (user as any)?.username ?? (user as any)?.profile?.username;
-          setFcUser({
-            fid: user.fid,
-            username,
-            displayName: user.displayName,
-            pfpUrl,
-          });
-        }
-      } catch {
-        // Ignore if not in mini app or context unavailable
-      }
+          }
+          return undefined;
+        };
+
+        let attempts = 0;
+        const maxAttempts = 20; // retry ~4s total
+
+        const tryFetch = async (): Promise<void> => {
+          if (cancelled) return;
+          try {
+            let context: any = null;
+            if (typeof (sdk as any)?.getContext === 'function') {
+              context = await (sdk as any).getContext();
+            } else if ((sdk as any)?.context) {
+              context = (sdk as any).context;
+            }
+
+            let plainContext = context;
+            try {
+              plainContext = typeof structuredClone === 'function'
+                ? structuredClone(context)
+                : JSON.parse(JSON.stringify(context));
+            } catch {}
+
+            const user = plainContext?.user;
+            if (user?.fid) {
+              const maybePfp = (user as any)?.pfpUrl ?? (user as any)?.pfp ?? (user as any)?.profile?.pfp ?? (user as any)?.profile?.picture;
+              const pfpUrl = pickUrl(maybePfp);
+              const username = (user as any)?.username ?? (user as any)?.profile?.username;
+              if (!cancelled) {
+                setFcUser({
+                  fid: user.fid,
+                  username,
+                  displayName: (user as any)?.displayName ?? (user as any)?.profile?.displayName ?? (user as any)?.profile?.name,
+                  pfpUrl,
+                });
+              }
+              return;
+            }
+          } catch {}
+
+          attempts += 1;
+          if (attempts < maxAttempts) {
+            setTimeout(tryFetch, 200);
+          }
+        };
+
+        tryFetch();
+      } catch {}
     })();
     return () => {
       cancelled = true;
