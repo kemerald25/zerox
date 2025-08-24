@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 interface GameControlsProps {
   onSymbolSelect: (symbol: 'X' | 'O') => void;
   onDifficultySelect: (difficulty: 'easy' | 'hard') => void;
-  onReset: () => void;
   selectedSymbol: 'X' | 'O' | null;
   selectedDifficulty: 'easy' | 'hard' | null;
 }
@@ -14,12 +13,11 @@ interface GameControlsProps {
 const GameControls: React.FC<GameControlsProps> = ({
   onSymbolSelect,
   onDifficultySelect,
-  onReset,
   selectedSymbol,
   selectedDifficulty,
 }) => {
   const GREEN = '#66c800';
-  const LIME_GREEN = '#b6f569';
+  // const LIME_GREEN = '#b6f569';
 
   return (
     <div className="w-full max-w-md mx-auto space-y-4 p-4">
