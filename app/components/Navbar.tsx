@@ -57,11 +57,19 @@ export function Navbar() {
         const user = plainContext?.user;
         if (!cancelled && user?.fid) {
           const maybePfp = user.pfpUrl as unknown;
-          const pfpUrl = typeof maybePfp === 'string'
-            ? maybePfp
-            : (maybePfp && typeof (maybePfp as any).url === 'string')
-              ? (maybePfp as any).url
-              : undefined;
+          const pickUrl = (val: unknown): string | undefined => {
+            if (typeof val === 'string') return val;
+            if (val && typeof val === 'object') {
+              const obj = val as Record<string, unknown>;
+              const keys = ['url', 'src', 'srcUrl', 'original', 'default', 'small', 'medium', 'large'];
+              for (const k of keys) {
+                const v = obj[k];
+                if (typeof v === 'string') return v;
+              }
+            }
+            return undefined;
+          };
+          const pfpUrl = pickUrl(maybePfp);
           setFcUser({
             fid: user.fid,
             username: user.username,
