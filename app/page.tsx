@@ -276,6 +276,24 @@ export default function Home() {
             setStreak(Number(data.streak));
             setAchievements(Array.isArray(data.achievements) ? data.achievements : []);
           }
+          // If daily eligible and this was a win on hard with today's seed, try bonus claim
+          if (gameStatus === 'won') {
+            const url = new URL(window.location.href);
+            const seed = url.searchParams.get('seed') ?? undefined;
+            const symbolParam = url.searchParams.get('symbol');
+            const diffParam = url.searchParams.get('difficulty');
+            const symbol = symbolParam === 'X' || symbolParam === 'O' ? symbolParam : undefined;
+            const difficultySel = diffParam === 'easy' || diffParam === 'hard' ? diffParam : undefined;
+            if (seed && symbol === 'X' && difficultySel === 'hard') {
+              try {
+                await fetch('/api/daily', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ address, completed: true, seed, symbol, difficulty: difficultySel, result: 'win' })
+                });
+              } catch {}
+            }
+          }
         } catch {}
       } else if (address) {
         try {
