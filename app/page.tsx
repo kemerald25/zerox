@@ -1096,6 +1096,7 @@ function BracketsSection() {
   const { address } = useAccount();
   const [creating, setCreating] = React.useState(false);
   const [joining, setJoining] = React.useState<string | null>(null);
+  const [joined, setJoined] = React.useState<string | null>(null);
   const { composeCast } = useComposeCast();
   const [selected, setSelected] = React.useState<string | null>(null);
   const [detail, setDetail] = React.useState<null | { bracket: { id: string; name: string; status: string }; players: Array<{ seed: number; address: string; alias?: string | null; pfp_url?: string | null }>; matches: Array<{ id: string; round: number; p1_seed: number; p2_seed: number; p1_wins: number; p2_wins: number; status: string; winner_seed?: number | null }> }>(null);
@@ -1137,7 +1138,11 @@ function BracketsSection() {
     if (!address) return;
     setJoining(id);
     try {
-      await fetch('/api/bracket', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'join', bracket_id: id, address }) });
+      const res = await fetch('/api/bracket', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'join', bracket_id: id, address }) });
+      if (res.ok) {
+        setJoined(id);
+        await loadDetail(id);
+      }
     } catch {}
     setJoining(null);
   };
@@ -1198,8 +1203,8 @@ function BracketsSection() {
                 <div className="flex gap-2">
                   <button className="px-3 py-1 rounded bg-white text-[#66c800] border border-[#66c800]" onClick={() => copyInviteLink(b)}>Copy link</button>
                   <button className="px-3 py-1 rounded bg-white text-[#66c800] border border-[#66c800]" onClick={() => inviteToBracket(b)}>Invite</button>
-                  <button className="px-3 py-1 rounded bg-[#66c800] text-white disabled:opacity-50" disabled={!address || joining === b.id || b.status === 'completed'} onClick={() => joinBracket(b.id)}>
-                    {joining === b.id ? 'Joining…' : 'Join'}
+                  <button className="px-3 py-1 rounded bg-[#66c800] text-white disabled:opacity-50" disabled={!address || joining === b.id || b.status === 'completed' || joined === b.id} onClick={() => joinBracket(b.id)}>
+                    {joining === b.id ? 'Joining…' : joined === b.id ? 'Joined' : 'Join'}
                   </button>
                 </div>
               </div>
