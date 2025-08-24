@@ -151,6 +151,13 @@ export async function resumeAudio(): Promise<void> {
   ensureMaster();
 }
 
+// Gentle warning beep (for timers)
+export function playWarning(): void {
+  playSequence([
+    { freq: 880, dur: 80, type: 'sine', gain: 0.06 },
+  ]);
+}
+
 // Volume/mute controls
 export function setVolume(newVolume: number): void {
   const nodes = ensureMaster();
