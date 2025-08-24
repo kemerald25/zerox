@@ -653,7 +653,7 @@ export default function Home() {
         <h1 className="text-4xl font-bold mb-8" style={{ color: '#66c800' }}>
           Tic Tac Toe
         </h1>
-
+        
         {showAddPrompt && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl w-80 text-center">
