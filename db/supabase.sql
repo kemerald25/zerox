@@ -117,6 +117,10 @@ alter table public.sprint_entries enable row level security;
 alter table public.loss_settlements enable row level security;
 alter table public.game_sessions enable row level security;
 
+-- New tables RLS enablement
+-- payout_logs and brackets tables
+-- (created below after triggers section)
+
 -- Policies (anon role)
 do $$ begin
   if not exists (select 1 from pg_policies where policyname = 'lb_select_all') then
