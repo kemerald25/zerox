@@ -7,9 +7,10 @@ import { motion } from 'framer-motion';
 interface GameStatusProps {
   status: 'playing' | 'won' | 'lost' | 'draw';
   isPlayerTurn: boolean;
+  secondsLeft?: number | null;
 }
 
-const GameStatus: React.FC<GameStatusProps> = ({ status, isPlayerTurn }) => {
+const GameStatus: React.FC<GameStatusProps> = ({ status, isPlayerTurn, secondsLeft }) => {
   const GREEN = '#66c800';
   const LIME_GREEN = '#b6f569';
 
@@ -87,6 +88,9 @@ const GameStatus: React.FC<GameStatusProps> = ({ status, isPlayerTurn }) => {
         }}
       >
         {getMessage()}
+        {status === 'playing' && typeof secondsLeft === 'number' && (
+          <span className="ml-2 text-base opacity-80">{secondsLeft}s</span>
+        )}
         {status === 'playing' && !isPlayerTurn && (
           <motion.span
             animate={{ scale: [1, 1.2, 1] }}
