@@ -50,9 +50,18 @@ export default function Home() {
   const handleShareResult = useCallback(async () => {
     const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
     const resultText = gameStatus === 'won' ? 'I won!' : gameStatus === 'lost' ? 'I lost!' : "It's a draw!";
-    const text = `${resultText} Tic Tac Toe vs AI (${difficulty}). Play here:`;
+    const text = `${resultText} Tic Tac Toe vs AI (${difficulty}). Play here: ${appUrl}`;
+    const payload = { text, embeds: [`${appUrl}/screenshot.png`] } as { text: string; embeds?: string[] };
     try {
-      await composeCast({ text: `${text} ${appUrl}`, embeds: [`${appUrl}/screenshot.png`] });
+      await composeCast(payload);
+      return;
+    } catch {}
+    try {
+      await (sdk as any)?.actions?.composeCast?.(payload);
+      return;
+    } catch {}
+    try {
+      await navigator.clipboard.writeText(text);
     } catch {}
   }, [composeCast, gameStatus, difficulty]);
 
@@ -60,8 +69,10 @@ export default function Home() {
     const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
     const seed = `${Date.now()}`;
     const url = `${base}?seed=${seed}&symbol=${playerSymbol}&difficulty=${difficulty}`;
+    const payload = { text: `Challenge me in Tic Tac Toe! ${url}`, embeds: [`${base}/screenshot.png`] } as { text: string; embeds?: string[] };
+    try { await composeCast(payload); return; } catch {}
+    try { await (sdk as any)?.actions?.composeCast?.(payload); return; } catch {}
     try { await navigator.clipboard.writeText(url); } catch {}
-    try { await composeCast({ text: `Challenge me in Tic Tac Toe! ${url}`, embeds: [`${base}/screenshot.png`] }); } catch {}
   }, [composeCast, playerSymbol, difficulty]);
 
   // Post results to leaderboard
