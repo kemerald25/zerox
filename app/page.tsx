@@ -108,6 +108,20 @@ export default function Home() {
     post();
   }, [address, gameStatus]);
 
+  // Gate gameplay if an unpaid loss settlement exists
+  const [mustSettle, setMustSettle] = useState(false);
+  useEffect(() => {
+    const check = async () => {
+      if (!address) { setMustSettle(false); return; }
+      try {
+        const res = await fetch(`/api/settlement?address=${address}`);
+        const data = await res.json();
+        setMustSettle(Boolean(data?.required));
+      } catch { setMustSettle(false); }
+    };
+    check();
+  }, [address, gameStatus]);
+
   // Read challenge params from URL to prefill
   useEffect(() => {
     try {
@@ -184,6 +198,7 @@ export default function Home() {
   const { recordResult } = useScoreboard();
 
   const handleCellClick = (index: number) => {
+    if (mustSettle) return;
     if (!isPlayerTurn || board[index] || gameStatus !== 'playing') return;
 
     // Ensure audio is unlocked on user gesture
@@ -214,6 +229,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!isPlayerTurn && gameStatus === 'playing') {
+      if (mustSettle) return;
       const timer = setTimeout(() => {
         const aiMove = getAIMove(board);
         if (aiMove !== -1) {
@@ -241,7 +257,7 @@ export default function Home() {
 
       return () => clearTimeout(timer);
     }
-  }, [board, isPlayerTurn, playerSymbol, getAIMove, gameStatus, checkWinner, getAvailableMoves, recordResult]);
+  }, [board, isPlayerTurn, playerSymbol, getAIMove, gameStatus, checkWinner, getAvailableMoves, recordResult, mustSettle]);
 
   // Outcome sounds
   useEffect(() => {
