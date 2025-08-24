@@ -11,6 +11,7 @@ import { WalletCheck } from './components/WalletCheck';
 import { playMove, playAIMove, playWin, playLoss, playDraw, playReset, resumeAudio, playWarning } from '@/lib/sound';
 import { hapticTap, hapticWin, hapticLoss } from '@/lib/haptics';
 import { useAccount, useSendTransaction } from 'wagmi';
+import { useMiniKit, useIsInMiniApp, useComposeCast, useViewProfile } from '@coinbase/onchainkit/minikit';
 
 export default function Home() {
   useEffect(() => {
@@ -32,6 +33,25 @@ export default function Home() {
 
   const { address } = useAccount();
   const { sendTransactionAsync } = useSendTransaction();
+  const { context, isFrameReady, setFrameReady } = useMiniKit();
+  const { isInMiniApp } = useIsInMiniApp();
+  const { composeCast } = useComposeCast();
+  const viewProfile = useViewProfile();
+
+  useEffect(() => {
+    if (!isFrameReady) setFrameReady();
+  }, [isFrameReady, setFrameReady]);
+
+  // Read challenge params from URL to prefill
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      const symbolParam = url.searchParams.get('symbol');
+      const difficultyParam = url.searchParams.get('difficulty');
+      if ((symbolParam === 'X' || symbolParam === 'O') && !playerSymbol) setPlayerSymbol(symbolParam);
+      if ((difficultyParam === 'easy' || difficultyParam === 'hard') && !difficulty) setDifficulty(difficultyParam);
+    } catch {}
+  }, [playerSymbol, difficulty]);
 
   const checkWinner = useCallback((squares: Array<string | null>): string | null => {
     const lines = [
@@ -305,6 +325,74 @@ export default function Home() {
             isPlayerTurn={isPlayerTurn}
             winningLine={winningLine}
           />
+          {/* Social actions */}
+          {(gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') && (
+            <div className="mt-4 flex flex-col sm:flex-row gap-3 items-center">
+              <button
+                className="px-4 py-2 rounded-lg bg-[#66c800] text-white"
+                onClick={async () => {
+                  const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
+                  const resultText = gameStatus === 'won' ? 'I won!' : gameStatus === 'lost' ? 'I lost!' : "It's a draw!";
+                  const text = `${resultText} Tic Tac Toe vs AI (${difficulty}). Play here:`;
+                  try {
+                    await composeCast({ text: `${text} ${appUrl}`, embeds: [`${appUrl}/screenshot.png`] });
+                  } catch {}
+                }}
+              >
+                Share Result
+              </button>
+              <button
+                className="px-4 py-2 rounded-lg bg-[#b6f569] text-[#66c800] border border-[#66c800]"
+                onClick={async () => {
+                  const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
+                  const seed = `${Date.now()}`;
+                  const url = `${base}?seed=${seed}&symbol=${playerSymbol}&difficulty=${difficulty}`;
+                  try {
+                    await navigator.clipboard.writeText(url);
+                  } catch {}
+                  try {
+                    await composeCast({ text: `Challenge me in Tic Tac Toe! ${url}`, embeds: [`${base}/screenshot.png`] });
+                  } catch {}
+                }}
+              >
+                Share Challenge
+              </button>
+            </div>
+          )}
+          {/* Attribution for cast embed entry */}
+          {isInMiniApp && context?.location?.type === 'cast_embed' && context.location.cast?.author && (
+            <div className="mt-4 p-3 rounded-lg bg-[#b6f569]/30 text-[#66c800] text-sm flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {context.location.cast.author.pfpUrl ? (
+                <img src={context.location.cast.author.pfpUrl as any} alt={context.location.cast.author.username || 'pfp'} className="w-6 h-6 rounded-full" />
+              ) : null}
+              <span>Shared by @{context.location.cast.author.username || context.location.cast.author.fid}</span>
+              <div className="ml-auto flex gap-2">
+                <button
+                  className="px-3 py-1 rounded bg-[#66c800] text-white"
+                  onClick={async () => {
+                    try {
+                      const cast = context.location.cast as any;
+                      await composeCast({
+                        text: `Thanks @${cast.author?.username || cast.author?.fid} for sharing! 🙏`,
+                        parent: { type: 'cast', hash: cast.hash },
+                      } as any);
+                    } catch {}
+                  }}
+                >
+                  Thank them
+                </button>
+                <button
+                  className="px-3 py-1 rounded bg-[#66c800]/10 text-[#66c800] border border-[#66c800]"
+                  onClick={() => {
+                    try { viewProfile(context.location.cast.author.fid); } catch {}
+                  }}
+                >
+                  View profile
+                </button>
+              </div>
+            </div>
+          )}
           {seriesActive && (
             <div className="mt-4 text-center" style={{ color: '#66c800' }}>
               Series: You {seriesWins.player} - {seriesWins.ai} AI
