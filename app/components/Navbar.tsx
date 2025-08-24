@@ -5,7 +5,7 @@ import { motion, useScroll, useSpring } from 'framer-motion';
 import Link from 'next/link';
 import { useAccount, useConnect } from 'wagmi';
 import React, { useEffect, useState } from 'react';
-import { setMuted, toggleMute, setVolume, getVolume } from '@/lib/sound';
+import { toggleMute, setVolume, getVolume } from '@/lib/sound';
 import { useMiniKit, useIsInMiniApp } from '@coinbase/onchainkit/minikit';
 
 export function Navbar() {
