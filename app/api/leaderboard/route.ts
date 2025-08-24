@@ -2,15 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
-type LeaderboardEntry = {
-  address: string;
-  alias?: string;
-  pfp_url?: string | null;
-  wins: number;
-  draws: number;
-  losses: number;
-  points: number;
-};
+// Inline types used directly in code below
 
 function seasonStartISO(): string {
   const d = new Date();
