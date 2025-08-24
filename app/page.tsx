@@ -79,6 +79,23 @@ export default function Home() {
     try { await composeCast({ text: `Challenge me in Tic Tac Toe! ${url}`, embeds: [`${base}/screenshot.png`] }); } catch {}
   }, [composeCast, playerSymbol, difficulty]);
 
+  // Post results to leaderboard
+  useEffect(() => {
+    const post = async () => {
+      if (!address) return;
+      if (!(gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw')) return;
+      try {
+        const alias = (context as any)?.user?.username as string | undefined;
+        await fetch('/api/leaderboard', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address, result: gameStatus === 'won' ? 'win' : gameStatus === 'lost' ? 'loss' : 'draw', alias })
+        });
+      } catch {}
+    };
+    post();
+  }, [address, gameStatus, context]);
+
   // Read challenge params from URL to prefill
   useEffect(() => {
     try {
@@ -107,7 +124,7 @@ export default function Home() {
   }, []);
 
   const getAvailableMoves = useCallback((squares: Array<string | null>): number[] => {
-    return squares.reduce<number[]>((moves, cell, index) =>
+    return squares.reduce<number[]>((moves, cell, index) => 
       cell === null ? [...moves, index] : moves, []);
   }, []);
 
@@ -558,9 +575,7 @@ export default function Home() {
       )}
 
       {activeTab === 'leaderboard' && (
-        <div className="w-full max-w-md text-center" style={{ color: '#66c800' }}>
-          <div className="p-4 rounded-lg border border-[#66c800]/30">Leaderboard coming soon…</div>
-        </div>
+        <LeaderboardTab />
       )}
       {/* Bottom tab nav */}
       <div className="fixed left-0 right-0 bottom-0 z-40">
@@ -599,5 +614,60 @@ export default function Home() {
 
       </WalletCheck>
     </main>
+  );
+}
+
+function LeaderboardTab() {
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [season, setSeason] = React.useState<{ start: string; end: string } | null>(null);
+  const [rows, setRows] = React.useState<Array<{ rank: number; address: string; alias?: string; wins: number; draws: number; losses: number; points: number }>>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('/api/leaderboard');
+        const data = await res.json();
+        setSeason(data?.season ?? null);
+        setRows(Array.isArray(data?.top) ? data.top : []);
+      } catch {
+        setError('Failed to load leaderboard');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  return (
+    <div className="w-full max-w-md mx-auto" style={{ color: '#66c800' }}>
+      <div className="p-4 rounded-lg border border-[#66c800]/30 bg-white/60 dark:bg-black/40">
+        <div className="flex items-center justify-between mb-3">
+          <div className="font-bold">Top 10</div>
+          {season && (
+            <div className="text-xs opacity-80">Season: {season.start} → {season.end}</div>
+          )}
+        </div>
+        {loading ? (
+          <div className="text-sm opacity-80">Loading…</div>
+        ) : error ? (
+          <div className="text-sm text-red-500">{error}</div>
+        ) : rows.length === 0 ? (
+          <div className="text-sm opacity-80">No entries yet.</div>
+        ) : (
+          <div className="space-y-2">
+            {rows.map((r) => (
+              <div key={r.rank} className="flex items-center justify-between p-2 rounded bg-[#b6f569]/20">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 text-center font-bold">{r.rank}</div>
+                  <div className="font-semibold">{r.alias ? `@${r.alias}` : `${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
+                </div>
+                <div className="text-sm">{r.points} pts</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
