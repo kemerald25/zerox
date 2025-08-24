@@ -35,6 +35,7 @@ export default function Home() {
   const [streak, setStreak] = useState(0);
   const [achievements, setAchievements] = useState<string[]>([]);
   const [dailySeed, setDailySeed] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'play' | 'daily' | 'leaderboard'>('play');
 
   const { address } = useAccount();
   const { sendTransactionAsync } = useSendTransaction();
@@ -371,8 +372,12 @@ export default function Home() {
 
   // remove auto-advance; handled via rematch modal
 
+  // Account for bottom nav height + safe area
+  const bottomInset = (context?.client?.safeAreaInsets?.bottom ?? 0);
+  const bottomNavHeight = 64 + bottomInset;
+
   return (
-    <main className="min-h-screen p-4 flex flex-col items-center justify-center">
+    <main className="min-h-screen p-4 flex flex-col items-center justify-center" style={{ paddingBottom: bottomNavHeight }}>
       <WalletCheck>
         <h1 className="text-4xl font-bold mb-8" style={{ color: '#66c800' }}>
           Tic Tac Toe
@@ -386,7 +391,7 @@ export default function Home() {
         selectedDifficulty={difficulty}
       />
 
-      {playerSymbol && difficulty && (
+      {activeTab === 'play' && playerSymbol && difficulty && (
         <>
           <GameStatus status={gameStatus} isPlayerTurn={isPlayerTurn} secondsLeft={secondsLeft ?? null} />
           <GameBoard
@@ -516,23 +521,61 @@ export default function Home() {
               </div>
             )}
           </div>
-          {/* Daily challenge */}
-          {dailySeed && (
-            <div className="mt-3 text-center">
-              <button
-                className="px-4 py-2 rounded-lg bg-[#66c800] text-white"
-                onClick={() => {
-                  const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
-                  const url = `${base}?seed=${dailySeed}&symbol=X&difficulty=hard`;
-                  window.location.href = url;
-                }}
-              >
-                Play Daily Challenge
-              </button>
-            </div>
-          )}
         </>
       )}
+
+      {activeTab === 'daily' && (
+        <div className="w-full max-w-md text-center">
+          <div className="p-4 rounded-lg shadow" style={{ backgroundColor: '#b6f569', color: '#066c00' }}>
+            <div className="text-xl font-bold mb-2">Daily Challenge</div>
+            <div className="text-sm mb-4">Beat the AI on hard mode with today’s seed to earn bonus faucet and XP.</div>
+            <button
+              className="px-5 py-3 rounded-lg bg-[#66c800] text-white w-full"
+              disabled={!dailySeed}
+              onClick={() => {
+                const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
+                const url = `${base}?seed=${dailySeed}&symbol=X&difficulty=hard`;
+                window.location.href = url;
+              }}
+            >
+              {dailySeed ? 'Play Today’s Challenge' : 'Loading…'}
+            </button>
+            <div className="mt-4 text-sm">Current streak: {streak} | Level {level}</div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'leaderboard' && (
+        <div className="w-full max-w-md text-center" style={{ color: '#66c800' }}>
+          <div className="p-4 rounded-lg border border-[#66c800]/30">Leaderboard coming soon…</div>
+        </div>
+      )}
+      {/* Bottom tab nav */}
+      <div className="fixed left-0 right-0 bottom-0 z-40">
+        <div className="mx-auto max-w-2xl">
+          <div className="flex items-stretch justify-around bg-white/90 dark:bg-black/80 border-t border-[#b6f569]/30" style={{ paddingBottom: bottomInset }}>
+            <button
+              className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'daily' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}
+              onClick={() => setActiveTab('daily')}
+            >
+              Daily
+            </button>
+            <button
+              className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'play' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}
+              onClick={() => setActiveTab('play')}
+            >
+              Play
+            </button>
+            <button
+              className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'leaderboard' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}
+              onClick={() => setActiveTab('leaderboard')}
+            >
+              Leaderboard
+            </button>
+          </div>
+        </div>
+      </div>
+
       </WalletCheck>
     </main>
   );
