@@ -362,9 +362,12 @@ export default function Home() {
           {/* Attribution for cast embed entry */}
           {(() => {
             const loc = context?.location as unknown;
-            const isCastEmbed = !!(loc && typeof (loc as any).type === 'string' && (loc as any).type === 'cast_embed' && (loc as any).cast);
+            type CastAuthor = { fid: number; username?: string; pfpUrl?: unknown };
+            type CastObj = { author: CastAuthor; hash: string };
+            type CastEmbedLoc = { type: 'cast_embed'; cast: CastObj };
+            const isCastEmbed = !!(loc && typeof (loc as CastEmbedLoc).type === 'string' && (loc as CastEmbedLoc).type === 'cast_embed' && (loc as CastEmbedLoc).cast);
             if (!isInMiniApp || !isCastEmbed) return null;
-            const cast = (loc as any).cast as { author: { fid: number; username?: string; pfpUrl?: unknown }; hash: string };
+            const cast = (loc as CastEmbedLoc).cast;
             const author = cast.author;
             const pfp = typeof author.pfpUrl === 'string' ? author.pfpUrl : undefined;
             return (
@@ -379,10 +382,7 @@ export default function Home() {
                     className="px-3 py-1 rounded bg-[#66c800] text-white"
                     onClick={async () => {
                       try {
-                        await composeCast({
-                          text: `Thanks @${author.username || author.fid} for sharing! 🙏`,
-                          parent: { type: 'cast', hash: cast.hash },
-                        });
+                        await composeCast({ text: `Thanks @${author.username || author.fid} for sharing! 🙏`, parent: { type: 'cast', hash: cast.hash } });
                       } catch {}
                     }}
                   >
