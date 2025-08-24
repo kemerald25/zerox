@@ -111,7 +111,7 @@ export function Navbar() {
                 >
                   {typeof fcUser.pfpUrl === 'string' ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={fcUser.pfpUrl} alt={fcUser.username || 'pfp'} className="w-8 h-8 rounded-full" />
+                    <img src={fcUser.pfpUrl} alt={fcUser.username || 'pfp'} className="w-6 h-8 rounded-full" />
                   ) : null}
                   <div className="leading-tight">
                     <div className="font-semibold">{fcUser.displayName || fcUser.username || `fid:${fcUser.fid}`}</div>
