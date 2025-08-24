@@ -5,6 +5,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { Navbar } from "./components/Navbar";
 
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
