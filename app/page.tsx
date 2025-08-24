@@ -481,7 +481,7 @@ export default function Home() {
           onSymbolSelect={setPlayerSymbol}
           onDifficultySelect={setDifficulty}
           selectedSymbol={playerSymbol}
-          selectedDifficulty={selectedDifficulty}
+          selectedDifficulty={difficulty}
         />
       {playerSymbol && difficulty && (
         <>
