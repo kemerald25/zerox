@@ -6495,7 +6495,7 @@ unrs-resolver@^1.6.2:
     "@unrs/resolver-binding-win32-ia32-msvc" "1.11.1"
     "@unrs/resolver-binding-win32-x64-msvc" "1.11.1"
 
-unstorage@^1.9.0:
+unstorage@^1.17.0, unstorage@^1.9.0:
   version "1.17.0"
   resolved "https://registry.yarnpkg.com/unstorage/-/unstorage-1.17.0.tgz#63f4b64f3958f3dc48606538ba7eb2d4a447157b"
   integrity sha512-l9Z7lBiwtNp8ZmcoZ/dmPkFXFdtEdZtTZafCSnEIj3YvtkXeGAtL2rN8MQFy/0cs4eOLpuRJMp9ivdug7TCvww==
