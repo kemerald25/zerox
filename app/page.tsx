@@ -1089,3 +1089,73 @@ function SprintSection() {
     </div>
   );
 }
+
+function BracketsSection() {
+  const [list, setList] = React.useState<Array<{ id: string; name: string; status: string }>>([]);
+  const [name, setName] = React.useState('Saturday Cup');
+  const { address } = useAccount();
+  const [creating, setCreating] = React.useState(false);
+  const [joining, setJoining] = React.useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('/api/bracket');
+        const data = await res.json();
+        if (Array.isArray(data?.brackets)) setList(data.brackets);
+      } catch {}
+    };
+    load();
+  }, []);
+
+  const createBracket = async () => {
+    if (!address) return;
+    setCreating(true);
+    try {
+      const res = await fetch('/api/bracket', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'create', name, admin_address: address }) });
+      const data = await res.json();
+      if (data?.bracket) setList((l) => [data.bracket, ...l]);
+    } catch {}
+    setCreating(false);
+  };
+
+  const joinBracket = async (id: string) => {
+    if (!address) return;
+    setJoining(id);
+    try {
+      await fetch('/api/bracket', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'join', bracket_id: id, address }) });
+    } catch {}
+    setJoining(null);
+  };
+
+  return (
+    <div className="w-full max-w-md mx-auto mt-4" style={{ color: '#66c800' }}>
+      <div className="p-4 rounded-lg border border-[#66c800]/30 bg-white/60 dark:bg-black/40">
+        <div className="flex items-center justify-between mb-2">
+          <div className="font-bold">Brackets (8-player, Bo3)</div>
+        </div>
+        <div className="flex gap-2 mb-3">
+          <input className="flex-1 border border-[#66c800] rounded px-2 py-1 text-sm bg-white/80" value={name} onChange={(e)=>setName(e.target.value)} />
+          <button className="px-3 py-1 rounded bg-[#66c800] text-white disabled:opacity-50" disabled={!address || creating} onClick={createBracket}>Create</button>
+        </div>
+        {list.length === 0 ? (
+          <div className="text-sm opacity-80">No brackets yet.</div>
+        ) : (
+          <div className="space-y-2">
+            {list.map((b) => (
+              <div key={b.id} className="flex items-center justify-between p-2 rounded bg-[#b6f569]/20">
+                <div>
+                  <div className="font-semibold">{b.name}</div>
+                  <div className="text-xs">{b.status}</div>
+                </div>
+                <button className="px-3 py-1 rounded bg-[#66c800] text-white disabled:opacity-50" disabled={!address || joining === b.id || b.status === 'completed'} onClick={() => joinBracket(b.id)}>
+                  {joining === b.id ? 'Joining…' : 'Join'}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
