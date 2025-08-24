@@ -1096,6 +1096,7 @@ function BracketsSection() {
   const { address } = useAccount();
   const [creating, setCreating] = React.useState(false);
   const [joining, setJoining] = React.useState<string | null>(null);
+  const { composeCast } = useComposeCast();
 
   useEffect(() => {
     const load = async () => {
@@ -1106,7 +1107,17 @@ function BracketsSection() {
       } catch {}
     };
     load();
-  }, []);
+    // Auto-join via URL params: ?bracket_id=...&join=1
+    try {
+      const url = new URL(window.location.href);
+      const bid = url.searchParams.get('bracket_id');
+      const wantJoin = url.searchParams.get('join');
+      if (address && bid && (wantJoin === '1' || wantJoin === 'true')) {
+        // fire and forget
+        (async () => { try { await fetch('/api/bracket', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'join', bracket_id: bid, address }) }); } catch {} })();
+      }
+    } catch {}
+  }, [address]);
 
   const createBracket = async () => {
     if (!address) return;
@@ -1126,6 +1137,15 @@ function BracketsSection() {
       await fetch('/api/bracket', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'join', bracket_id: id, address }) });
     } catch {}
     setJoining(null);
+  };
+
+  const inviteToBracket = async (b: { id: string; name: string }) => {
+    const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
+    const url = `${base}/leaderboard?bracket_id=${b.id}&join=1`;
+    const text = `Join my ${b.name} bracket! 8-player, best-of-3. Tap to join: ${url}`;
+    const payload: { text: string; embeds?: [string] } = { text, embeds: [url] as [string] };
+    try { await composeCast(payload); return; } catch {}
+    try { await navigator.clipboard.writeText(url); } catch {}
   };
 
   return (
@@ -1148,9 +1168,12 @@ function BracketsSection() {
                   <div className="font-semibold">{b.name}</div>
                   <div className="text-xs">{b.status}</div>
                 </div>
-                <button className="px-3 py-1 rounded bg-[#66c800] text-white disabled:opacity-50" disabled={!address || joining === b.id || b.status === 'completed'} onClick={() => joinBracket(b.id)}>
-                  {joining === b.id ? 'Joining…' : 'Join'}
-                </button>
+                <div className="flex gap-2">
+                  <button className="px-3 py-1 rounded bg-white text-[#66c800] border border-[#66c800]" onClick={() => inviteToBracket(b)}>Invite</button>
+                  <button className="px-3 py-1 rounded bg-[#66c800] text-white disabled:opacity-50" disabled={!address || joining === b.id || b.status === 'completed'} onClick={() => joinBracket(b.id)}>
+                    {joining === b.id ? 'Joining…' : 'Join'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
