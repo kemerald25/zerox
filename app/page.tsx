@@ -409,13 +409,22 @@ export default function Home() {
         if (data?.to && data?.value) {
           await sendTransactionAsync({ to: data.to as `0x${string}`, value: BigInt(data.value) });
           try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: playerAddress, required: false }) }); } catch {}
+          if (sessionId) {
+            try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, settled: true, tx_hash: (data.hash ?? undefined) }) }); } catch {}
+          }
         } else {
           try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: playerAddress, required: true }) }); } catch {}
           setMustSettle(true);
+          if (sessionId) {
+            try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, requires_settlement: true }) }); } catch {}
+          }
         }
       } catch {
         try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: playerAddress, required: true }) }); } catch {}
         setMustSettle(true);
+        if (sessionId) {
+          try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, requires_settlement: true }) }); } catch {}
+        }
       }
     };
 
@@ -427,7 +436,7 @@ export default function Home() {
         handleLossCharge(address);
       }
     }
-  }, [gameStatus, address, outcomeHandled, sendTransactionAsync]);
+  }, [gameStatus, address, outcomeHandled, sendTransactionAsync, sessionId]);
 
   // handleReset no longer used after series removal
 
