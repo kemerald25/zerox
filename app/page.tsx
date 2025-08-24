@@ -288,14 +288,14 @@ export default function Home() {
             // Record AI-determined outcome
             recordResult(didPlayerWin ? 'win' : 'loss');
             if (sessionId) {
-              try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: didPlayerWin ? 'win' : 'loss', settled: didPlayerWin }) }); } catch {}
+              (async () => { try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: didPlayerWin ? 'win' : 'loss', settled: didPlayerWin }) }); } catch {} })();
             }
           } else if (getAvailableMoves(newBoard).length === 0) {
             setGameStatus('draw');
             // Record draw when determined on AI turn
             recordResult('draw');
             if (sessionId) {
-              try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: 'draw', settled: true }) }); } catch {}
+              (async () => { try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: 'draw', settled: true }) }); } catch {} })();
             }
           }
         }
@@ -304,7 +304,7 @@ export default function Home() {
 
       return () => clearTimeout(timer);
     }
-  }, [board, isPlayerTurn, playerSymbol, getAIMove, gameStatus, checkWinner, getAvailableMoves, recordResult, mustSettle]);
+  }, [board, isPlayerTurn, playerSymbol, getAIMove, gameStatus, checkWinner, getAvailableMoves, recordResult, mustSettle, sessionId]);
 
   // Outcome sounds
   useEffect(() => {
