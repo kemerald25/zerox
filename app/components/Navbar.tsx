@@ -46,19 +46,13 @@ export function Navbar() {
           context = (sdk as any).context;
         }
 
-        // Materialize to a plain object to avoid proxy path traps
-        let plainContext = context;
-        try {
-          plainContext = typeof structuredClone === 'function' ? structuredClone(context) : JSON.parse(JSON.stringify(context));
-        } catch {}
-
-        const user = plainContext?.user;
+        const user = context?.user;
         if (!cancelled && user?.fid) {
           setFcUser({
             fid: user.fid,
             username: user.username,
             displayName: user.displayName,
-            pfpUrl: typeof user.pfpUrl === 'string' ? user.pfpUrl : undefined,
+            pfpUrl: user.pfpUrl,
           });
         }
       } catch {
