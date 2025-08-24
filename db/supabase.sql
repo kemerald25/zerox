@@ -6,6 +6,7 @@ create table if not exists public.leaderboard_entries (
   season text not null,
   address text not null,
   alias text,
+  pfp_url text,
   wins integer not null default 0,
   draws integer not null default 0,
   losses integer not null default 0,
@@ -14,6 +15,14 @@ create table if not exists public.leaderboard_entries (
   updated_at timestamptz not null default now(),
   constraint leaderboard_entries_pkey primary key (season, address)
 );
+
+-- Safe migration in case table already existed
+do $$ begin
+  begin
+    alter table public.leaderboard_entries add column if not exists pfp_url text;
+  exception when others then null;
+  end;
+end $$;
 
 create index if not exists leaderboard_entries_points_idx
   on public.leaderboard_entries (season, points desc, wins desc);
