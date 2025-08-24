@@ -8,9 +8,10 @@ interface GameBoardProps {
   onCellClick: (index: number) => void;
   isPlayerTurn: boolean;
   winningLine?: number[] | null;
+  size?: number;
 }
 
-const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn, winningLine }) => {
+const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn, winningLine, size = 3 }) => {
   // Brand colors
   const GREEN = '#66c800';
   const LIME_GREEN = '#b6f569';
@@ -18,12 +19,14 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn,
   return (
     <div className="w-full max-w-md mx-auto">
       <motion.div 
-        className="grid grid-cols-3 gap-2 aspect-square p-2"
+        className="grid gap-2 aspect-square p-2"
         style={{ 
           backgroundColor: LIME_GREEN, 
           padding: '8px', 
           borderRadius: '12px',
-          boxShadow: `0 0 20px ${LIME_GREEN}40`
+          boxShadow: `0 0 20px ${LIME_GREEN}40`,
+          display: 'grid',
+          gridTemplateColumns: `repeat(${size}, 1fr)`
         }}
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
