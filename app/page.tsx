@@ -8,7 +8,8 @@ import GameControls from './components/game/GameControls';
 import GameStatus from './components/game/GameStatus';
 import { Scoreboard } from './components/game/Scoreboard';
 import { WalletCheck } from './components/WalletCheck';
-import { playMove, playAIMove, playWin, playLoss, playDraw, playReset, resumeAudio } from '@/lib/sound';
+import { playMove, playAIMove, playWin, playLoss, playDraw, playReset, resumeAudio, playWarning } from '@/lib/sound';
+import { hapticTap, hapticWin, hapticLoss } from '@/lib/haptics';
 import { useAccount, useSendTransaction } from 'wagmi';
 
 export default function Home() {
@@ -21,6 +22,9 @@ export default function Home() {
   const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost' | 'draw'>('playing');
   const [isPlayerTurn, setIsPlayerTurn] = useState(true);
   const [outcomeHandled, setOutcomeHandled] = useState(false);
+  const [winningLine, setWinningLine] = useState<number[] | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+  const TURN_LIMIT = 15;
 
   const { address } = useAccount();
   const { sendTransactionAsync } = useSendTransaction();
@@ -34,6 +38,7 @@ export default function Home() {
 
     for (const [a, b, c] of lines) {
       if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+        setWinningLine([a, b, c]);
         return squares[a];
       }
     }
@@ -93,6 +98,7 @@ export default function Home() {
 
     // Ensure audio is unlocked on user gesture
     resumeAudio();
+    hapticTap();
 
     const newBoard = [...board];
     newBoard[index] = playerSymbol;
@@ -151,8 +157,10 @@ export default function Home() {
   useEffect(() => {
     if (gameStatus === 'won') {
       playWin();
+      hapticWin();
     } else if (gameStatus === 'lost') {
       playLoss();
+      hapticLoss();
     } else if (gameStatus === 'draw') {
       playDraw();
     }
@@ -201,6 +209,8 @@ export default function Home() {
     setPlayerSymbol(null);
     setDifficulty(null);
     setOutcomeHandled(false);
+    setWinningLine(null);
+    setSecondsLeft(null);
 
     // Reset sound
     playReset();
@@ -212,7 +222,38 @@ export default function Home() {
     setGameStatus('playing');
     setIsPlayerTurn(true);
     setOutcomeHandled(false);
+    setWinningLine(null);
+    setSecondsLeft(TURN_LIMIT);
   }, []);
+
+  // Turn timer logic
+  useEffect(() => {
+    if (gameStatus !== 'playing') {
+      setSecondsLeft(null);
+      return;
+    }
+    // Initialize when player's turn starts
+    if (isPlayerTurn) {
+      setSecondsLeft((prev) => (typeof prev === 'number' ? prev : TURN_LIMIT));
+    }
+  }, [gameStatus, isPlayerTurn]);
+
+  useEffect(() => {
+    if (gameStatus !== 'playing' || !isPlayerTurn || typeof secondsLeft !== 'number') return;
+    if (secondsLeft <= 0) return;
+    const id = setTimeout(() => {
+      const next = secondsLeft - 1;
+      setSecondsLeft(next);
+      if (next === 3 || next === 1) {
+        playWarning();
+      }
+      if (next <= 0) {
+        // Auto-skip: AI moves if player times out
+        setIsPlayerTurn(false);
+      }
+    }, 1000);
+    return () => clearTimeout(id);
+  }, [secondsLeft, gameStatus, isPlayerTurn]);
 
   useEffect(() => {
     if (gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') {
@@ -243,11 +284,12 @@ export default function Home() {
 
       {playerSymbol && difficulty && (
         <>
-          <GameStatus status={gameStatus} isPlayerTurn={isPlayerTurn} />
+          <GameStatus status={gameStatus} isPlayerTurn={isPlayerTurn} secondsLeft={secondsLeft ?? null} />
           <GameBoard
             board={board}
             onCellClick={handleCellClick}
             isPlayerTurn={isPlayerTurn}
+            winningLine={winningLine}
           />
           <Scoreboard />
         </>
