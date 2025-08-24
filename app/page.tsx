@@ -340,13 +340,18 @@ export default function Home() {
     if (gameStatus === 'won') {
       playWin();
       hapticWin();
+      // Auto-start a new round shortly after a win
+      const id = setTimeout(() => {
+        startNewGameRound();
+      }, 1200);
+      return () => clearTimeout(id);
     } else if (gameStatus === 'lost') {
       playLoss();
       hapticLoss();
     } else if (gameStatus === 'draw') {
       playDraw();
     }
-  }, [gameStatus]);
+  }, [gameStatus, startNewGameRound]);
 
   // Series removed
 
