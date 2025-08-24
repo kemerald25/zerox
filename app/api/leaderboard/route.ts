@@ -38,7 +38,7 @@ export async function GET() {
     .order('wins', { ascending: false })
     .limit(10);
   if (error) return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top: [] });
-  const top = (data || []).map((r, i) => ({ rank: i + 1, address: r.address, alias: r.alias ?? undefined, wins: r.wins, draws: r.draws, losses: r.losses, points: r.points }));
+  const top = (data || []).map((r: { address: any; alias: any; wins: any; draws: any; losses: any; points: any; }, i: number) => ({ rank: i + 1, address: r.address, alias: r.alias ?? undefined, wins: r.wins, draws: r.draws, losses: r.losses, points: r.points }));
   return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top });
 }
 
