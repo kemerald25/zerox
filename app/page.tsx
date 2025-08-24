@@ -49,18 +49,6 @@ export default function Home() {
     if (!isFrameReady) setFrameReady();
   }, [isFrameReady, setFrameReady]);
 
-  // Make Daily the default tab on first visit
-  useEffect(() => {
-    try {
-      if (typeof window === 'undefined') return;
-      const seen = window.localStorage.getItem('hasVisited');
-      if (!seen) {
-        setActiveTab('daily');
-        window.localStorage.setItem('hasVisited', '1');
-      }
-    } catch {}
-  }, []);
-
   // Share handlers reused in main UI and modal
   const handleShareResult = useCallback(async () => {
     const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
