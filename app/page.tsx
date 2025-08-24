@@ -84,6 +84,22 @@ export default function Home() {
     post();
   }, [address, gameStatus, context]);
 
+  // Post wins to sprint window
+  useEffect(() => {
+    const post = async () => {
+      if (!address) return;
+      if (gameStatus !== 'won') return;
+      try {
+        await fetch('/api/sprint', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address, result: 'win' })
+        });
+      } catch {}
+    };
+    post();
+  }, [address, gameStatus]);
+
   // Read challenge params from URL to prefill
   useEffect(() => {
     try {
@@ -589,7 +605,10 @@ export default function Home() {
       )}
 
       {activeTab === 'leaderboard' && (
-        <LeaderboardTab />
+        <>
+          <LeaderboardTab />
+          <SprintSection />
+        </>
       )}
       {/* Bottom tab nav */}
       <div className="fixed left-0 right-0 bottom-0 z-40">
