@@ -372,10 +372,11 @@ export default function Home() {
       if (!address) return;
       if (gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') {
         try {
+          const xpBonus = (blitzPreset === '5s' ? 4 : blitzPreset === '7s' ? 2 : 0);
           const res = await fetch('/api/progress', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ address, result: gameStatus === 'won' ? 'win' : gameStatus === 'lost' ? 'loss' : 'draw' })
+            body: JSON.stringify({ address, result: gameStatus === 'won' ? 'win' : gameStatus === 'lost' ? 'loss' : 'draw', xpBonus })
           });
           const data = await res.json();
           if (data?.xp != null) {
