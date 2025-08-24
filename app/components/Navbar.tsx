@@ -56,7 +56,7 @@ export function Navbar() {
 
         const user = plainContext?.user;
         if (!cancelled && user?.fid) {
-          const maybePfp = user.pfpUrl as unknown;
+          const maybePfp = (user as any)?.pfpUrl ?? (user as any)?.pfp ?? (user as any)?.profile?.pfp ?? (user as any)?.profile?.picture;
           const pickUrl = (val: unknown): string | undefined => {
             if (typeof val === 'string') return val;
             if (val && typeof val === 'object') {
@@ -70,9 +70,10 @@ export function Navbar() {
             return undefined;
           };
           const pfpUrl = pickUrl(maybePfp);
+          const username = (user as any)?.username ?? (user as any)?.profile?.username;
           setFcUser({
             fid: user.fid,
-            username: user.username,
+            username,
             displayName: user.displayName,
             pfpUrl,
           });
