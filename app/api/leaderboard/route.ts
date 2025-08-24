@@ -32,13 +32,13 @@ export async function GET() {
   if (!supabase) return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top: [] });
   const { data, error } = await supabase
     .from('leaderboard_entries')
-    .select('address,alias,wins,draws,losses,points')
+    .select('address,alias,pfp_url,wins,draws,losses,points')
     .eq('season', season)
     .order('points', { ascending: false })
     .order('wins', { ascending: false })
     .limit(10);
   if (error) return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top: [] });
-  const top = (data || []).map((r: { address: any; alias: any; wins: any; draws: any; losses: any; points: any; }, i: number) => ({ rank: i + 1, address: r.address, alias: r.alias ?? undefined, wins: r.wins, draws: r.draws, losses: r.losses, points: r.points }));
+  const top = (data || []).map((r: { address: string; alias?: string | null; pfp_url?: string | null; wins: number; draws: number; losses: number; points: number; }, i: number) => ({ rank: i + 1, address: r.address, alias: r.alias ?? undefined, pfpUrl: r.pfp_url ?? undefined, wins: r.wins, draws: r.draws, losses: r.losses, points: r.points }));
   return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top });
 }
 
@@ -62,12 +62,12 @@ export async function POST(req: NextRequest) {
       .eq('season', season)
       .eq('address', addr)
       .limit(1);
-    const existing: LeaderboardEntry | null = rows && rows.length ? rows[0] as any : null;
-    const next: LeaderboardEntry = existing ?? { address: addr, alias: alias ?? undefined, wins: 0, draws: 0, losses: 0, points: 0 };
+    const existing: any = rows && rows.length ? rows[0] : null;
+    const next: any = existing ?? { address: addr, alias: alias ?? undefined, pfp_url: null, wins: 0, draws: 0, losses: 0, points: 0 };
     next.wins += delta.w; next.draws += delta.d; next.losses += delta.l; next.points += delta.p;
     if (alias && !next.alias) next.alias = alias;
 
-    const upsertPayload = { season, address: addr, alias: next.alias ?? null, wins: next.wins, draws: next.draws, losses: next.losses, points: next.points };
+    const upsertPayload = { season, address: addr, alias: next.alias ?? null, pfp_url: next.pfp_url ?? null, wins: next.wins, draws: next.draws, losses: next.losses, points: next.points };
     const { error } = await supabase
       .from('leaderboard_entries')
       .upsert(upsertPayload, { onConflict: 'season,address' });
