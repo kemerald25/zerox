@@ -561,11 +561,14 @@ export default function Home() {
   useEffect(() => {
     const handleWinPayout = async (playerAddress: string) => {
       try {
-        await fetch('/api/payout', {
+        const r = await fetch('/api/payout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ address: playerAddress }),
         });
+        if (r.ok) { try { showToast('Winner payout sent'); } catch {} } else {
+          try { const j = await r.json(); showToast(j?.error || 'Payout failed'); } catch { showToast('Payout failed'); }
+        }
       } catch {}
     };
 
@@ -579,6 +582,7 @@ export default function Home() {
         const data = await res.json();
         if (data?.to && data?.value) {
           await sendTransactionAsync({ to: data.to as `0x${string}`, value: BigInt(data.value) });
+          try { showToast('Loss settlement sent'); } catch {}
           try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: playerAddress, required: false }) }); } catch {}
           if (sessionId) {
             try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, settled: true, tx_hash: (data.hash ?? undefined) }) }); } catch {}
@@ -588,6 +592,7 @@ export default function Home() {
         } else {
           try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: playerAddress, required: true }) }); } catch {}
           setMustSettle(true);
+          try { showToast('Payment required to continue'); } catch {}
           if (sessionId) {
             try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, requires_settlement: true }) }); } catch {}
           }
@@ -595,6 +600,7 @@ export default function Home() {
       } catch {
         try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: playerAddress, required: true }) }); } catch {}
         setMustSettle(true);
+        try { showToast('Transaction failed'); } catch {}
         if (sessionId) {
           try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, requires_settlement: true }) }); } catch {}
         }
