@@ -85,7 +85,7 @@ export default function Home() {
       if (!address) return;
       if (!(gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw')) return;
       try {
-        const alias = (context as any)?.user?.username as string | undefined;
+        const alias = context?.user && typeof context.user.username === 'string' ? context.user.username : undefined;
         await fetch('/api/leaderboard', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
