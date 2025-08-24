@@ -56,11 +56,17 @@ export function Navbar() {
 
         const user = plainContext?.user;
         if (!cancelled && user?.fid) {
+          const maybePfp = user.pfpUrl as unknown;
+          const pfpUrl = typeof maybePfp === 'string'
+            ? maybePfp
+            : (maybePfp && typeof (maybePfp as any).url === 'string')
+              ? (maybePfp as any).url
+              : undefined;
           setFcUser({
             fid: user.fid,
             username: user.username,
             displayName: user.displayName,
-            pfpUrl: typeof user.pfpUrl === 'string' ? user.pfpUrl : undefined,
+            pfpUrl,
           });
         }
       } catch {
