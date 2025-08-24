@@ -1089,6 +1089,7 @@ function SprintSection() {
   );
 }
 
+// BracketsSection removed per request
 function BracketsSection() {
   const [list, setList] = React.useState<Array<{ id: string; name: string; status: string }>>([]);
   const [name, setName] = React.useState('Saturday Cup');
