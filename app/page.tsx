@@ -30,7 +30,8 @@ export default function Home() {
   const [winningLine, setWinningLine] = useState<number[] | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [misere, setMisere] = useState(false);
-  const TURN_LIMIT = 15;
+  const [blitzPreset, setBlitzPreset] = useState<'off' | '7s' | '5s'>('off');
+  const computeTurnLimit = useCallback(() => (blitzPreset === '5s' ? 5 : blitzPreset === '7s' ? 7 : 15), [blitzPreset]);
   // series state removed
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState(1);
