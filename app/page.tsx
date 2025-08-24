@@ -622,6 +622,7 @@ function LeaderboardTab() {
   const [error, setError] = React.useState<string | null>(null);
   const [season, setSeason] = React.useState<{ start: string; end: string } | null>(null);
   const [rows, setRows] = React.useState<Array<{ rank: number; address: string; alias?: string; wins: number; draws: number; losses: number; points: number }>>([]);
+  const [countdown, setCountdown] = React.useState<string>('');
 
   useEffect(() => {
     const load = async () => {
@@ -639,15 +640,35 @@ function LeaderboardTab() {
     load();
   }, []);
 
+  useEffect(() => {
+    if (!season?.end) return;
+    const end = new Date(`${season.end}T00:00:00.000Z`).getTime();
+    const tick = () => {
+      const now = Date.now();
+      const diff = Math.max(0, end - now);
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setCountdown(`${d}d ${h}h ${m}m ${s}s`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [season]);
+
   return (
     <div className="w-full max-w-md mx-auto" style={{ color: '#66c800' }}>
       <div className="p-4 rounded-lg border border-[#66c800]/30 bg-white/60 dark:bg-black/40">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-1">
           <div className="font-bold">Top 10</div>
           {season && (
             <div className="text-xs opacity-80">Season: {season.start} → {season.end}</div>
           )}
         </div>
+        {season && (
+          <div className="text-xs mb-3 opacity-80">Ends in {countdown}</div>
+        )}
         {loading ? (
           <div className="text-sm opacity-80">Loading…</div>
         ) : error ? (
@@ -657,12 +678,15 @@ function LeaderboardTab() {
         ) : (
           <div className="space-y-2">
             {rows.map((r) => (
-              <div key={r.rank} className="flex items-center justify-between p-2 rounded bg-[#b6f569]/20">
+              <div key={r.rank} className={`flex items-center justify-between p-2 rounded ${r.rank === 1 ? 'bg-[#b6f569]/40' : 'bg-[#b6f569]/20'}`}>
                 <div className="flex items-center gap-2">
                   <div className="w-6 text-center font-bold">{r.rank}</div>
                   <div className="font-semibold">{r.alias ? `@${r.alias}` : `${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
                 </div>
-                <div className="text-sm">{r.points} pts</div>
+                <div className="text-xs text-right">
+                  <div>{r.points} pts</div>
+                  <div className="opacity-80">W-D-L {r.wins}-{r.draws}-{r.losses}</div>
+                </div>
               </div>
             ))}
           </div>
