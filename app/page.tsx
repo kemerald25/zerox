@@ -348,19 +348,7 @@ export default function Home() {
     }
   }, [gameStatus, address, outcomeHandled, sendTransactionAsync]);
 
-  const handleReset = () => {
-    setBoard(Array(9).fill(null));
-    setGameStatus('playing');
-    setIsPlayerTurn(true);
-    setPlayerSymbol(null);
-    setDifficulty(null);
-    setOutcomeHandled(false);
-    setWinningLine(null);
-    setSecondsLeft(null);
-
-    // Reset sound
-    playReset();
-  };
+  // handleReset no longer used after series removal
 
   // Start a new round automatically after game ends, preserving symbol and difficulty
   // startNextRound removed
