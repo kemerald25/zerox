@@ -29,7 +29,9 @@ export async function POST(req: NextRequest) {
       const blitz: 'off'|'7s'|'5s' = (body?.blitz === '5s' || body?.blitz === '7s') ? body.blitz : 'off';
       const n = size * size;
       const board = JSON.stringify(Array(n).fill(null));
-      const { data, error } = await supabase.from('pvp_matches').insert({ invited_by: invited_by ?? null, size, misere, blitz, board }).select('*').maybeSingle();
+      const row: any = { invited_by: invited_by ?? null, size, misere, blitz, board };
+      if (invited_by) row.player_x = invited_by.toLowerCase();
+      const { data, error } = await supabase.from('pvp_matches').insert(row).select('*').maybeSingle();
       if (error || !data) return NextResponse.json({ error: 'create_failed' }, { status: 500 });
       return NextResponse.json({ match: data });
     }
