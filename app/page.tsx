@@ -763,6 +763,10 @@ function LeaderboardTab() {
               <div key={r.rank} className={`flex items-center justify-between p-2 rounded ${r.rank === 1 ? 'bg-[#b6f569]/40' : 'bg-[#b6f569]/20'}`}>
                 <div className="flex items-center gap-2">
                   <div className="w-6 text-center font-bold">{r.rank}</div>
+                  {(() => {
+                    const p = (r as any).pfpUrl as string | undefined;
+                    return p ? (<Image src={p} alt={r.alias || 'pfp'} width={20} height={20} className="rounded-full" />) : null;
+                  })()}
                   <div className="font-semibold">{r.alias ? `@${r.alias}` : `${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
                 </div>
                 <div className="text-xs text-right">
