@@ -438,7 +438,6 @@ export default function Home() {
         <GameControls
         onSymbolSelect={setPlayerSymbol}
         onDifficultySelect={setDifficulty}
-        onReset={handleReset}
         selectedSymbol={playerSymbol}
         selectedDifficulty={difficulty}
       />
