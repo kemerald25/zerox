@@ -47,6 +47,24 @@ export default function Home() {
     if (!isFrameReady) setFrameReady();
   }, [isFrameReady, setFrameReady]);
 
+  // Share handlers reused in main UI and modal
+  const handleShareResult = useCallback(async () => {
+    const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
+    const resultText = gameStatus === 'won' ? 'I won!' : gameStatus === 'lost' ? 'I lost!' : "It's a draw!";
+    const text = `${resultText} Tic Tac Toe vs AI (${difficulty}). Play here:`;
+    try {
+      await composeCast({ text: `${text} ${appUrl}`, embeds: [`${appUrl}/screenshot.png`] });
+    } catch {}
+  }, [composeCast, gameStatus, difficulty]);
+
+  const handleShareChallenge = useCallback(async () => {
+    const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
+    const seed = `${Date.now()}`;
+    const url = `${base}?seed=${seed}&symbol=${playerSymbol}&difficulty=${difficulty}`;
+    try { await navigator.clipboard.writeText(url); } catch {}
+    try { await composeCast({ text: `Challenge me in Tic Tac Toe! ${url}`, embeds: [`${base}/screenshot.png`] }); } catch {}
+  }, [composeCast, playerSymbol, difficulty]);
+
   // Read challenge params from URL to prefill
   useEffect(() => {
     try {
@@ -382,30 +400,13 @@ export default function Home() {
             <div className="mt-4 flex flex-col sm:flex-row gap-3 items-center">
               <button
                 className="px-4 py-2 rounded-lg bg-[#66c800] text-white"
-                onClick={async () => {
-                  const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
-                  const resultText = gameStatus === 'won' ? 'I won!' : gameStatus === 'lost' ? 'I lost!' : "It's a draw!";
-                  const text = `${resultText} Tic Tac Toe vs AI (${difficulty}). Play here:`;
-                  try {
-                    await composeCast({ text: `${text} ${appUrl}`, embeds: [`${appUrl}/screenshot.png`] });
-                  } catch {}
-                }}
+                onClick={handleShareResult}
               >
                 Share Result
               </button>
               <button
                 className="px-4 py-2 rounded-lg bg-[#b6f569] text-[#66c800] border border-[#66c800]"
-                onClick={async () => {
-                  const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
-                  const seed = `${Date.now()}`;
-                  const url = `${base}?seed=${seed}&symbol=${playerSymbol}&difficulty=${difficulty}`;
-                  try {
-                    await navigator.clipboard.writeText(url);
-                  } catch {}
-                  try {
-                    await composeCast({ text: `Challenge me in Tic Tac Toe! ${url}`, embeds: [`${base}/screenshot.png`] });
-                  } catch {}
-                }}
+                onClick={handleShareChallenge}
               >
                 Share Challenge
               </button>
@@ -466,6 +467,22 @@ export default function Home() {
                     ? 'Best of 3 complete.'
                     : 'Continue the series?'}
                 </div>
+                {(gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') && (
+                  <div className="mb-4 flex flex-col gap-2">
+                    <button
+                      className="px-4 py-2 rounded-lg bg-[#66c800] text-white"
+                      onClick={handleShareResult}
+                    >
+                      Share Result
+                    </button>
+                    <button
+                      className="px-4 py-2 rounded-lg bg-[#b6f569] text-[#66c800] border border-[#66c800]"
+                      onClick={handleShareChallenge}
+                    >
+                      Share Challenge
+                    </button>
+                  </div>
+                )}
                 <div className="flex gap-3 justify-center">
                   {seriesWins.player < 2 && seriesWins.ai < 2 ? (
                     <button
