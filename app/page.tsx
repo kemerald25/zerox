@@ -18,7 +18,8 @@ export default function Home() {
   useEffect(() => {
     sdk.actions.ready();
   }, []);
-  const [board, setBoard] = useState<Array<string | null>>(Array(9).fill(null));
+  const [boardSize, setBoardSize] = useState<3 | 4 | 5>(3);
+  const [board, setBoard] = useState<Array<string | null>>(Array(3 * 3).fill(null));
   const [playerSymbol, setPlayerSymbol] = useState<'X' | 'O' | null>(null);
   const [difficulty, setDifficulty] = useState<'easy' | 'hard' | null>(null);
   const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost' | 'draw'>('playing');
@@ -26,6 +27,7 @@ export default function Home() {
   const [outcomeHandled, setOutcomeHandled] = useState(false);
   const [winningLine, setWinningLine] = useState<number[] | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+  const [misere, setMisere] = useState(false);
   const TURN_LIMIT = 15;
   // series state removed
   const [xp, setXp] = useState(0);
@@ -134,20 +136,40 @@ export default function Home() {
   }, [playerSymbol, difficulty]);
 
   const checkWinner = useCallback((squares: Array<string | null>): string | null => {
-    const lines = [
-      [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
-      [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
-      [0, 4, 8], [2, 4, 6] // diagonals
+    const n = boardSize;
+    const inRow = n === 3 ? 3 : 4; // 4-in-a-row for 4x4/5x5
+    const dirs = [
+      [1, 0], // right
+      [0, 1], // down
+      [1, 1], // diag down-right
+      [1, -1] // diag up-right
     ];
-
-    for (const [a, b, c] of lines) {
-      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-        setWinningLine([a, b, c]);
-        return squares[a];
+    const index = (x: number, y: number) => y * n + x;
+    for (let y = 0; y < n; y++) {
+      for (let x = 0; x < n; x++) {
+        const start = squares[index(x, y)];
+        if (!start) continue;
+        for (const [dx, dy] of dirs) {
+          const cells: number[] = [index(x, y)];
+          let k = 1;
+          while (k < inRow) {
+            const nx = x + dx * k;
+            const ny = y + dy * k;
+            if (nx < 0 || ny < 0 || nx >= n || ny >= n) break;
+            const ii = index(nx, ny);
+            if (squares[ii] !== start) break;
+            cells.push(ii);
+            k++;
+          }
+          if (cells.length === inRow) {
+            setWinningLine(cells);
+            return start;
+          }
+        }
       }
     }
     return null;
-  }, []);
+  }, [boardSize]);
 
   const getAvailableMoves = useCallback((squares: Array<string | null>): number[] => {
     return squares.reduce<number[]>((moves, cell, index) => 
@@ -156,8 +178,8 @@ export default function Home() {
 
   const minimax = useCallback((squares: Array<string | null>, isMax: boolean): number => {
     const winner = checkWinner(squares);
-    if (winner === playerSymbol) return -1;
-    if (winner === (playerSymbol === 'X' ? 'O' : 'X')) return 1;
+    if (winner === playerSymbol) return misere ? 1 : -1;
+    if (winner === (playerSymbol === 'X' ? 'O' : 'X')) return misere ? -1 : 1;
     if (getAvailableMoves(squares).length === 0) return 0;
 
     const moves = getAvailableMoves(squares);
@@ -168,7 +190,7 @@ export default function Home() {
     });
 
     return isMax ? Math.max(...scores) : Math.min(...scores);
-  }, [playerSymbol, checkWinner, getAvailableMoves]);
+  }, [playerSymbol, checkWinner, getAvailableMoves, misere]);
 
   const getAIMove = useCallback((squares: Array<string | null>): number => {
     const availableMoves = getAvailableMoves(squares);
@@ -431,20 +453,43 @@ export default function Home() {
         
       {activeTab === 'play' && (
         <>
-          <GameControls
-            onSymbolSelect={setPlayerSymbol}
-            onDifficultySelect={setDifficulty}
-            selectedSymbol={playerSymbol}
-            selectedDifficulty={difficulty}
-          />
-          {playerSymbol && difficulty && (
-            <>
+        <GameControls
+        onSymbolSelect={setPlayerSymbol}
+        onDifficultySelect={setDifficulty}
+        selectedSymbol={playerSymbol}
+        selectedDifficulty={difficulty}
+      />
+      {playerSymbol && difficulty && (
+        <>
+          <div className="mb-2 flex items-center justify-center gap-2" style={{ color: '#66c800' }}>
+            <label className="text-sm">Size</label>
+            <select
+              className="border border-[#66c800] rounded px-2 py-1 text-sm bg-white/80"
+              value={boardSize}
+              onChange={(e) => {
+                const n = Number(e.target.value) as 3 | 4 | 5;
+                setBoardSize(n);
+                setBoard(Array(n * n).fill(null));
+                setWinningLine(null);
+                setGameStatus('playing');
+              }}
+            >
+              <option value={3}>3x3</option>
+              <option value={4}>4x4</option>
+              <option value={5}>5x5</option>
+            </select>
+            <label className="ml-3 text-sm flex items-center gap-1">
+              <input type="checkbox" checked={misere} onChange={(e) => { setMisere(e.target.checked); setGameStatus('playing'); setWinningLine(null); setBoard((b) => b.map(() => null)); }} />
+              Misère
+            </label>
+          </div>
           <GameStatus status={gameStatus} isPlayerTurn={isPlayerTurn} secondsLeft={secondsLeft ?? null} />
           <GameBoard
             board={board}
             onCellClick={handleCellClick}
             isPlayerTurn={isPlayerTurn}
             winningLine={winningLine}
+            size={boardSize}
           />
           {/* Social actions */}
           {(gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') && (
