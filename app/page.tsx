@@ -175,6 +175,7 @@ export default function Home() {
 
   // Gate gameplay if an unpaid loss settlement exists
   const [mustSettle, setMustSettle] = useState(false);
+  const [settlingLoss, setSettlingLoss] = useState(false);
   useEffect(() => {
     const check = async () => {
       if (!address) { setMustSettle(false); return; }
@@ -186,6 +187,11 @@ export default function Home() {
     };
     check();
   }, [address, gameStatus, blitzPreset]);
+
+  // Hide add-mini-app prompt if payment is required so it doesn't block clicks
+  useEffect(() => {
+    if (mustSettle) setShowAddPrompt(false);
+  }, [mustSettle]);
 
   // Read challenge params from URL to prefill
   useEffect(() => {
@@ -704,21 +710,32 @@ export default function Home() {
             Payment required to continue. Please complete the previous loss transaction.
             <div className="mt-2 flex justify-center">
               <button
-                className="px-4 py-2 rounded bg-red-600 text-white"
+                className={`px-4 py-2 rounded bg-red-600 text-white ${settlingLoss ? 'opacity-60 cursor-wait' : ''}`}
+                disabled={settlingLoss}
                 onClick={async () => {
-                  if (!address) return;
+                  if (!address) { try { showToast('Connect your wallet first'); } catch {} return; }
+                  setSettlingLoss(true);
                   try {
                     const res = await fetch('/api/charge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address }) });
                     const data = await res.json();
                     if (data?.to && data?.value) {
-                      await sendTransactionAsync({ to: data.to as `0x${string}`, value: BigInt(data.value) });
+                      const { hash } = await sendTransactionAsync({ to: data.to as `0x${string}`, value: BigInt(data.value) });
+                      try { showToast('Loss settlement sent'); } catch {}
                       try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address, required: false }) }); } catch {}
                       setMustSettle(false);
+                      // Optionally record tx on latest session
+                      if (sessionId) { try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, settled: true, tx_hash: hash }) }); } catch {} }
+                    } else {
+                      try { showToast('Settlement quote unavailable'); } catch {}
                     }
-                  } catch {}
+                  } catch {
+                    try { showToast('Transaction failed'); } catch {}
+                  } finally {
+                    setSettlingLoss(false);
+                  }
                 }}
               >
-                Complete previous transaction
+                {settlingLoss ? 'Processing…' : 'Complete previous transaction'}
               </button>
             </div>
           </div>
