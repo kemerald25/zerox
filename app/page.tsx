@@ -305,6 +305,39 @@ export default function Home() {
             isPlayerTurn={isPlayerTurn}
             winningLine={winningLine}
           />
+          {seriesActive && (
+            <div className="mt-4 text-center" style={{ color: '#66c800' }}>
+              Series: You {seriesWins.player} - {seriesWins.ai} AI
+            </div>
+          )}
+          {showRematchModal && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+              <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl w-80 text-center">
+                <div className="text-lg font-bold mb-2" style={{ color: '#66c800' }}>Rematch?</div>
+                <div className="mb-4 text-sm" style={{ color: '#66c800' }}>
+                  {seriesWins.player >= 2 || seriesWins.ai >= 2
+                    ? 'Best of 3 complete.'
+                    : 'Continue the series?'}
+                </div>
+                <div className="flex gap-3 justify-center">
+                  {seriesWins.player < 2 && seriesWins.ai < 2 ? (
+                    <button
+                      className="px-4 py-2 rounded-lg bg-[#b6f569] text-[#66c800] border border-[#66c800]"
+                      onClick={startNextRound}
+                    >
+                      Rematch
+                    </button>
+                  ) : null}
+                  <button
+                    className="px-4 py-2 rounded-lg bg-[#66c800] text-white"
+                    onClick={handleReset}
+                  >
+                    New Series
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           <Scoreboard />
         </>
       )}
