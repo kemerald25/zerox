@@ -40,35 +40,18 @@ export function Scoreboard() {
   }
 
   return (
-    <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: LIME_GREEN }}>
-      <h3 className="text-lg font-bold mb-2" style={{ color: GREEN }}>
-        Your Score
-      </h3>
-      <div className="grid grid-cols-3 gap-4 text-center">
-        <div>
-          <div className="text-2xl font-bold" style={{ color: GREEN }}>
-            {score.wins}
-          </div>
-          <div className="text-sm" style={{ color: GREEN }}>
-            Wins
-          </div>
-        </div>
-        <div>
-          <div className="text-2xl font-bold" style={{ color: GREEN }}>
-            {score.losses}
-          </div>
-          <div className="text-sm" style={{ color: GREEN }}>
-            Losses
-          </div>
-        </div>
-        <div>
-          <div className="text-2xl font-bold" style={{ color: GREEN }}>
-            {score.draws}
-          </div>
-          <div className="text-sm" style={{ color: GREEN }}>
-            Draws
-          </div>
-        </div>
+    <div className="mt-2 w-full max-w-md px-3 py-2 rounded-lg flex items-center justify-center gap-6 text-sm" style={{ backgroundColor: LIME_GREEN }}>
+      <div className="flex items-center gap-2" style={{ color: GREEN }}>
+        <span className="font-semibold">Wins</span>
+        <span className="text-xl font-bold">{score.wins}</span>
+      </div>
+      <div className="flex items-center gap-2" style={{ color: GREEN }}>
+        <span className="font-semibold">Losses</span>
+        <span className="text-xl font-bold">{score.losses}</span>
+      </div>
+      <div className="flex items-center gap-2" style={{ color: GREEN }}>
+        <span className="font-semibold">Draws</span>
+        <span className="text-xl font-bold">{score.draws}</span>
       </div>
     </div>
   );
