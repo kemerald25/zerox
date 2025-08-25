@@ -15,7 +15,7 @@ interface GameBoardProps {
 
 const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn, winningLine, size = 3, hintIndex = null, disabledCells = [] }) => {
   // Brand colors
-  const GREEN = '#66c800';
+  const GREEN = '#70FF5A';
   const LIME_GREEN = '#b6f569';
 
   // Responsive tweaks based on board size
