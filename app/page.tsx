@@ -675,7 +675,7 @@ export default function Home() {
             {toast}
           </div>
         )}
-        <h1 className="text-4xl font-bold mb-8" style={{ color: '#70FF5A' }}>
+        <h1 className="text-4xl font-bold mb-8" style={{ color: '#' }}>
           ZeroX
         </h1>
         
