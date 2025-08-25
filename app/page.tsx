@@ -675,7 +675,7 @@ export default function Home() {
   const bottomNavHeight = 64 + bottomInset;
 
   return (
-    <main className="min-h-screen p-4 flex flex-col items-center justify-center" style={{ paddingBottom: bottomNavHeight }}>
+    <main className="min-h-screen p-4 flex flex-col items-center" style={{ paddingBottom: bottomNavHeight }}>
       <WalletCheck>
         {toast && (
           <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded bg-[#66c800] text-white shadow">
@@ -715,7 +715,7 @@ export default function Home() {
         )}
         
       {currentTab === 'play' && (
-        <>
+        <div className="w-full flex flex-col items-center" style={{ minHeight: `calc(100vh - ${bottomNavHeight}px - 80px)` }}>
         {mustSettle && (
           <div className="mb-3 w-full max-w-md p-3 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm">
             Payment required to continue. Please complete the previous loss transaction.
