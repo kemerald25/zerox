@@ -14,8 +14,10 @@ import { playMove, playAIMove, playWin, playLoss, playDraw, resumeAudio, playWar
 import { hapticTap, hapticWin, hapticLoss } from '@/lib/haptics';
 import { useAccount, useSendTransaction } from 'wagmi';
 import { useMiniKit, useIsInMiniApp, useComposeCast, useViewProfile } from '@coinbase/onchainkit/minikit';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const router = useRouter();
   useEffect(() => {
     sdk.actions.ready();
   }, []);
@@ -81,6 +83,19 @@ export default function Home() {
   useEffect(() => {
     if (!isFrameReady) setFrameReady();
   }, [isFrameReady, setFrameReady]);
+
+  // If a user lands on the root or Play route with a PVP match link (?match_id=...), redirect to /play/online
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      const mid = url.searchParams.get('match_id');
+      const join = url.searchParams.get('join') ?? '1';
+      const onPlayOnline = window.location.pathname.startsWith('/play/online');
+      if (mid && !onPlayOnline) {
+        router.replace(`/play/online?match_id=${encodeURIComponent(mid)}&join=${encodeURIComponent(join)}`);
+      }
+    } catch {}
+  }, [router]);
 
   // Prompt to add Mini App after ~5s if not already added
   const [showAddPrompt, setShowAddPrompt] = useState(false);
