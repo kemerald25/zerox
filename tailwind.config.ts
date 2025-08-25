@@ -8,6 +8,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["Minecraft", "Minecraft Ten", "Minecraftia", "ui-sans-serif", "system-ui"],
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
