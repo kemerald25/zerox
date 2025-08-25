@@ -737,7 +737,7 @@ export default function Home() {
       />
       {playerSymbol && difficulty && (
         <>
-          <div className="mb-3 flex items-center justify-center gap-3 flex-wrap" style={{ color: '#70FF5A' }}>
+          <div className="mb-3 flex items-center justify-center gap-3 flex-wrap" style={{ color: '#000' }}>
             <div className="w-full text-center text-sm opacity-80">
               {(() => {
                 const payout = process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || process.env.PAYOUT_AMOUNT_ETH;
