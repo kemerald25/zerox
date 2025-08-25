@@ -85,7 +85,7 @@ export function Navbar() {
                 href="/"
                 className="text-lg font-semibold text-[#66c800] hover:text-[#b6f569] transition-colors"
               >
-                TicTacToe
+                ZeroX
               </Link>
             </div>
             <div className="flex items-center space-x-4">
