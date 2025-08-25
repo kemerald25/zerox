@@ -6,7 +6,7 @@ import BottomNav from '../components/BottomNav';
 export default function LeaderboardPage() {
   return (
     <>
-      <div className=" pt-10">
+      <div className="min-h-screen pt-10" style={{ backgroundColor: '#141414' }}>
         <LeaderboardTab />
         <SprintSection />
       </div>
