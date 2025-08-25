@@ -199,7 +199,7 @@ export default function OnlinePlayPage() {
                                 </div>
                             </div>
                             <div className="text-xs text-black font-semibold">{hostProfile?.username ? `@${hostProfile.username}` : 'You'}</div>
-                            <button className="mt-2 w-full h-12 bg-black text-white text-2xl font-bold rounded-lg" disabled={!youAreX}>X</button>
+                            <button className="mt-2 w-full h-12 bg-black  text-white text-2xl font-bold rounded-lg" disabled={!youAreX}>X</button>
                         </div>
                         <div className="relative p-4 pt-10 rounded-2xl bg-white text-center">
                             <div className="absolute -top-8 left-1/2 -translate-x-1/2">
