@@ -100,11 +100,19 @@ export default function OnlinePlayPage() {
   }, [match, address, isMyTurn, boardArr, matchId, mySymbol]);
 
   const hostAvatar = useMemo(() => {
-    return 'https://example.com/avatar1.png'; // Replace with actual avatar URL for @De1Develbase_eth
+    try {
+      return 'https://api.dicebear.com/7.x/identicon/svg?seed=De1Develbase_eth'; // Adjusted seed to match username
+    } catch {
+      return '/fallback-avatar.png'; // Fallback image if API fails
+    }
   }, []);
 
   const opponentAvatar = useMemo(() => {
-    return 'https://example.com/avatar2.png'; // Replace with actual avatar URL for @Ovittobase_eth
+    try {
+      return 'https://api.dicebear.com/7.x/identicon/svg?seed=Ovittobase_eth'; // Adjusted seed to match username
+    } catch {
+      return '/fallback-avatar.png'; // Fallback image if API fails
+    }
   }, []);
 
   return (
@@ -118,13 +126,13 @@ export default function OnlinePlayPage() {
 
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="p-3 rounded-xl bg-white text-center">
-              <Image src={hostAvatar} alt="you" width={44} height={44} className="rounded-full object-cover mx-auto mb-2" />
+              <Image src={hostAvatar} alt="you" width={44} height={44} className="rounded-full object-cover mx-auto mb-2" unoptimized />
               <div className="text-xs font-semibold">@De1Develbase_eth</div>
               <div className="text-xs text-black/60">Won: 21</div>
               <button className="mt-2 w-full h-16 bg-black text-white text-2xl font-bold rounded-lg" disabled={!youAreX}>X</button>
             </div>
             <div className="p-3 rounded-xl bg-white text-center">
-              <Image src={opponentAvatar} alt="opponent" width={44} height={44} className="rounded-full object-cover mx-auto mb-2" />
+              <Image src={opponentAvatar} alt="opponent" width={44} height={44} className="rounded-full object-cover mx-auto mb-2" unoptimized />
               <div className="text-xs font-semibold">@Ovittobase_eth</div>
               <div className="text-xs text-black/60">Won: 15</div>
               <button className="mt-2 w-full h-16 bg-[#70FF5A] text-black text-2xl font-bold rounded-lg" disabled={!youAreO}>O</button>
