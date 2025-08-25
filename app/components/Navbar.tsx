@@ -75,7 +75,7 @@ export function Navbar() {
   return (
     <>
       <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-[#70FF5A] origin-left z-50"
+        className="fixed top-0 left-0 right-0 h-1 bg-[#393535] origin-left z-50"
         style={{ scaleX }}
       />
       <nav className="sticky top-0 z-40 w-full bg-white border-b border-[#e5e7eb]">
