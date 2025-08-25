@@ -117,10 +117,14 @@ export default function OnlinePlayPage() {
 
   return (
     <>
-      <div className="min-h-screen" style={{ backgroundColor: '#000000' }}>
-        <div className="max-w-md mx-auto px-4 pt-8 pb-24">
+      <div className="min-h-screen relative bg-white">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -left-10 -top-6 text-[220px] font-bold leading-none text-black/5 select-none">X</div>
+          <div className="absolute -right-8 bottom-10 text-[220px] font-bold leading-none text-black/5 select-none">O</div>
+        </div>
+        <div className="relative max-w-md mx-auto px-4 pt-8 pb-24">
           <div className="flex items-center justify-between mb-4">
-            <div className="text-sm font-semibold text-white">Play Online</div>
+            <div className="text-sm font-semibold text-black">Play Online</div>
             <button className="px-3 py-1.5 rounded-lg bg-[#70FF5A] text-black text-xs" onClick={handleInvite} disabled={!matchId}>Invite</button>
           </div>
 
@@ -128,13 +132,19 @@ export default function OnlinePlayPage() {
             <div className="p-3 rounded-xl bg-white text-center">
               <Image src={hostAvatar} alt="you" width={44} height={44} className="rounded-full object-cover mx-auto mb-2" unoptimized />
               <div className="text-xs font-semibold">@De1Develbase_eth</div>
-              <div className="text-xs text-black/60">Won: 21</div>
+              <div className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-md bg-black text-white text-[11px]">
+                <span>👑</span>
+                <span>Won · 21</span>
+              </div>
               <button className="mt-2 w-full h-16 bg-black text-white text-2xl font-bold rounded-lg" disabled={!youAreX}>X</button>
             </div>
             <div className="p-3 rounded-xl bg-white text-center">
               <Image src={opponentAvatar} alt="opponent" width={44} height={44} className="rounded-full object-cover mx-auto mb-2" unoptimized />
               <div className="text-xs font-semibold">@Ovittobase_eth</div>
-              <div className="text-xs text-black/60">Won: 15</div>
+              <div className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-md bg-black text-white text-[11px]">
+                <span>👑</span>
+                <span>Won · 15</span>
+              </div>
               <button className="mt-2 w-full h-16 bg-[#70FF5A] text-black text-2xl font-bold rounded-lg" disabled={!youAreO}>O</button>
             </div>
           </div>
