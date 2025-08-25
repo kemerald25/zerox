@@ -142,10 +142,10 @@ export default function OnlinePlayPage() {
     useEffect(() => {
         (async () => {
             try {
-                const u = context?.user as unknown as { username?: string; displayName?: string; pfpUrl?: unknown; pfp?: unknown; profile?: Record<string, unknown> } | undefined;
+                const u = context?.user as unknown as { username?: string; displayName?: string; pfpUrl?: unknown; pfp?: unknown; profile?: { username?: unknown; pfp?: unknown; picture?: unknown } } | undefined;
                 if (!u || !address) return;
-                const username = typeof u.username === 'string' ? u.username : (typeof (u.profile?.username as unknown) === 'string' ? (u.profile?.username as string) : undefined);
-                const maybePfp = (u as any)?.pfpUrl ?? (u as any)?.pfp ?? u.profile?.pfp ?? u.profile?.picture;
+                const username = typeof u.username === 'string' ? u.username : (typeof u.profile?.username === 'string' ? (u.profile?.username as string) : undefined);
+                const maybePfp = (u?.pfpUrl ?? u?.pfp ?? u.profile?.pfp ?? u.profile?.picture) as unknown;
                 let pfpUrl: string | undefined;
                 if (typeof maybePfp === 'string') pfpUrl = maybePfp;
                 else if (maybePfp && typeof maybePfp === 'object') {
