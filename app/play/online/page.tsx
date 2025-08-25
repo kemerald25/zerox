@@ -31,12 +31,24 @@ export default function OnlinePlayPage() {
     const [busy, setBusy] = useState(false);
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    const myId = useMemo(() => {
-        const addr = (address || '').toLowerCase();
-        if (addr) return addr;
-        const fid = (context?.user as unknown as { fid?: number } | undefined)?.fid;
-        return typeof fid === 'number' ? `fc:${String(fid)}`.toLowerCase() : '';
+    const [playerId, setPlayerId] = useState<string>('');
+    useEffect(() => {
+        let id = (address || '').toLowerCase();
+        if (!id) {
+            const fid = (context?.user as unknown as { fid?: number } | undefined)?.fid;
+            if (typeof fid === 'number') id = `fc:${String(fid)}`.toLowerCase();
+        }
+        if (!id) {
+            try { id = localStorage.getItem('pvp_pid') || ''; } catch {}
+        }
+        if (!id) {
+            id = `anon:${Math.random().toString(36).slice(2,10)}`;
+            try { localStorage.setItem('pvp_pid', id); } catch {}
+        }
+        setPlayerId(id);
     }, [address, context]);
+
+    const myId = playerId;
     const youAreX = useMemo(() => !!(match?.player_x && match.player_x.toLowerCase() === myId), [match, myId]);
     const youAreO = useMemo(() => !!(match?.player_o && match.player_o.toLowerCase() === myId), [match, myId]);
     const mySymbol: 'X' | 'O' | null = youAreX ? 'X' : youAreO ? 'O' : null;
@@ -148,7 +160,7 @@ export default function OnlinePlayPage() {
         (async () => {
             try {
                 const u = context?.user as unknown as { username?: string; displayName?: string; pfpUrl?: unknown; pfp?: unknown; profile?: { username?: unknown; pfp?: unknown; picture?: unknown } } | undefined;
-                if (!u || !address) return;
+                if (!u || !myId) return;
                 const username = typeof u.username === 'string' ? u.username : (typeof u.profile?.username === 'string' ? (u.profile?.username as string) : undefined);
                 const maybePfp = (u?.pfpUrl ?? u?.pfp ?? u.profile?.pfp ?? u.profile?.picture) as unknown;
                 let pfpUrl: string | undefined;
@@ -159,10 +171,10 @@ export default function OnlinePlayPage() {
                         if (typeof v === 'string') { pfpUrl = v; break; }
                     }
                 }
-                await fetch('/api/profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address, username, pfpUrl }) });
+                await fetch('/api/profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: myId, username, pfpUrl }) });
             } catch {}
         })();
-    }, [context, address]);
+    }, [context, myId]);
 
     // For displaying the opponent, try reading from our backend cache by their address
     useEffect(() => {
