@@ -20,7 +20,7 @@ export function WalletCheck({ children }: { children: React.ReactNode }) {
         className="text-center space-y-4"
       >
         <h2 className="text-3xl font-bold" style={{ color: '#66c800' }}>
-          Welcome to TicTacToe
+          Welcome to ZeroX
         </h2>
         <p className="text-lg text-gray-600 dark:text-gray-400">
           Connect your Farcaster wallet to start playing
