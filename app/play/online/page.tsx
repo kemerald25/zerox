@@ -1,0 +1,152 @@
+'use client';
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
+import { useAccount } from 'wagmi';
+import { useMiniKit, useComposeCast } from '@coinbase/onchainkit/minikit';
+import GameBoard from '@/app/components/game/GameBoard';
+import BottomNav from '@/app/components/BottomNav';
+
+type PvpMatch = {
+  id: string;
+  player_x?: string | null;
+  player_o?: string | null;
+  invited_by?: string | null;
+  board: string; // JSON string
+  next_turn: 'X' | 'O';
+  size: number;
+  misere: boolean;
+  blitz: 'off'|'7s'|'5s';
+  status: 'open'|'active'|'done';
+  winner?: string | null;
+};
+
+export default function OnlinePlayPage() {
+  const { address } = useAccount();
+  const { context } = useMiniKit();
+  const { composeCast } = useComposeCast();
+
+  const [matchId, setMatchId] = useState<string | null>(null);
+  const [match, setMatch] = useState<PvpMatch | null>(null);
+  const [busy, setBusy] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const me = (address || '').toLowerCase();
+  const youAreX = useMemo(() => !!(match?.player_x && match.player_x.toLowerCase() === me), [match, me]);
+  const youAreO = useMemo(() => !!(match?.player_o && match.player_o.toLowerCase() === me), [match, me]);
+  const mySymbol: 'X' | 'O' | null = youAreX ? 'X' : youAreO ? 'O' : null;
+
+  // Create or join
+  useEffect(() => {
+    if (!address) return;
+    (async () => {
+      try {
+        const url = new URL(window.location.href);
+        const existing = url.searchParams.get('match_id');
+        const wantJoin = url.searchParams.get('join');
+        if (existing && (wantJoin === '1' || wantJoin === 'true')) {
+          await fetch('/api/pvp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'join', id: existing, address }) });
+          setMatchId(existing);
+        } else {
+          const res = await fetch('/api/pvp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'create', invited_by: address, size: 3, misere: false, blitz: 'off' }) });
+          const j = await res.json();
+          if (j?.match?.id) setMatchId(j.match.id as string);
+        }
+      } catch {}
+    })();
+  }, [address]);
+
+  // Polling
+  useEffect(() => {
+    if (!matchId) return;
+    const load = async () => {
+      try {
+        const res = await fetch(`/api/pvp?id=${matchId}`);
+        const j = await res.json();
+        if (j?.match) setMatch(j.match as PvpMatch);
+      } catch {}
+    };
+    load();
+    pollRef.current = setInterval(load, 1200);
+    return () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } };
+  }, [matchId]);
+
+  const boardArr: Array<string | null> = useMemo(() => {
+    try { return (match?.board ? JSON.parse(match.board) : Array(9).fill(null)) as Array<string|null>; } catch { return Array(9).fill(null); }
+  }, [match]);
+
+  const size = match?.size ?? 3;
+  const isMyTurn = mySymbol ? match?.next_turn === mySymbol : false;
+
+  const handleInvite = async () => {
+    if (!matchId) return;
+    const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
+    const url = `${base}/play/online?match_id=${matchId}&join=1`;
+    try { await composeCast({ text: `Play ZeroX with me! ${url}`, embeds: [url] }); return; } catch {}
+    try { await navigator.clipboard.writeText(url); } catch {}
+  };
+
+  const handleCellClick = useCallback(async (index: number) => {
+    if (!match || !address) return;
+    if (!isMyTurn) return;
+    if (boardArr[index] !== null) return;
+    if (!matchId) return;
+    if (!mySymbol) return;
+    try {
+      setBusy(true);
+      await fetch('/api/pvp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'move', id: matchId, address, index }) });
+    } catch {} finally { setBusy(false); }
+  }, [match, address, isMyTurn, boardArr, matchId, mySymbol]);
+
+  const hostAvatar = useMemo(() => {
+    const p = (context?.user as any)?.pfpUrl; const username = (context?.user as any)?.username;
+    return typeof p === 'string' ? p : `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(username || 'you')}`;
+  }, [context]);
+
+  const opponentAvatar = useMemo(() => {
+    // We do not have remote profile data for opponent; show placeholder
+    const seed = match?.player_x && match.player_x.toLowerCase() !== me ? match.player_x : match?.player_o && match.player_o.toLowerCase() !== me ? match.player_o : 'opponent';
+    return `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed || 'opponent')}`;
+  }, [match, me]);
+
+  return (
+    <>
+      <div className="min-h-screen" style={{ backgroundColor: '#141414' }}>
+        <div className="max-w-md mx-auto px-4 pt-8 pb-24">
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm font-semibold text-white">Play Online</div>
+            <button className="px-3 py-1.5 rounded-lg bg-[#70FF5A] text-black text-xs" onClick={handleInvite} disabled={!matchId}>Invite</button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="p-3 rounded-xl bg-white">
+              <div className="flex items-center gap-3">
+                <Image src={hostAvatar} alt="you" width={44} height={44} className="rounded-full object-cover" />
+                <div className="text-xs font-semibold">You {mySymbol ? `(${mySymbol})` : ''}</div>
+              </div>
+            </div>
+            <div className="p-3 rounded-xl bg-white text-right">
+              <div className="flex items-center gap-3 justify-end">
+                <div className="text-xs font-semibold">{match?.player_x && match?.player_o ? 'Opponent' : 'Waiting…'}</div>
+                <Image src={opponentAvatar} alt="opponent" width={44} height={44} className="rounded-full object-cover" />
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-2 text-center text-xs text-white/80">{match?.status === 'done' ? (match?.winner ? (match.winner === mySymbol ? 'You win!' : 'You lose') : 'Draw') : (isMyTurn ? 'Your turn' : "Opponent's turn")}</div>
+
+          <GameBoard
+            board={boardArr}
+            onCellClick={handleCellClick}
+            isPlayerTurn={Boolean(isMyTurn) && !busy && match?.status !== 'done'}
+            winningLine={null}
+            size={size}
+          />
+        </div>
+      </div>
+      <BottomNav />
+    </>
+  );
+}
+
+
