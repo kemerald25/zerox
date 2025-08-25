@@ -762,6 +762,14 @@ export default function Home() {
       {playerSymbol && difficulty && (
         <>
           <div className="mb-2 flex items-center justify-center gap-2 flex-wrap" style={{ color: '#66c800' }}>
+            <div className="w-full text-center text-sm opacity-90">
+              {(() => {
+                const payout = process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || process.env.PAYOUT_AMOUNT_ETH;
+                const charge = process.env.NEXT_PUBLIC_CHARGE_AMOUNT_ETH || process.env.CHARGE_AMOUNT_ETH;
+                const p = payout || charge || '0.00002';
+                return `Win to receive ~${p} ETH. Lose and you pay ~${p}.`;
+              })()}
+            </div>
             <label className="text-sm">Size</label>
             <select
               className="border border-[#66c800] rounded px-2 py-1 text-sm bg-white/80"
