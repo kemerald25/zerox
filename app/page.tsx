@@ -1068,7 +1068,7 @@ function LeaderboardTab() {
                 <div key={r.rank} className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3">
                     <div className="w-6 text-center font-bold text-[#66c800]">{r.rank}</div>
-                    <Image src={src} alt={(r as any).alias || 'pfp'} width={36} height={28} className="rounded-md object-cover" />
+                    <Image src={src} alt={(r as any).alias || 'pfp'} width={36} height={36} className="rounded-md object-cover" />
                     <div className="font-semibold text-[#0a0a0a]">{(r as any).alias ? `@${(r as any).alias}` : `${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
                   </div>
                   <div className="text-xs text-right">
