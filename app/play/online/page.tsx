@@ -100,7 +100,8 @@ export default function OnlinePlayPage() {
     }, [match]);
 
     const size = match?.size ?? 3;
-    const isMyTurn = mySymbol ? match?.next_turn === mySymbol : false;
+    const isActive = match?.status === 'active';
+    const isMyTurn = isActive && mySymbol ? match?.next_turn === mySymbol : false;
     const waitingForOpponent = useMemo(() => Boolean(matchId && match && (!match.player_x || !match.player_o)), [matchId, match]);
 
     const handleInvite = async () => {
@@ -113,6 +114,7 @@ export default function OnlinePlayPage() {
 
     const handleCellClick = useCallback(async (index: number) => {
         if (!match || !myId) return;
+        if (match.status !== 'active') return;
         if (!isMyTurn) return;
         if (boardArr[index] !== null) return;
         if (!matchId) return;
@@ -245,14 +247,14 @@ export default function OnlinePlayPage() {
                     </div>
 
                     <div className="mb-2 text-center text-xs text-black/60">
-                        {waitingForOpponent ? 'Share the invite to start' : match?.status === 'done' ? (match?.winner ? (match.winner === mySymbol ? 'You win!' : 'You lose') : 'Draw') : (isMyTurn ? 'Your turn' : "Opponent's turn")}
+                        {waitingForOpponent || match?.status === 'open' ? 'Share the invite to start' : match?.status === 'done' ? (match?.winner ? (match.winner === mySymbol ? 'You win!' : 'You lose') : 'Draw') : (isMyTurn ? 'Your turn' : "Opponent's turn")}
                     </div>
 
                     <div className="flex-1 flex items-center justify-center">
                         <GameBoard
                             board={boardArr}
                             onCellClick={handleCellClick}
-                            isPlayerTurn={Boolean(isMyTurn) && !busy && match?.status !== 'done'}
+                            isPlayerTurn={Boolean(isMyTurn) && !busy && match?.status === 'active'}
                             winningLine={null}
                             size={size}
                         />
