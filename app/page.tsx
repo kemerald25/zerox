@@ -61,9 +61,6 @@ export default function Home() {
     setSelectingBlock(false);
     setDoubleActive(false);
     setDoublePendingSecond(false);
-    setUsedBlock(false);
-    setUsedHint(false);
-    setUsedDouble(false);
     // alternate who starts next round
     setNextStarter((s) => (s === 'player' ? 'ai' : 'player'));
   }, [boardSize, computeTurnLimit, nextStarter]);
