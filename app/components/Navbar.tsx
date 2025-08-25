@@ -3,7 +3,6 @@
 
 import { motion, useScroll, useSpring } from 'framer-motion';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { useAccount, useConnect } from 'wagmi';
 import React, { useEffect, useState } from 'react';
@@ -14,7 +13,6 @@ export function Navbar() {
   const { scrollYProgress } = useScroll();
   const { isConnected, address } = useAccount();
   const { connect, connectors } = useConnect();
-  const pathname = usePathname();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
@@ -80,7 +78,7 @@ export function Navbar() {
         className="fixed top-0 left-0 right-0 h-1 bg-[#70FF5A] origin-left z-50"
         style={{ scaleX }}
       />
-      <nav className={`sticky top-0 z-40 w-full border-b ${pathname?.startsWith('/leaderboard') ? 'bg-[#141414] border-transparent' : 'bg-white border-[#e5e7eb]'}`}>
+      <nav className="sticky top-0 z-40 w-full bg-[#000000] border-b border-[#e5e7eb]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
