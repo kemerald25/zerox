@@ -56,6 +56,7 @@ export default function Home() {
     setIsPlayerTurn(nextStarter === 'player');
     setSecondsLeft(computeTurnLimit());
     setOutcomeHandled(false);
+    setResultRecorded(false);
     setSessionId(null);
     // reset power-ups
     setHintIndex(null);
@@ -70,6 +71,7 @@ export default function Home() {
     setNextStarter((s) => (s === 'player' ? 'ai' : 'player'));
   }, [boardSize, computeTurnLimit, nextStarter]);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [resultRecorded, setResultRecorded] = useState(false);
 
   const { address } = useAccount();
   const { sendTransactionAsync } = useSendTransaction();
@@ -468,6 +470,12 @@ export default function Home() {
 
   // Outcome sounds
   useEffect(() => {
+    // Ensure on-chain record is prompted once for any outcome
+    if ((gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') && !resultRecorded) {
+      try { recordResult(gameStatus === 'won' ? 'win' : gameStatus === 'lost' ? 'loss' : 'draw'); } catch {}
+      setResultRecorded(true);
+    }
+
     if (gameStatus === 'won') {
       playWin();
       hapticWin();
