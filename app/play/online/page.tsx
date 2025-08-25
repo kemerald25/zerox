@@ -119,7 +119,7 @@ export default function OnlinePlayPage() {
     <>
       <div className="min-h-screen relative bg-white">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -left-10 -top-6 text-[520px] font-bold leading-none text- select-none">X</div>
+          <div className="absolute -left-10 -top-6 text-[520px] font-bold leading-none text-[] select-none">X</div>
           <div className="absolute -right-8 bottom-10 text-[220px] font-bold leading-none text-black/5 select-none">O</div>
         </div>
         <div className="relative max-w-md mx-auto px-4 pt-8 pb-24">
