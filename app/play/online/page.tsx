@@ -16,8 +16,8 @@ type PvpMatch = {
   next_turn: 'X' | 'O';
   size: number;
   misere: boolean;
-  blitz: 'off'|'7s'|'5s';
-  status: 'open'|'active'|'done';
+  blitz: 'off' | '7s' | '5s';
+  status: 'open' | 'active' | 'done';
   winner?: string | null;
 };
 
@@ -72,7 +72,7 @@ export default function OnlinePlayPage() {
   }, [matchId]);
 
   const boardArr: Array<string | null> = useMemo(() => {
-    try { return (match?.board ? JSON.parse(match.board) : Array(9).fill(null)) as Array<string|null>; } catch { return Array(9).fill(null); }
+    try { return (match?.board ? JSON.parse(match.board) : Array(9).fill(null)) as Array<string | null>; } catch { return Array(9).fill(null); }
   }, [match]);
 
   const size = match?.size ?? 3;
@@ -100,15 +100,12 @@ export default function OnlinePlayPage() {
   }, [match, address, isMyTurn, boardArr, matchId, mySymbol]);
 
   const hostAvatar = useMemo(() => {
-    const p = (context?.user as any)?.pfpUrl; const username = (context?.user as any)?.username;
-    return typeof p === 'string' ? p : `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(username || 'you')}`;
-  }, [context]);
+    return 'https://example.com/avatar1.png'; // Replace with actual avatar URL for @De1Develbase_eth
+  }, []);
 
   const opponentAvatar = useMemo(() => {
-    // We do not have remote profile data for opponent; show placeholder
-    const seed = match?.player_x && match.player_x.toLowerCase() !== me ? match.player_x : match?.player_o && match.player_o.toLowerCase() !== me ? match.player_o : 'opponent';
-    return `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed || 'opponent')}`;
-  }, [match, me]);
+    return 'https://example.com/avatar2.png'; // Replace with actual avatar URL for @Ovittobase_eth
+  }, []);
 
   return (
     <>
@@ -120,21 +117,23 @@ export default function OnlinePlayPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="p-3 rounded-xl bg-white">
-              <div className="flex items-center gap-3">
-                <Image src={hostAvatar} alt="you" width={44} height={44} className="rounded-full object-cover" />
-                <div className="text-xs font-semibold">You {mySymbol ? `(${mySymbol})` : ''}</div>
-              </div>
+            <div className="p-3 rounded-xl bg-white text-center">
+              <Image src={hostAvatar} alt="you" width={44} height={44} className="rounded-full object-cover mx-auto mb-2" />
+              <div className="text-xs font-semibold">@De1Develbase_eth</div>
+              <div className="text-xs text-black/60">Won: 21</div>
+              <button className="mt-2 w-full h-16 bg-black text-white text-2xl font-bold rounded-lg" disabled={!youAreX}>X</button>
             </div>
-            <div className="p-3 rounded-xl bg-white text-right">
-              <div className="flex items-center gap-3 justify-end">
-                <div className="text-xs font-semibold">{waitingForOpponent ? 'Waiting…' : 'Opponent'}</div>
-                <Image src={opponentAvatar} alt="opponent" width={44} height={44} className="rounded-full object-cover" />
-              </div>
+            <div className="p-3 rounded-xl bg-white text-center">
+              <Image src={opponentAvatar} alt="opponent" width={44} height={44} className="rounded-full object-cover mx-auto mb-2" />
+              <div className="text-xs font-semibold">@Ovittobase_eth</div>
+              <div className="text-xs text-black/60">Won: 15</div>
+              <button className="mt-2 w-full h-16 bg-[#70FF5A] text-black text-2xl font-bold rounded-lg" disabled={!youAreO}>O</button>
             </div>
           </div>
 
-          <div className="mb-2 text-center text-xs text-black/60">{waitingForOpponent ? 'Share the invite to start' : match?.status === 'done' ? (match?.winner ? (match.winner === mySymbol ? 'You win!' : 'You lose') : 'Draw') : (isMyTurn ? 'Your turn' : "Opponent's turn")}</div>
+          <div className="mb-2 text-center text-xs text-black/60">
+            {waitingForOpponent ? 'Share the invite to start' : match?.status === 'done' ? (match?.winner ? (match.winner === mySymbol ? 'You win!' : 'You lose') : 'Draw') : (isMyTurn ? 'Your turn' : "Opponent's turn")}
+          </div>
 
           <GameBoard
             board={boardArr}
@@ -149,5 +148,3 @@ export default function OnlinePlayPage() {
     </>
   );
 }
-
-
