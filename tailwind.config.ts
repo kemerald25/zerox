@@ -10,6 +10,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ["Pixelify Sans", "ui-sans-serif", "system-ui"],
+        ui: ["ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica", "Arial", "Noto Sans", "sans-serif"],
       },
       colors: {
         background: "var(--background)",
