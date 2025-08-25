@@ -106,7 +106,7 @@ export function Navbar() {
               {fcUser ? (
                 <motion.div
                   whileHover={{ scale: 1.03 }}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#70FF5A]/10 text-[##393535] transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#70FF5A]/10 text-[#393535] transition-colors"
                 >
                   {typeof fcUser.pfpUrl === 'string' ? (
                     // eslint-disable-next-line @next/next/no-img-element
