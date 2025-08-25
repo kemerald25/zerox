@@ -676,7 +676,14 @@ export default function Home() {
     <main className="min-h-screen p-4 flex flex-col items-center" style={{ paddingBottom: bottomNavHeight }}>
       <WalletCheck>
         {toast && (
-          <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded bg-[#70FF5A] text-white shadow">
+          <div
+            className="fixed top-3 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded shadow-lg border"
+            style={{
+              backgroundColor: gameStatus === 'won' ? '#70FF5A' : gameStatus === 'lost' ? '#000000' : '#ffffff',
+              color: gameStatus === 'lost' ? '#ffffff' : '#000000',
+              borderColor: '#e5e7eb',
+            }}
+          >
             {toast}
           </div>
         )}
