@@ -199,7 +199,7 @@ export default function OnlinePlayPage() {
                                 </div>
                             </div>
                             <div className="text-xs text-black font-semibold">{hostProfile?.username ? `@${hostProfile.username}` : 'You'}</div>
-                            <button className="mt-2 w-full h-12 bg-black font-sans text-white text-2xl font-bold rounded-lg" disabled={!youAreX}>X</button>
+                            <button className="mt-2 w-full h-12 bg-black text-white text-2xl font-bold rounded-lg font-ui" disabled={!youAreX}>X</button>
                         </div>
                         <div className="relative p-4 pt-10 rounded-2xl bg-white text-center">
                             <div className="absolute -top-8 left-1/2 -translate-x-1/2">
@@ -208,7 +208,7 @@ export default function OnlinePlayPage() {
                                 </div>
                             </div>
                             <div className="text-xs text-black font-semibold">{opponentProfile?.username ? `@${opponentProfile.username}` : opponentAddress ? `${opponentAddress.slice(0,6)}…${opponentAddress.slice(-4)}` : (waitingForOpponent ? 'Waiting…' : 'Opponent')}</div>
-                            <button className="mt-2 w-full h-12 bg-[#70FF5A] text-black text-2xl font-bold rounded-lg" disabled={!youAreO}>O</button>
+                            <button className="mt-2 w-full h-12 bg-[#70FF5A] text-black text-2xl font-bold rounded-lg font-ui" disabled={!youAreO}>O</button>
                         </div>
                     </div>
 
