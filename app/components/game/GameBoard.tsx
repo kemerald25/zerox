@@ -18,17 +18,23 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn,
   const GREEN = '#66c800';
   const LIME_GREEN = '#b6f569';
 
+  // Responsive tweaks based on board size
+  const gapPx = size >= 5 ? 4 : size === 4 ? 6 : 8; // tighter gaps for larger grids
+  const borderWidth = size >= 5 ? 1 : 2; // thinner borders for dense boards
+  const fontClass = size >= 5 ? 'text-xl' : size === 4 ? 'text-2xl' : 'text-4xl';
+
   return (
     <div className="w-full max-w-md mx-auto">
       <motion.div 
-        className="grid gap-2 aspect-square p-2"
+        className="grid aspect-square p-2"
         style={{ 
           backgroundColor: LIME_GREEN, 
           padding: '8px', 
           borderRadius: '12px',
           boxShadow: `0 0 20px ${LIME_GREEN}40`,
           display: 'grid',
-          gridTemplateColumns: `repeat(${size}, 1fr)`
+          gridTemplateColumns: `repeat(${size}, 1fr)`,
+          gap: `${gapPx}px`
         }}
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -41,14 +47,14 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn,
           <motion.button
             key={index}
             onClick={() => isPlayerTurn && !cell && !isDisabled && onCellClick(index)}
-            whileHover={{ scale: cell || isDisabled ? 1 : 1.05, boxShadow: `0 0 10px ${GREEN}40` }}
+            whileHover={{ scale: cell || isDisabled ? 1 : 1.03, boxShadow: `0 0 10px ${GREEN}40` }}
             whileTap={{ scale: cell || isDisabled ? 1 : 0.95 }}
             initial={cell ? { scale: 0.8, opacity: 0 } : {}}
             animate={cell ? { scale: 1, opacity: 1 } : {}}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
             className={`
               aspect-square flex items-center justify-center
-              text-4xl font-bold rounded-lg
+              ${fontClass} font-bold rounded-lg
               ${cell || isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}
               ${isPlayerTurn && !cell && !isDisabled ? 'hover:bg-opacity-90' : ''}
               transition-colors duration-200
@@ -56,7 +62,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn,
             style={{
               backgroundColor: isWinningCell ? LIME_GREEN : 'white',
               color: GREEN,
-              border: `2px solid ${isWinningCell ? LIME_GREEN : isDisabled ? '#cccccc' : GREEN}`,
+              border: `${borderWidth}px solid ${isWinningCell ? LIME_GREEN : isDisabled ? '#cccccc' : GREEN}`,
               boxShadow: isWinningCell ? `0 0 18px ${LIME_GREEN}80` : `0 0 10px ${GREEN}20`,
               opacity: isDisabled ? 0.5 : 1
             }}
