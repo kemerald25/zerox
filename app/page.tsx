@@ -1037,37 +1037,43 @@ function LeaderboardTab() {
   }, [season]);
 
   return (
-    <div className="w-full max-w-md mx-auto" style={{ color: '#66c800' }}>
-      <div className="p-4 rounded-lg border border-[#66c800]/30 bg-white/60 dark:bg-black/40">
-        <div className="flex items-center justify-between mb-1">
-          <div className="font-bold">Top 10</div>
+    <div className="w-full max-w-md mx-auto">
+      <div className="p-4 rounded-xl border border-[#e5e7eb] bg-white">
+        <div className="flex items-center justify-between mb-2">
+          <div className="font-bold text-[#0a0a0a]">Top 10</div>
           {season && (
-            <div className="text-xs opacity-80">Season: {season.start} → {season.end}</div>
+            <div className="text-xs text-[#4b4b4f]">Season: {season.start} → {season.end}</div>
           )}
         </div>
         {season && (
-          <div className="text-xs mb-3 opacity-80">Ends in {countdown}</div>
+          <div className="text-xs mb-3 text-[#4b4b4f]">Ends in <span className="font-semibold text-[#66c800]">{countdown}</span></div>
         )}
         {loading ? (
-          <div className="text-sm opacity-80">Loading…</div>
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-10 rounded-lg bg-[#f6f7f6] animate-pulse" />
+            ))}
+          </div>
         ) : error ? (
           <div className="text-sm text-red-500">{error}</div>
         ) : rows.length === 0 ? (
-          <div className="text-sm opacity-80">No entries yet.</div>
+          <div className="text-sm text-[#4b4b4f]">No entries yet.</div>
         ) : (
-          <div className="space-y-2">
+          <div className="divide-y divide-[#e5e7eb]">
             {rows.map((r) => (
-              <div key={r.rank} className={`flex items-center justify-between p-2 rounded ${r.rank === 1 ? 'bg-[#b6f569]/40' : 'bg-[#b6f569]/20'}`}>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 text-center font-bold">{r.rank}</div>
+              <div key={r.rank} className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 text-center font-bold text-[#66c800]">{r.rank}</div>
                   {('pfpUrl' in r) && (r as unknown as { pfpUrl?: string }).pfpUrl ? (
-                    <Image src={(r as unknown as { pfpUrl: string }).pfpUrl} alt={r.alias || 'pfp'} width={20} height={20} className="rounded-full" />
-                  ) : null}
-                  <div className="font-semibold">{r.alias ? `@${r.alias}` : `${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
+                    <Image src={(r as unknown as { pfpUrl: string }).pfpUrl} alt={r.alias || 'pfp'} width={24} height={24} className="rounded-full" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-[#f6f7f6] border border-[#e5e7eb]" />
+                  )}
+                  <div className="font-semibold text-[#0a0a0a]">{r.alias ? `@${r.alias}` : `${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
                 </div>
                 <div className="text-xs text-right">
-                  <div>{r.points} pts</div>
-                  <div className="opacity-80">W-D-L {r.wins}-{r.draws}-{r.losses}</div>
+                  <div className="font-semibold text-[#0a0a0a]">{r.points} pts</div>
+                  <div className="text-[#4b4b4f]">W‑D‑L {r.wins}-{r.draws}-{r.losses}</div>
                 </div>
               </div>
             ))}
@@ -1110,23 +1116,23 @@ function SprintSection() {
   }, []);
 
   return (
-    <div className="w-full max-w-md mx-auto mt-4" style={{ color: '#66c800' }}>
-      <div className="p-4 rounded-lg border border-[#66c800]/30 bg-white/60 dark:bg-black/40">
+    <div className="w-full max-w-md mx-auto mt-4">
+      <div className="p-4 rounded-xl border border-[#e5e7eb] bg-white">
         <div className="flex items-center justify-between mb-2">
-          <div className="font-bold">Sprint (10 min)</div>
-          <div className="text-xs opacity-80">Ends in {endsIn}</div>
+          <div className="font-bold text-[#0a0a0a]">Sprint (10 min)</div>
+          <div className="text-xs text-[#4b4b4f]">Ends in <span className="font-semibold text-[#66c800]">{endsIn}</span></div>
         </div>
         {rows.length === 0 ? (
-          <div className="text-sm opacity-80">No wins yet in this window.</div>
+          <div className="text-sm text-[#4b4b4f]">No wins yet in this window.</div>
         ) : (
-          <div className="space-y-2">
+          <div className="divide-y divide-[#e5e7eb]">
             {rows.map((r) => (
-              <div key={r.rank} className={`flex items-center justify-between p-2 rounded bg-[#b6f569]/20`}>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 text-center font-bold">{r.rank}</div>
-                  <div className="font-semibold">{`${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
+              <div key={r.rank} className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 text-center font-bold text-[#66c800]">{r.rank}</div>
+                  <div className="font-semibold text-[#0a0a0a]">{`${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
                 </div>
-                <div className="text-xs">{r.wins} wins</div>
+                <div className="text-xs text-[#4b4b4f]">{r.wins} wins</div>
               </div>
             ))}
           </div>
