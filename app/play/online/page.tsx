@@ -137,7 +137,7 @@ export default function OnlinePlayPage() {
             <div className="p-3 rounded-xl bg-white text-center">
               <Image src={opponentAvatar} alt="opponent" width={44} height={44} className="rounded-full object-cover mx-auto mb-2" unoptimized />
               <div className="text-xs text-black font-semibold">@Ovittobase_eth</div>
-              <button className="mt-2 w-full h-16 bg-[#70FF5A] text-black text-2xl font-bold rounded-lg" disabled={!youAreO}>O</button>
+              <button className="mt-2 w-full h-12 bg-[#70FF5A] text-black text-2xl font-bold rounded-lg" disabled={!youAreO}>O</button>
             </div>
           </div>
 
