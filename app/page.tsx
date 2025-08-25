@@ -659,14 +659,16 @@ export default function Home() {
             {toast}
           </div>
         )}
-        {/* Results summary pill row (top-right) */}
-        <div className="w-full max-w-md mb-2 flex justify-end">
-          <div className="flex items-center gap-2">
-            <div className="px-2 py-1 rounded-md text-[10px] bg-[#70FF5A] text-black font-semibold">W {score?.wins ?? 0}</div>
-            <div className="px-2 py-1 rounded-md text-[10px] bg-white text-black border border-[#e5e7eb] font-semibold">D {score?.draws ?? 0}</div>
-            <div className="px-2 py-1 rounded-md text-[10px] bg-black text-white font-semibold">L {score?.losses ?? 0}</div>
+        {/* Results summary pill row (top-right) - only show when board is visible */}
+        {playerSymbol && difficulty && (
+          <div className="w-full max-w-md mb-2 flex justify-end">
+            <div className="flex items-center gap-2">
+              <div className="px-2 py-1 rounded-md text-[10px] bg-[#70FF5A] text-black font-semibold">W {score?.wins ?? 0}</div>
+              <div className="px-2 py-1 rounded-md text-[10px] bg-white text-black border border-[#e5e7eb] font-semibold">D {score?.draws ?? 0}</div>
+              <div className="px-2 py-1 rounded-md text-[10px] bg-black text-white font-semibold">L {score?.losses ?? 0}</div>
+            </div>
           </div>
-        </div>
+        )}
 
         <h1 className="text-4xl font-bold mb-3" style={{ color: '#000000' }}>
           ZeroX
