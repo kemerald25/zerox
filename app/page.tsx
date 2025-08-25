@@ -683,7 +683,7 @@ export default function Home() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl w-80 text-center">
               <div className="text-lg font-bold mb-2" style={{ color: '#70FF5A' }}>Add this Mini App?</div>
-              <div className="text-sm mb-4" style={{ color: '#00' }}>
+              <div className="text-sm mb-4" style={{ color: '#000000' }}>
                 Quickly access ZeroX from your apps screen.
               </div>
               <div className="flex gap-3 justify-center">
