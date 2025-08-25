@@ -924,7 +924,7 @@ export default function Home() {
           <div className="mt-4" />
             </>
           )}
-        </>
+        </div>
       )}
 
       {currentTab === 'daily' && (
