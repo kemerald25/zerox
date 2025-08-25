@@ -36,7 +36,6 @@ export default function Home() {
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState(1);
   const [streak, setStreak] = useState(0);
-  const [achievements, setAchievements] = useState<string[] | null>(null); // reserved for future badges UI
   const [dailySeed, setDailySeed] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   // Power-ups state
@@ -556,7 +555,6 @@ export default function Home() {
             setXp(Number(data.xp));
             setLevel(Number(data.level));
             setStreak(Number(data.streak));
-            setAchievements(Array.isArray(data.achievements) ? data.achievements : []);
           }
         } catch {}
       }
