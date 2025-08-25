@@ -17,6 +17,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn,
   // Brand colors
   const GREEN = '#70FF5A';
   const LIME_GREEN = '#b6f569';
+  const BLACK = '#0a0a0a';
 
   // Responsive tweaks based on board size
   const gapPx = size >= 5 ? 4 : size === 4 ? 6 : 8; // tighter gaps for larger grids
@@ -28,13 +29,14 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn,
       <motion.div 
         className="grid aspect-square p-2"
         style={{ 
-          backgroundColor: LIME_GREEN, 
+          backgroundColor: '#ffffff',
           padding: '8px', 
-          borderRadius: '12px',
-          boxShadow: `0 0 20px ${LIME_GREEN}40`,
+          borderRadius: '16px',
+          boxShadow: `0 0 24px ${GREEN}30`,
           display: 'grid',
           gridTemplateColumns: `repeat(${size}, 1fr)`,
-          gap: `${gapPx}px`
+          gap: `${gapPx}px`,
+          border: `2px dashed ${GREEN}`
         }}
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -43,6 +45,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn,
         {board.map((cell, index) => {
           const isWinningCell = Array.isArray(winningLine) && winningLine.includes(index);
           const isDisabled = disabledCells.includes(index);
+          const row = Math.floor(index / size);
+          const col = index % size;
+          const isDarkTile = ((row + col) % 2 === 0);
+          const baseBg = isDarkTile ? BLACK : '#ffffff';
+          const bg = isWinningCell ? LIME_GREEN : baseBg;
+          const symbolColor = isWinningCell ? BLACK : (isDarkTile ? '#ffffff' : BLACK);
           return (
           <motion.button
             key={index}
@@ -60,10 +68,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn,
               transition-colors duration-200
             `}
             style={{
-              backgroundColor: isWinningCell ? LIME_GREEN : 'white',
-              color: GREEN,
-              border: `${borderWidth}px solid ${isWinningCell ? LIME_GREEN : isDisabled ? '#cccccc' : GREEN}`,
-              boxShadow: isWinningCell ? `0 0 18px ${LIME_GREEN}80` : `0 0 10px ${GREEN}20`,
+              backgroundColor: bg,
+              color: symbolColor,
+              border: `${borderWidth}px dashed ${isWinningCell ? GREEN : '#e5e7eb'}`,
+              boxShadow: isWinningCell ? `0 0 18px ${GREEN}60` : `0 0 6px ${BLACK}10`,
               opacity: isDisabled ? 0.5 : 1
             }}
           >
@@ -71,7 +79,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn,
               initial={cell ? { scale: 0, rotate: -180 } : { scale: 1 }}
               animate={cell ? { scale: 1, rotate: 0 } : { scale: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              style={{ filter: isWinningCell ? 'drop-shadow(0 0 6px rgba(182,245,105,0.8))' : (hintIndex === index ? 'drop-shadow(0 0 6px rgba(102,200,0,0.7))' : 'none') }}
+              style={{ filter: isWinningCell ? `drop-shadow(0 0 6px ${GREEN}80)` : (hintIndex === index ? `drop-shadow(0 0 6px ${GREEN}70)` : 'none') }}
             >
               {cell}
             </motion.span>
