@@ -918,9 +918,7 @@ export default function Home() {
           <div className="mt-4" />
             </>
           )}
-        </div>
       </div>
-
       </WalletCheck>
     </main>
   );
