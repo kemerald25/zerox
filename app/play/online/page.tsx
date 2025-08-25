@@ -31,9 +31,14 @@ export default function OnlinePlayPage() {
     const [busy, setBusy] = useState(false);
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    const me = (address || '').toLowerCase();
-    const youAreX = useMemo(() => !!(match?.player_x && match.player_x.toLowerCase() === me), [match, me]);
-    const youAreO = useMemo(() => !!(match?.player_o && match.player_o.toLowerCase() === me), [match, me]);
+    const myId = useMemo(() => {
+        const addr = (address || '').toLowerCase();
+        if (addr) return addr;
+        const fid = (context?.user as unknown as { fid?: number } | undefined)?.fid;
+        return typeof fid === 'number' ? `fc:${String(fid)}`.toLowerCase() : '';
+    }, [address, context]);
+    const youAreX = useMemo(() => !!(match?.player_x && match.player_x.toLowerCase() === myId), [match, myId]);
+    const youAreO = useMemo(() => !!(match?.player_o && match.player_o.toLowerCase() === myId), [match, myId]);
     const mySymbol: 'X' | 'O' | null = youAreX ? 'X' : youAreO ? 'O' : null;
 
     // Ensure Farcaster frame is ready for context usage
@@ -45,23 +50,23 @@ export default function OnlinePlayPage() {
 
     // Create or join
     useEffect(() => {
-        if (!address) return;
+        if (!myId) return;
         (async () => {
             try {
                 const url = new URL(window.location.href);
                 const existing = url.searchParams.get('match_id');
                 const wantJoin = url.searchParams.get('join');
                 if (existing && (wantJoin === '1' || wantJoin === 'true')) {
-                    await fetch('/api/pvp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'join', id: existing, address }) });
+                    await fetch('/api/pvp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'join', id: existing, address: myId }) });
                     setMatchId(existing);
                 } else {
-                    const res = await fetch('/api/pvp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'create', invited_by: address, size: 3, misere: false, blitz: 'off' }) });
+                    const res = await fetch('/api/pvp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'create', invited_by: myId, size: 3, misere: false, blitz: 'off' }) });
                     const j = await res.json();
                     if (j?.match?.id) setMatchId(j.match.id as string);
                 }
             } catch { }
         })();
-    }, [address]);
+    }, [myId]);
 
     // Polling
     useEffect(() => {
@@ -95,16 +100,16 @@ export default function OnlinePlayPage() {
     };
 
     const handleCellClick = useCallback(async (index: number) => {
-        if (!match || !address) return;
+        if (!match || !myId) return;
         if (!isMyTurn) return;
         if (boardArr[index] !== null) return;
         if (!matchId) return;
         if (!mySymbol) return;
         try {
             setBusy(true);
-            await fetch('/api/pvp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'move', id: matchId, address, index }) });
+            await fetch('/api/pvp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'move', id: matchId, address: myId, index }) });
         } catch { } finally { setBusy(false); }
-    }, [match, address, isMyTurn, boardArr, matchId, mySymbol]);
+    }, [match, myId, isMyTurn, boardArr, matchId, mySymbol]);
 
     // Current user (host) Farcaster profile
     const hostProfile = useMemo(() => {
@@ -132,10 +137,10 @@ export default function OnlinePlayPage() {
     const opponentAddress = useMemo(() => {
         const addrX = match?.player_x?.toLowerCase();
         const addrO = match?.player_o?.toLowerCase();
-        if (addrX && addrX !== me) return addrX;
-        if (addrO && addrO !== me) return addrO;
+        if (addrX && addrX !== myId) return addrX;
+        if (addrO && addrO !== myId) return addrO;
         return null;
-    }, [match, me]);
+    }, [match, myId]);
 
     const [opponentProfile, setOpponentProfile] = useState<{ username?: string; pfpUrl?: string } | null>(null);
     // When a player joins, ask their client to publish their Farcaster username/pfp to the backend so the opponent can see it
