@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { sdk } from '@farcaster/miniapp-sdk';
 import Link from 'next/link';
 import GameBoard from './components/game/GameBoard';
+import BottomNav from './components/BottomNav';
 import GameControls from './components/game/GameControls';
 import GameStatus from './components/game/GameStatus';
 import { WalletCheck } from './components/WalletCheck';
@@ -668,6 +669,7 @@ export default function Home() {
   const bottomNavHeight = 64 + bottomInset;
 
   return (
+    <>
     <main className="min-h-screen p-4 flex flex-col items-center" style={{ paddingBottom: bottomNavHeight }}>
       <WalletCheck>
         {toast && (
@@ -921,6 +923,8 @@ export default function Home() {
       </div>
       </WalletCheck>
     </main>
+    <BottomNav />
+    </>
   );
 }
 
