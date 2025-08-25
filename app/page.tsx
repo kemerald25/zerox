@@ -761,8 +761,8 @@ export default function Home() {
       />
       {playerSymbol && difficulty && (
         <>
-          <div className="mb-2 flex items-center justify-center gap-2 flex-wrap" style={{ color: '#66c800' }}>
-            <div className="w-full text-center text-sm opacity-90">
+          <div className="mb-3 flex items-center justify-center gap-3 flex-wrap" style={{ color: '#66c800' }}>
+            <div className="w-full text-center text-sm opacity-80">
               {(() => {
                 const payout = process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || process.env.PAYOUT_AMOUNT_ETH;
                 const charge = process.env.NEXT_PUBLIC_CHARGE_AMOUNT_ETH || process.env.CHARGE_AMOUNT_ETH;
@@ -770,40 +770,43 @@ export default function Home() {
                 return `Win to receive ~${p} ETH. Lose and you pay ~${p}.`;
               })()}
             </div>
-            <label className="text-sm">Size</label>
-            <select
-              className="border border-[#66c800] rounded px-2 py-1 text-sm bg-white/80"
-              value={boardSize}
-              onChange={(e) => {
-                const n = Number(e.target.value) as 3 | 4 | 5;
-                setBoardSize(n);
-                setBoard(Array(n * n).fill(null));
-                setWinningLine(null);
-                setGameStatus('playing');
-              }}
-            >
-              <option value={3}>3x3</option>
-              <option value={4}>4x4</option>
-              <option value={5}>5x5</option>
-            </select>
-            <label className="ml-3 text-sm flex items-center gap-1">
-              <input type="checkbox" checked={misere} onChange={(e) => { setMisere(e.target.checked); setGameStatus('playing'); setWinningLine(null); setBoard((b) => b.map(() => null)); }} />
-              Misère
-            </label>
-            <label className="ml-3 text-sm">Blitz</label>
-            <select
-              className="border border-[#66c800] rounded px-2 py-1 text-sm bg-white/80"
-              value={blitzPreset}
-              onChange={(e) => {
-                const v = e.target.value as 'off' | '7s' | '5s';
-                setBlitzPreset(v);
-                setSecondsLeft(null);
-              }}
-            >
-              <option value="off">Off</option>
-              <option value="7s">7s</option>
-              <option value="5s">5s</option>
-            </select>
+            <div className="flex items-center gap-2">
+              <span className="text-xs opacity-80">Size</span>
+              {([3,4,5] as const).map((n) => (
+                <button
+                  key={n}
+                  className={`px-3 py-1 rounded-full text-sm border ${boardSize===n?'bg-[#66c800] text-white border-[#66c800]':'bg-white text-[#66c800] border-[#66c800]'}`}
+                  onClick={() => {
+                    setBoardSize(n as 3|4|5);
+                    setBoard(Array((n as 3|4|5) * (n as 3|4|5)).fill(null));
+                    setWinningLine(null);
+                    setGameStatus('playing');
+                  }}
+                >
+                  {n}x{n}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                className={`px-3 py-1 rounded-full text-sm border ${misere?'bg-[#66c800] text-white border-[#66c800]':'bg-white text-[#66c800] border-[#66c800]'}`}
+                onClick={() => { const next = !misere; setMisere(next); setGameStatus('playing'); setWinningLine(null); setBoard((b)=>b.map(()=>null)); }}
+              >
+                Misère
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs opacity-80">Blitz</span>
+              {(['off','7s','5s'] as const).map((v) => (
+                <button
+                  key={v}
+                  className={`px-3 py-1 rounded-full text-sm border ${blitzPreset===v?'bg-[#66c800] text-white border-[#66c800]':'bg-white text-[#66c800] border-[#66c800]'}`}
+                  onClick={() => { setBlitzPreset(v); setSecondsLeft(null); }}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
           </div>
           <GameStatus status={gameStatus} isPlayerTurn={isPlayerTurn} secondsLeft={secondsLeft ?? null} />
           {/* Power-ups */}
