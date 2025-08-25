@@ -677,24 +677,24 @@ export default function Home() {
     <main className="min-h-screen p-4 flex flex-col items-center" style={{ paddingBottom: bottomNavHeight }}>
       <WalletCheck>
         {toast && (
-          <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded bg-[#66c800] text-white shadow">
+          <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded bg-[#70FF5A] text-white shadow">
             {toast}
           </div>
         )}
-        <h1 className="text-4xl font-bold mb-8" style={{ color: '#66c800' }}>
+        <h1 className="text-4xl font-bold mb-8" style={{ color: '#70FF5A' }}>
           ZeroX
         </h1>
         
         {showAddPrompt && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl w-80 text-center">
-              <div className="text-lg font-bold mb-2" style={{ color: '#66c800' }}>Add this Mini App?</div>
-              <div className="text-sm mb-4" style={{ color: '#66c800' }}>
+              <div className="text-lg font-bold mb-2" style={{ color: '#70FF5A' }}>Add this Mini App?</div>
+              <div className="text-sm mb-4" style={{ color: '#70FF5A' }}>
                 Quickly access ZeroX from your apps screen.
               </div>
               <div className="flex gap-3 justify-center">
                 <button
-                  className="px-4 py-2 rounded-lg bg-[#66c800] text-white"
+                  className="px-4 py-2 rounded-lg bg-[#70FF5A] text-white"
                   onClick={async () => {
                     try { await sdk.actions.addMiniApp(); } catch {}
                     setShowAddPrompt(false);
@@ -703,7 +703,7 @@ export default function Home() {
                   Add Mini App
                 </button>
                 <button
-                  className="px-4 py-2 rounded-lg bg-[#b6f569] text-[#66c800] border border-[#66c800]"
+                  className="px-4 py-2 rounded-lg bg-[#b6f569] text-[#70FF5A] border border-[#70FF5A]"
                   onClick={() => setShowAddPrompt(false)}
                 >
                   Not now
@@ -758,7 +758,7 @@ export default function Home() {
       />
       {playerSymbol && difficulty && (
         <>
-          <div className="mb-3 flex items-center justify-center gap-3 flex-wrap" style={{ color: '#66c800' }}>
+          <div className="mb-3 flex items-center justify-center gap-3 flex-wrap" style={{ color: '#70FF5A' }}>
             <div className="w-full text-center text-sm opacity-80">
               {(() => {
                 const payout = process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || process.env.PAYOUT_AMOUNT_ETH;
@@ -769,21 +769,21 @@ export default function Home() {
             </div>
             <div className="w-full flex justify-center">
               <button
-                className="px-4 py-1.5 rounded-full text-sm border bg-white text-[#66c800] border-[#66c800]"
+                className="px-4 py-1.5 rounded-full text-sm border bg-white text-[#70FF5A] border-[#70FF5A]"
                 onClick={() => setShowSettings((v) => !v)}
               >
                 {showSettings ? 'Close Settings' : 'Settings'}
               </button>
             </div>
             {showSettings && (
-              <div className="w-full max-w-md mx-auto p-3 rounded-xl bg-white/90 border border-[#66c800]/30 text-[#066c00]">
+              <div className="w-full max-w-md mx-auto p-3 rounded-xl bg-white/90 border border-[#70FF5A]/30 text-[#066c00]">
                 <div className="text-xs font-semibold mb-2" style={{ color: '#066c00' }}>Variants</div>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs opacity-80">Size</span>
                   {([3,4,5] as const).map((n) => (
                     <button
                       key={n}
-                      className={`px-3 py-1 rounded-full text-sm border ${boardSize===n?'bg-[#66c800] text-white border-[#66c800]':'bg-white text-[#66c800] border-[#66c800]'}`}
+                      className={`px-3 py-1 rounded-full text-sm border ${boardSize===n?'bg-[#70FF5A] text-white border-[#70FF5A]':'bg-white text-[#70FF5A] border-[#70FF5A]'}`}
                       onClick={() => {
                         setBoardSize(n as 3|4|5);
                         setBoard(Array((n as 3|4|5) * (n as 3|4|5)).fill(null));
@@ -797,7 +797,7 @@ export default function Home() {
                 </div>
                 <div className="flex items-center gap-2 mb-2">
                   <button
-                    className={`px-3 py-1 rounded-full text-sm border ${misere?'bg-[#66c800] text-white border-[#66c800]':'bg-white text-[#66c800] border-[#66c800]'}`}
+                    className={`px-3 py-1 rounded-full text-sm border ${misere?'bg-[#70FF5A] text-white border-[#70FF5A]':'bg-white text-[#70FF5A] border-[#70FF5A]'}`}
                     onClick={() => { const next = !misere; setMisere(next); setGameStatus('playing'); setWinningLine(null); setBoard((b)=>b.map(()=>null)); }}
                   >
                     Misère
@@ -808,7 +808,7 @@ export default function Home() {
                   {(['off','7s','5s'] as const).map((v) => (
                     <button
                       key={v}
-                      className={`px-3 py-1 rounded-full text-sm border ${blitzPreset===v?'bg-[#66c800] text-white border-[#66c800]':'bg-white text-[#66c800] border-[#66c800]'}`}
+                      className={`px-3 py-1 rounded-full text-sm border ${blitzPreset===v?'bg-[#70FF5A] text-white border-[#70FF5A]':'bg-white text-[#70FF5A] border-[#70FF5A]'}`}
                       onClick={() => { setBlitzPreset(v); setSecondsLeft(null); }}
                     >
                       {v}
@@ -818,14 +818,14 @@ export default function Home() {
                 <div className="text-xs font-semibold mb-2 mt-3" style={{ color: '#066c00' }}>Quick actions</div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
-                    className={`px-3 py-1 rounded border ${selectingBlock ? 'bg-[#66c800] text-white' : 'bg-white text-[#66c800]'} border-[#66c800] disabled:opacity-50`}
+                    className={`px-3 py-1 rounded border ${selectingBlock ? 'bg-[#70FF5A] text-white' : 'bg-white text-[#70FF5A]'} border-[#70FF5A] disabled:opacity-50`}
                     disabled={usedBlock || !isPlayerTurn || gameStatus !== 'playing'}
                     onClick={() => { if (!usedBlock) setSelectingBlock((v) => !v); }}
                   >
                     Block
                   </button>
                   <button
-                    className="px-3 py-1 rounded border bg-white text-[#66c800] border-[#66c800] disabled:opacity-50"
+                    className="px-3 py-1 rounded border bg-white text-[#70FF5A] border-[#70FF5A] disabled:opacity-50"
                     disabled={usedHint || !isPlayerTurn || gameStatus !== 'playing'}
                     onClick={() => {
                       const idx = getBestPlayerMove(board);
@@ -835,7 +835,7 @@ export default function Home() {
                     Hint
                   </button>
                   <button
-                    className={`px-3 py-1 rounded border ${doubleActive ? 'bg-[#66c800] text-white' : 'bg-white text-[#66c800]'} border-[#66c800] disabled:opacity-50`}
+                    className={`px-3 py-1 rounded border ${doubleActive ? 'bg-[#70FF5A] text-white' : 'bg-white text-[#70FF5A]'} border-[#70FF5A] disabled:opacity-50`}
                     disabled={usedDouble || !isPlayerTurn || gameStatus !== 'playing' || doublePendingSecond}
                     onClick={() => { if (!usedDouble && !doublePendingSecond) setDoubleActive((v) => !v); }}
                   >
@@ -867,13 +867,13 @@ export default function Home() {
           {(gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') && (
             <div className="mt-4 flex flex-col sm:flex-row gap-3 items-center">
               <button
-                className="px-4 py-2 rounded-lg bg-[#66c800] text-white"
+                className="px-4 py-2 rounded-lg bg-[#70FF5A] text-white"
                 onClick={handleShareResult}
               >
                 Share Result
               </button>
               <button
-                className="px-4 py-2 rounded-lg bg-[#b6f569] text-[#66c800] border border-[#66c800]"
+                className="px-4 py-2 rounded-lg bg-[#b6f569] text-[#70FF5A] border border-[#70FF5A]"
                 onClick={handleShareChallenge}
               >
                 Share Challenge
@@ -892,14 +892,14 @@ export default function Home() {
             const author = cast.author;
             const pfp = typeof author.pfpUrl === 'string' ? author.pfpUrl : undefined;
             return (
-              <div className="mt-4 p-3 rounded-lg bg-[#b6f569]/30 text-[#66c800] text-sm flex items-center gap-3">
+              <div className="mt-4 p-3 rounded-lg bg-[#b6f569]/30 text-[#70FF5A] text-sm flex items-center gap-3">
                 {pfp ? (
                   <Image src={pfp} alt={author.username || 'pfp'} width={24} height={24} className="rounded-full" />
                 ) : null}
                 <span>Shared by @{author.username || author.fid}</span>
                 <div className="ml-auto flex gap-2">
                   <button
-                    className="px-3 py-1 rounded bg-[#66c800] text-white"
+                    className="px-3 py-1 rounded bg-[#70FF5A] text-white"
                     onClick={async () => {
                       try {
                         await composeCast({ text: `Thanks @${author.username || author.fid} for sharing! 🙏`, parent: { type: 'cast', hash: cast.hash } });
@@ -909,7 +909,7 @@ export default function Home() {
                     Thank them
                   </button>
                   <button
-                    className="px-3 py-1 rounded bg-[#66c800]/10 text-[#66c800] border border-[#66c800]"
+                    className="px-3 py-1 rounded bg-[#70FF5A]/10 text-[#70FF5A] border border-[#70FF5A]"
                     onClick={() => {
                       try { viewProfile(author.fid); } catch {}
                     }}
@@ -941,7 +941,7 @@ export default function Home() {
               </div>
             </details>
             <button
-              className="px-5 py-3 rounded-lg bg-[#66c800] text-white w-full"
+              className="px-5 py-3 rounded-lg bg-[#70FF5A] text-white w-full"
               disabled={!dailySeed}
               onClick={() => {
                 const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
@@ -966,23 +966,23 @@ export default function Home() {
       <div className="fixed left-0 right-0 bottom-0 z-40">
         <div className="mx-auto max-w-2xl">
           <div className="flex items-stretch justify-around bg-white border-t border-[#e5e7eb]" style={{ paddingBottom: bottomInset }}>
-            <Link href="/daily" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold rounded-t-lg ${currentTab === 'daily' ? 'text-[#066c00] bg-[#b6f569]/30' : 'text-[#66c800]/70'}`}>
+            <Link href="/daily" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold rounded-t-lg ${currentTab === 'daily' ? 'text-[#066c00] bg-[#b6f569]/30' : 'text-[#70FF5A]/70'}`}>
               <div className="flex flex-col items-center gap-0.5 relative">
-                {currentTab === 'daily' && <span className="absolute -top-2 h-1 w-8 rounded-full bg-[#66c800]" />}
+                {currentTab === 'daily' && <span className="absolute -top-2 h-1 w-8 rounded-full bg-[#70FF5A]" />}
                 <span aria-hidden>🗓️</span>
                 <span>Daily</span>
               </div>
             </Link>
-            <Link href="/play" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold rounded-t-lg ${currentTab === 'play' ? 'text-[#066c00] bg-[#b6f569]/30' : 'text-[#66c800]/70'}`}>
+            <Link href="/play" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold rounded-t-lg ${currentTab === 'play' ? 'text-[#066c00] bg-[#b6f569]/30' : 'text-[#70FF5A]/70'}`}>
               <div className="flex flex-col items-center gap-0.5 relative">
-                {currentTab === 'play' && <span className="absolute -top-2 h-1 w-8 rounded-full bg-[#66c800]" />}
+                {currentTab === 'play' && <span className="absolute -top-2 h-1 w-8 rounded-full bg-[#70FF5A]" />}
                 <span aria-hidden>🎮</span>
                 <span>Play</span>
               </div>
             </Link>
-            <Link href="/leaderboard" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold rounded-t-lg ${currentTab === 'leaderboard' ? 'text-[#066c00] bg-[#b6f569]/30' : 'text-[#66c800]/70'}`}>
+            <Link href="/leaderboard" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold rounded-t-lg ${currentTab === 'leaderboard' ? 'text-[#066c00] bg-[#b6f569]/30' : 'text-[#70FF5A]/70'}`}>
               <div className="flex flex-col items-center gap-0.5 relative">
-                {currentTab === 'leaderboard' && <span className="absolute -top-2 h-1 w-8 rounded-full bg-[#66c800]" />}
+                {currentTab === 'leaderboard' && <span className="absolute -top-2 h-1 w-8 rounded-full bg-[#70FF5A]" />}
                 <span aria-hidden>🏆</span>
                 <span>Leaderboard</span>
               </div>
@@ -1046,7 +1046,7 @@ function LeaderboardTab() {
           )}
         </div>
         {season && (
-          <div className="text-xs mb-3 text-[#4b4b4f]">Ends in <span className="font-semibold text-[#66c800]">{countdown}</span></div>
+          <div className="text-xs mb-3 text-[#4b4b4f]">Ends in <span className="font-semibold text-[#70FF5A]">{countdown}</span></div>
         )}
         {loading ? (
           <div className="space-y-2">
@@ -1067,7 +1067,7 @@ function LeaderboardTab() {
               return (
                 <div key={r.rank} className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3">
-                    <div className="w-6 text-center font-bold text-[#66c800]">{r.rank}</div>
+                    <div className="w-6 text-center font-bold text-[#70FF5A]">{r.rank}</div>
                     <Image src={src} alt={(r as any).alias || 'pfp'} width={36} height={36} className="rounded-md object-cover" />
                     <div className="font-semibold text-[#0a0a0a]">{(r as any).alias ? `@${(r as any).alias}` : `${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
                   </div>
@@ -1121,7 +1121,7 @@ function SprintSection() {
       <div className="p-4 rounded-xl border border-[#e5e7eb] bg-white">
         <div className="flex items-center justify-between mb-2">
           <div className="font-bold text-[#0a0a0a]">Sprint (10 min)</div>
-          <div className="text-xs text-[#4b4b4f]">Ends in <span className="font-semibold text-[#66c800]">{endsIn}</span></div>
+          <div className="text-xs text-[#4b4b4f]">Ends in <span className="font-semibold text-[#70FF5A]">{endsIn}</span></div>
         </div>
         {rows.length === 0 ? (
           <div className="text-sm text-[#4b4b4f]">No wins yet in this window.</div>
@@ -1130,7 +1130,7 @@ function SprintSection() {
             {rows.map((r) => (
               <div key={r.rank} className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-6 text-center font-bold text-[#66c800]">{r.rank}</div>
+                  <div className="w-6 text-center font-bold text-[#70FF5A]">{r.rank}</div>
                   <div className="font-semibold text-[#0a0a0a]">{`${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
                 </div>
                 <div className="text-xs text-[#4b4b4f]">{r.wins} wins</div>
