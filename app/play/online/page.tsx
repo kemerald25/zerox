@@ -142,7 +142,7 @@ export default function OnlinePlayPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-4 -mt-1">
-            <div className="flex justify-ce">
+            <div className="flex justify-center">
               <div className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-black text-white text-[11px]">
                 <span>👑</span>
                 <span>Won · 21</span>
