@@ -108,7 +108,7 @@ export default function OnlinePlayPage() {
 
     // Current user (host) Farcaster profile
     const hostProfile = useMemo(() => {
-        const u = context?.user as unknown as { fid?: number; username?: unknown; displayName?: unknown; pfpUrl?: unknown; pfp?: unknown; profile?: Record<string, unknown> } | undefined;
+        const u = context?.user as unknown as { fid?: number; username?: string; displayName?: string; pfpUrl?: unknown; pfp?: unknown; profile?: Record<string, unknown> } | undefined;
         if (!u) return null;
         const username = typeof u.username === 'string' ? u.username : (typeof u.profile?.username === 'string' ? (u.profile?.username as string) : undefined);
         const displayName = typeof u.displayName === 'string' ? u.displayName : (typeof u.profile?.displayName === 'string' ? (u.profile?.displayName as string) : (typeof u.profile?.name === 'string' ? (u.profile?.name as string) : undefined));
@@ -144,7 +144,7 @@ export default function OnlinePlayPage() {
             try {
                 const u = context?.user as unknown as { username?: string; displayName?: string; pfpUrl?: unknown; pfp?: unknown; profile?: Record<string, unknown> } | undefined;
                 if (!u || !address) return;
-                const username = typeof u.username === 'string' ? u.username : (typeof u.profile?.username === 'string' ? (u.profile?.username as string) : undefined);
+                const username = typeof u.username === 'string' ? u.username : (typeof (u.profile?.username as unknown) === 'string' ? (u.profile?.username as string) : undefined);
                 const maybePfp = (u as any)?.pfpUrl ?? (u as any)?.pfp ?? u.profile?.pfp ?? u.profile?.picture;
                 let pfpUrl: string | undefined;
                 if (typeof maybePfp === 'string') pfpUrl = maybePfp;
