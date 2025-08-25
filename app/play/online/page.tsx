@@ -124,7 +124,7 @@ export default function OnlinePlayPage() {
                 </div>
                 <div className="relative max-w-md mx-auto px-4 pt-8 pb-24 min-h-[100svh] flex flex-col">
                     <div className="flex items-center justify-between mb-10">
-                        <div className="text-sm font-semibold text-black">Play Online</div>
+                        <div className="text-sm font-semibold text-black">Play with Friends</div>
                         <button className="px-3 py-1.5 rounded-lg bg-[#70FF5A] text-black text-xs" onClick={handleInvite} disabled={!matchId}>Invite</button>
                     </div>
 
