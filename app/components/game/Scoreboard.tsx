@@ -10,7 +10,7 @@ export function Scoreboard() {
   const { connect } = useConnect();
   const { score } = useScoreboard();
 
-  const GREEN = '#66c800';
+  const GREEN = '#70FF5A';
   const LIME_GREEN = '#b6f569';
 
   if (!address) {
