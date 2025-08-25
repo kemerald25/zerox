@@ -106,7 +106,7 @@ export default function Home() {
   const handleShareResult = useCallback(async () => {
     const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
     const resultText = gameStatus === 'won' ? 'I won!' : gameStatus === 'lost' ? 'I lost!' : "It's a draw!";
-    const text = `${resultText} Tic Tac Toe vs AI (${difficulty}). Play here: ${appUrl}`;
+    const text = `${resultText} ZeroX vs AI (${difficulty}). Play here: ${appUrl}`;
     const payload: { text: string; embeds?: [string] } = { text, embeds: [appUrl] as [string] };
     try {
       await composeCast(payload);
@@ -125,7 +125,7 @@ export default function Home() {
     const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
     const seed = `${Date.now()}`;
     const url = `${base}?seed=${seed}&symbol=${playerSymbol}&difficulty=${difficulty}`;
-    const payload: { text: string; embeds?: [string] } = { text: `Challenge me in Tic Tac Toe! ${url}`, embeds: [url] as [string] };
+    const payload: { text: string; embeds?: [string] } = { text: `Challenge me in ZeroX! ${url}`, embeds: [url] as [string] };
     try { await composeCast(payload); return; } catch {}
     try { await (sdk as unknown as { actions?: { composeCast?: (p: { text: string; embeds?: [string] }) => Promise<void> } }).actions?.composeCast?.(payload); return; } catch {}
     try { await navigator.clipboard.writeText(url); } catch {}
@@ -685,7 +685,7 @@ export default function Home() {
           </div>
         )}
         <h1 className="text-4xl font-bold mb-8" style={{ color: '#66c800' }}>
-          Tic Tac Toe
+          ZeroX
         </h1>
         
         {showAddPrompt && (
@@ -693,7 +693,7 @@ export default function Home() {
             <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl w-80 text-center">
               <div className="text-lg font-bold mb-2" style={{ color: '#66c800' }}>Add this Mini App?</div>
               <div className="text-sm mb-4" style={{ color: '#66c800' }}>
-                Quickly access Tic Tac Toe from your apps screen.
+                Quickly access ZeroX from your apps screen.
               </div>
               <div className="flex gap-3 justify-center">
                 <button
