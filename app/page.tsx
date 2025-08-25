@@ -5,7 +5,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { sdk } from '@farcaster/miniapp-sdk';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import GameBoard from './components/game/GameBoard';
 import GameControls from './components/game/GameControls';
 import GameStatus from './components/game/GameStatus';
@@ -47,12 +46,7 @@ export default function Home() {
   const [usedBlock, setUsedBlock] = useState(false);
   const [usedHint, setUsedHint] = useState(false);
   const [usedDouble, setUsedDouble] = useState(false);
-  const pathname = usePathname();
-  const currentTab: 'play' | 'daily' | 'leaderboard' = pathname?.startsWith('/daily')
-    ? 'daily'
-    : pathname?.startsWith('/leaderboard')
-      ? 'leaderboard'
-      : 'play';
+  // Play page only (tabs split into routes)
 
   const startNewGameRound = useCallback(() => {
     const n = boardSize;
@@ -713,8 +707,8 @@ export default function Home() {
           </div>
         )}
         
-      {currentTab === 'play' && (
-        <div className="w-full flex flex-col items-center" style={{ minHeight: `calc(100vh - ${bottomNavHeight}px - 80px)` }}>
+      {/* Play page content */}
+      <div className="w-full flex flex-col items-center" style={{ minHeight: `calc(100vh - ${bottomNavHeight}px - 80px)` }}>
         {mustSettle && (
           <div className="mb-3 w-full max-w-md p-3 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm">
             Payment required to continue. Please complete the previous loss transaction.
@@ -924,70 +918,6 @@ export default function Home() {
           <div className="mt-4" />
             </>
           )}
-        </div>
-      )}
-
-      {currentTab === 'daily' && (
-        <div className="w-full max-w-md text-center">
-          <div className="p-4 rounded-lg shadow" style={{ backgroundColor: '#b6f569', color: '#066c00' }}>
-            <div className="text-xl font-bold mb-2">Daily Challenge</div>
-            <div className="text-sm mb-2">Beat the AI on hard mode with today’s seed to earn bonus faucet and XP.</div>
-            <details className="text-xs opacity-90 mb-3">
-              <summary className="cursor-pointer">How it works</summary>
-              <div className="mt-2 text-left">
-                - You must play with symbol X and difficulty Hard using today’s seed.<br/>
-                - Winning auto-claims a one-time bonus to your wallet (rate-limited daily).<br/>
-                - Draws/losses do not qualify, but still count for XP and streaks.
-              </div>
-            </details>
-            <button
-              className="px-5 py-3 rounded-lg bg-[#70FF5A] text-white w-full"
-              disabled={!dailySeed}
-              onClick={() => {
-                const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
-                const url = `${base}?seed=${dailySeed}&symbol=X&difficulty=hard`;
-                window.location.href = url;
-              }}
-            >
-              {dailySeed ? 'Play Today’s Challenge' : 'Loading…'}
-            </button>
-            <div className="mt-4 text-sm">Current streak: {streak} | Level {level}</div>
-          </div>
-        </div>
-      )}
-
-      {currentTab === 'leaderboard' && (
-        <>
-          <LeaderboardTab />
-          <SprintSection />
-        </>
-      )}
-      {/* Bottom tab nav */}
-      <div className="fixed left-0 right-0 bottom-0 z-40">
-        <div className="mx-auto max-w-2xl">
-          <div className="flex items-stretch justify-around bg-white border-t border-[#e5e7eb]" style={{ paddingBottom: bottomInset }}>
-            <Link href="/daily" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold rounded-t-lg ${currentTab === 'daily' ? 'text-[#066c00] bg-[#b6f569]/30' : 'text-[#70FF5A]/70'}`}>
-              <div className="flex flex-col items-center gap-0.5 relative">
-                {currentTab === 'daily' && <span className="absolute -top-2 h-1 w-8 rounded-full bg-[#70FF5A]" />}
-                <span aria-hidden>🗓️</span>
-                <span>Daily</span>
-              </div>
-            </Link>
-            <Link href="/play" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold rounded-t-lg ${currentTab === 'play' ? 'text-[#066c00] bg-[#b6f569]/30' : 'text-[#70FF5A]/70'}`}>
-              <div className="flex flex-col items-center gap-0.5 relative">
-                {currentTab === 'play' && <span className="absolute -top-2 h-1 w-8 rounded-full bg-[#70FF5A]" />}
-                <span aria-hidden>🎮</span>
-                <span>Play</span>
-              </div>
-            </Link>
-            <Link href="/leaderboard" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold rounded-t-lg ${currentTab === 'leaderboard' ? 'text-[#066c00] bg-[#b6f569]/30' : 'text-[#70FF5A]/70'}`}>
-              <div className="flex flex-col items-center gap-0.5 relative">
-                {currentTab === 'leaderboard' && <span className="absolute -top-2 h-1 w-8 rounded-full bg-[#70FF5A]" />}
-                <span aria-hidden>🏆</span>
-                <span>Leaderboard</span>
-              </div>
-            </Link>
-          </div>
         </div>
       </div>
 
