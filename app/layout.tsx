@@ -44,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-white">
+      <body className="mini-app-theme bg-white">
         <Providers>
           <Navbar />
           <main className="pt-16">
