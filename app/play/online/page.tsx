@@ -117,12 +117,12 @@ export default function OnlinePlayPage() {
 
     return (
         <>
-            <div className="min-h-screen relative bg-white">
+            <div className="min-h-[100svh] relative bg-white">
                 <div className="pointer-events-none absolute inset-0 overflow-hidden">
                     <div className="absolute -left-10 -top-3 text-[320px] font-bold leading-none text-black/5 select-none">X</div>
                     <div className="absolute -right-8 bottom-10 text-[220px] font-bold leading-none text-black/5 select-none">O</div>
                 </div>
-                <div className="relative max-w-md mx-auto px-4 pt-8 pb-24">
+                <div className="relative max-w-md mx-auto px-4 pt-8 pb-24 min-h-[100svh] flex flex-col">
                     <div className="flex items-center justify-between mb-10">
                         <div className="text-sm font-semibold text-black">Play Online</div>
                         <button className="px-3 py-1.5 rounded-lg bg-[#70FF5A] text-black text-xs" onClick={handleInvite} disabled={!matchId}>Invite</button>
@@ -164,13 +164,15 @@ export default function OnlinePlayPage() {
                         {waitingForOpponent ? 'Share the invite to start' : match?.status === 'done' ? (match?.winner ? (match.winner === mySymbol ? 'You win!' : 'You lose') : 'Draw') : (isMyTurn ? 'Your turn' : "Opponent's turn")}
                     </div>
 
-                    <GameBoard
-                        board={boardArr}
-                        onCellClick={handleCellClick}
-                        isPlayerTurn={Boolean(isMyTurn) && !busy && match?.status !== 'done'}
-                        winningLine={null}
-                        size={size}
-                    />
+                    <div className="flex-1 flex items-center justify-center">
+                        <GameBoard
+                            board={boardArr}
+                            onCellClick={handleCellClick}
+                            isPlayerTurn={Boolean(isMyTurn) && !busy && match?.status !== 'done'}
+                            winningLine={null}
+                            size={size}
+                        />
+                    </div>
                 </div>
             </div>
             <BottomNav />
