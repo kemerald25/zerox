@@ -37,15 +37,12 @@ export default function Home() {
   const [level, setLevel] = useState(1);
   const [streak, setStreak] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
-  // Power-ups state
+  // Power-ups state (removed quick actions; keep minimal hints/block support for board UI)
   const [hintIndex, setHintIndex] = useState<number | null>(null);
   const [blockedCellIndex, setBlockedCellIndex] = useState<number | null>(null);
   const [selectingBlock, setSelectingBlock] = useState(false);
   const [doubleActive, setDoubleActive] = useState(false);
   const [doublePendingSecond, setDoublePendingSecond] = useState(false);
-  const [usedBlock, setUsedBlock] = useState(false);
-  const [usedHint, setUsedHint] = useState(false);
-  const [usedDouble, setUsedDouble] = useState(false);
   // Play page only (tabs split into routes)
 
   const startNewGameRound = useCallback(() => {
