@@ -9,7 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Minecraft", "Minecraft Ten", "Minecraftia", "ui-sans-serif", "system-ui"],
+        sans: ["Pixelify Sans", "ui-sans-serif", "system-ui"],
       },
       colors: {
         background: "var(--background)",
