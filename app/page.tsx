@@ -4,7 +4,7 @@ import { useScoreboard } from '@/lib/useScoreboard';
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { sdk } from '@farcaster/miniapp-sdk';
-import Link from 'next/link';
+// import Link from 'next/link';
 import GameBoard from './components/game/GameBoard';
 import BottomNav from './components/BottomNav';
 import GameControls from './components/game/GameControls';
@@ -28,7 +28,7 @@ export default function Home() {
   const [outcomeHandled, setOutcomeHandled] = useState(false);
   const [winningLine, setWinningLine] = useState<number[] | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
-  const [misere, setMisere] = useState(false);
+  const [misere] = useState(false);
   const [blitzPreset, setBlitzPreset] = useState<'off' | '7s' | '5s'>('off');
   const [nextStarter, setNextStarter] = useState<'player' | 'ai'>('player');
   const computeTurnLimit = useCallback(() => (blitzPreset === '5s' ? 5 : blitzPreset === '7s' ? 7 : 15), [blitzPreset]);
@@ -36,7 +36,7 @@ export default function Home() {
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState(1);
   const [streak, setStreak] = useState(0);
-  const [dailySeed, setDailySeed] = useState<string | null>(null);
+  const [dailySeed, setDailySeed] = useState<string | null>(null); // kept for future daily challenge wiring
   const [showSettings, setShowSettings] = useState(false);
   // Power-ups state
   const [hintIndex, setHintIndex] = useState<number | null>(null);
