@@ -866,12 +866,12 @@ export default function Home() {
               >
                 Share Result
               </button>
-              <button
+              {/* <button
                 className="px-4 py-2 rounded-lg bg-[#b6f569] text-[#70FF5A] border border-[#70FF5A]"
                 onClick={handleShareChallenge}
               >
                 Share Challenge
-              </button>
+              </button> */}
             </div>
           )}
           {/* Attribution for cast embed entry */}
