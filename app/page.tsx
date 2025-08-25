@@ -1,7 +1,7 @@
 'use client';
 
 import { useScoreboard } from '@/lib/useScoreboard';
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { sdk } from '@farcaster/miniapp-sdk';
 // import Link from 'next/link';
@@ -81,27 +81,6 @@ export default function Home() {
   const [toast, setToast] = useState<string | null>(null);
   const showToast = useCallback((msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2000); }, []);
 
-  // Farcaster user profile (robust extraction similar to Navbar)
-  const fcProfile = useMemo(() => {
-    const u = context?.user as unknown as { fid?: number; username?: unknown; displayName?: unknown; pfpUrl?: unknown; pfp?: unknown; profile?: { username?: unknown; displayName?: unknown; name?: unknown; pfp?: unknown; picture?: unknown } } | undefined;
-    if (!u) return null;
-    const username = typeof u.username === 'string' ? u.username : (typeof u.profile?.username === 'string' ? (u.profile?.username as string) : undefined);
-    const displayName = typeof u.displayName === 'string' ? u.displayName : (typeof u.profile?.displayName === 'string' ? (u.profile?.displayName as string) : (typeof u.profile?.name === 'string' ? (u.profile?.name as string) : undefined));
-    const maybePfp = (u?.pfpUrl ?? u?.pfp ?? u.profile?.pfp ?? u.profile?.picture) as unknown;
-    let pfpUrl: string | undefined;
-    if (typeof maybePfp === 'string') {
-      pfpUrl = maybePfp;
-    } else if (maybePfp && typeof maybePfp === 'object') {
-      const candidates = ['url','src','srcUrl','original','default','small','medium','large'] as const;
-      for (const k of candidates) {
-        const v = (maybePfp as Record<string, unknown>)[k];
-        if (typeof v === 'string') { pfpUrl = v; break; }
-      }
-    }
-    const fallbackSeed = username || (u.fid != null ? `fid-${u.fid}` : address || 'player');
-    const src = pfpUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(fallbackSeed)}`;
-    return { username, displayName, src };
-  }, [context, address]);
 
   useEffect(() => {
     if (!isFrameReady) setFrameReady();
@@ -683,15 +662,7 @@ export default function Home() {
         <h1 className="text-4xl font-bold mb-3" style={{ color: '#000000' }}>
           ZeroX
         </h1>
-        {fcProfile && (
-          <div className="w-full max-w-md mb-5 flex items-center gap-3 p-3 rounded-xl bg-white border border-[#e5e7eb]">
-            <Image src={fcProfile.src} alt={fcProfile.username || 'pfp'} width={40} height={40} className="rounded-md object-cover" />
-            <div className="leading-tight">
-              <div className="font-semibold text-[#0a0a0a]">{fcProfile.displayName || fcProfile.username || 'Player'}</div>
-              {fcProfile.username && <div className="text-xs text-[#4b4b4f]">@{fcProfile.username}</div>}
-            </div>
-          </div>
-        )}
+        
         
         {showAddPrompt && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
