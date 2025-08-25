@@ -9,8 +9,9 @@ export default function DailyPage() {
   useEffect(() => { (async () => { try { const r = await fetch('/api/daily'); const j = await r.json(); if (typeof j?.seed === 'string') setDailySeed(j.seed); } catch {} })(); }, []);
   return (
     <>
-      <div className="w-full max-w-md mx-auto pt-10 text-center">
-        <div className="p-4 rounded-lg border border-[#e5e7eb] bg-white">
+      <div className="min-h-screen" style={{ backgroundColor: '#141414' }}>
+        <div className="w-full max-w-md mx-auto pt-10 text-center">
+          <div className="p-4 rounded-lg border border-[#e5e7eb] bg-white">
           <div className="text-xl font-bold mb-2 text-[#0a0a0a]">Daily Challenge</div>
           <div className="text-sm mb-2 text-[#4b4b4f]">Beat the AI on hard mode with today’s seed to earn bonus faucet and XP.</div>
           <details className="text-xs opacity-90 mb-3">
@@ -33,6 +34,7 @@ export default function DailyPage() {
             {dailySeed ? 'Play Today’s Challenge' : 'Loading…'}
           </button>
           <div className="mt-4 text-sm text-[#4b4b4f]">{address ? 'Connected' : 'Connect wallet'} to track streak</div>
+          </div>
         </div>
       </div>
       <BottomNav />
