@@ -169,7 +169,7 @@ export default function OnlinePlayPage() {
                         <button className="px-3 py-1.5 rounded-lg bg-[#70FF5A] text-black text-xs" onClick={handleInvite} disabled={!matchId}>Invite</button>
                     </div>
 
-                    <div className="grid grid-cols-2  gap-4 mb-2">
+                    <div className="grid grid-cols-2 mt gap-4 mb-2">
                         <div className="relative p-4 pt-10 rounded-2xl bg-white text-center">
                             <div className="absolute -top-7 justify-center">
                                 <Image src={hostProfile?.src || `https://api.dicebear.com/7.x/identicon/svg?seed=you`} alt="you" width={56} height={56} className="rounded-full ring-2 ring-white shadow-md object-cover" unoptimized />
