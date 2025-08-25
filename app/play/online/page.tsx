@@ -77,6 +77,7 @@ export default function OnlinePlayPage() {
 
   const size = match?.size ?? 3;
   const isMyTurn = mySymbol ? match?.next_turn === mySymbol : false;
+  const waitingForOpponent = useMemo(() => Boolean(matchId && match && (!match.player_x || !match.player_o)), [matchId, match]);
 
   const handleInvite = async () => {
     if (!matchId) return;
@@ -127,13 +128,13 @@ export default function OnlinePlayPage() {
             </div>
             <div className="p-3 rounded-xl bg-white text-right">
               <div className="flex items-center gap-3 justify-end">
-                <div className="text-xs font-semibold">{match?.player_x && match?.player_o ? 'Opponent' : 'Waiting…'}</div>
+                <div className="text-xs font-semibold">{waitingForOpponent ? 'Waiting…' : 'Opponent'}</div>
                 <Image src={opponentAvatar} alt="opponent" width={44} height={44} className="rounded-full object-cover" />
               </div>
             </div>
           </div>
 
-          <div className="mb-2 text-center text-xs text-white/80">{match?.status === 'done' ? (match?.winner ? (match.winner === mySymbol ? 'You win!' : 'You lose') : 'Draw') : (isMyTurn ? 'Your turn' : "Opponent's turn")}</div>
+          <div className="mb-2 text-center text-xs text-black/60">{waitingForOpponent ? 'Share the invite to start' : match?.status === 'done' ? (match?.winner ? (match.winner === mySymbol ? 'You win!' : 'You lose') : 'Draw') : (isMyTurn ? 'Your turn' : "Opponent's turn")}</div>
 
           <GameBoard
             board={boardArr}
