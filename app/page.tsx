@@ -916,8 +916,8 @@ export default function Home() {
           })()}
           {/* Rematch series removed */}
           <div className="mt-4" />
-            </>
-          )}
+        </>
+      )}
       </div>
       </WalletCheck>
     </main>
