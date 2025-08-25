@@ -526,7 +526,6 @@ export default function Home() {
             setXp(Number(data.xp));
             setLevel(Number(data.level));
             setStreak(Number(data.streak));
-            setAchievements(Array.isArray(data.achievements) ? data.achievements : []);
           }
           // If daily eligible and this was a win on hard with today's seed, try bonus claim
           if (gameStatus === 'won') {
