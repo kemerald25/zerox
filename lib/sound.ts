@@ -104,21 +104,27 @@ export function playAIMove(): void {
 }
 
 export function playWin(): void {
-  // Cheerful arpeggio
+  // Brighter, more expressive win fanfare (ascending arpeggio + sparkle)
   playSequence([
-    { freq: 523.25, dur: 100, type: 'triangle' },  // C5
-    { freq: 659.25, dur: 100, type: 'triangle' },  // E5
-    { freq: 783.99, dur: 130, type: 'triangle' }, // G5
-    { freq: 1046.5, dur: 180, type: 'sine' },    // C6
+    { freq: 523.25, dur: 110, type: 'sawtooth', gain: 0.1 },  // C5
+    { freq: 659.25, dur: 110, type: 'sawtooth', gain: 0.1 },  // E5
+    { freq: 783.99, dur: 130, type: 'sawtooth', gain: 0.1 },  // G5
+    { freq: 987.77, dur: 130, type: 'triangle', gain: 0.09 }, // B5
+    { freq: 1046.5, dur: 180, type: 'triangle', gain: 0.1 },  // C6
+    // quick sparkle
+    { freq: 1318.5, dur: 70, type: 'triangle', gain: 0.08 },  // E6
+    { freq: 1567.98, dur: 90, type: 'triangle', gain: 0.08 }, // G6
   ]);
 }
 
 export function playLoss(): void {
-  // Soft minor fall
+  // Deeper, clearer descending minor fall
   playSequence([
-    { freq: 392.0, dur: 140, type: 'sine' },  // G4
-    { freq: 329.63, dur: 120, type: 'sine' }, // E4
-    { freq: 261.63, dur: 140, type: 'sine' }, // C4
+    { freq: 392.0, dur: 160, type: 'sine', gain: 0.09 },   // G4
+    { freq: 349.23, dur: 150, type: 'sine', gain: 0.085 }, // F4
+    { freq: 329.63, dur: 150, type: 'sine', gain: 0.08 },  // E4
+    { freq: 261.63, dur: 170, type: 'sine', gain: 0.08 },  // C4
+    { freq: 196.00, dur: 190, type: 'sine', gain: 0.07 },  // G3 (thud)
   ]);
 }
 
