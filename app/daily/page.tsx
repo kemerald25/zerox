@@ -9,7 +9,7 @@ export default function DailyPage() {
   useEffect(() => { (async () => { try { const r = await fetch('/api/daily'); const j = await r.json(); if (typeof j?.seed === 'string') setDailySeed(j.seed); } catch {} })(); }, []);
   return (
     <>
-      <div className="w-full max-w-md mx-auto pt-10 text-center">
+      <div className="w-full max-w-md mx-auto pt-10 text-center" style={{ backgroundColor: '#141414', minHeight: '100vh' }}>
         <div className="p-4 rounded-lg border border-[#e5e7eb] bg-white">
           <div className="text-xl font-bold mb-2 text-[#0a0a0a]">Daily Challenge</div>
           <div className="text-sm mb-2 text-[#4b4b4f]">Beat the AI on hard mode with today’s seed to earn bonus faucet and XP.</div>
