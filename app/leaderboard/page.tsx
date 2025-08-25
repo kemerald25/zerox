@@ -57,7 +57,7 @@ function LeaderboardTab() {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="p-4 rounded-xl border border-[#e5e7eb] bg-[white]">
+      <div className="p-4 rounded-xl border border-[#e5e7eb] bg-[#141414]">
         <div className="flex items-center justify-between mb-2">
           <div className="font-bold text-[#0a0a0a]">Top 10</div>
           {season && (
