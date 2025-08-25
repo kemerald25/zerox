@@ -137,10 +137,24 @@ export default function OnlinePlayPage() {
         return null;
     }, [match, me]);
 
+    const [opponentProfile, setOpponentProfile] = useState<{ username?: string; pfpUrl?: string } | null>(null);
+    useEffect(() => {
+        let ignore = false;
+        (async () => {
+            try {
+                if (!opponentAddress) { setOpponentProfile(null); return; }
+                const res = await fetch(`/api/profile?address=${opponentAddress}`);
+                const j = await res.json();
+                if (!ignore) setOpponentProfile((j && j.profile) ? j.profile as { username?: string; pfpUrl?: string } : null);
+            } catch { if (!ignore) setOpponentProfile(null); }
+        })();
+        return () => { ignore = true; };
+    }, [opponentAddress]);
+
     const opponentAvatar = useMemo(() => {
         const seed = opponentAddress || 'opponent';
-        return `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed)}`;
-    }, [opponentAddress]);
+        return opponentProfile?.pfpUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed)}`;
+    }, [opponentAddress, opponentProfile]);
 
     return (
         <>
@@ -167,7 +181,7 @@ export default function OnlinePlayPage() {
                             <div className="absolute -top-7 right-4">
                                 <Image src={opponentAvatar} alt="opponent" width={56} height={56} className="rounded-full ring-2 ring-white shadow-md object-cover" unoptimized />
                             </div>
-                            <div className="text-xs text-black font-semibold">{opponentAddress ? `${opponentAddress.slice(0,6)}…${opponentAddress.slice(-4)}` : (waitingForOpponent ? 'Waiting…' : 'Opponent')}</div>
+                            <div className="text-xs text-black font-semibold">{opponentProfile?.username ? `@${opponentProfile.username}` : opponentAddress ? `${opponentAddress.slice(0,6)}…${opponentAddress.slice(-4)}` : (waitingForOpponent ? 'Waiting…' : 'Opponent')}</div>
                             <button className="mt-2 w-full h-12 bg-[#70FF5A] text-black text-2xl font-bold rounded-lg" disabled={!youAreO}>O</button>
                         </div>
                     </div>
