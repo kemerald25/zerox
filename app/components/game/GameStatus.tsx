@@ -11,7 +11,7 @@ interface GameStatusProps {
 }
 
 const GameStatus: React.FC<GameStatusProps> = ({ status, isPlayerTurn, secondsLeft }) => {
-  const GREEN = '#66c800';
+  const GREEN = '#70FF5A';
   const LIME_GREEN = '#b6f569';
 
   const getMessage = () => {
