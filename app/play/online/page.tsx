@@ -23,7 +23,7 @@ type PvpMatch = {
 
 export default function OnlinePlayPage() {
     const { address } = useAccount();
-    const { context } = useMiniKit();
+    const { context, isFrameReady, setFrameReady } = useMiniKit();
     const { composeCast } = useComposeCast();
 
     const [matchId, setMatchId] = useState<string | null>(null);
@@ -35,6 +35,13 @@ export default function OnlinePlayPage() {
     const youAreX = useMemo(() => !!(match?.player_x && match.player_x.toLowerCase() === me), [match, me]);
     const youAreO = useMemo(() => !!(match?.player_o && match.player_o.toLowerCase() === me), [match, me]);
     const mySymbol: 'X' | 'O' | null = youAreX ? 'X' : youAreO ? 'O' : null;
+
+    // Ensure Farcaster frame is ready for context usage
+    useEffect(() => {
+        if (!isFrameReady) {
+            setFrameReady();
+        }
+    }, [isFrameReady, setFrameReady]);
 
     // Create or join
     useEffect(() => {
@@ -99,21 +106,41 @@ export default function OnlinePlayPage() {
         } catch { } finally { setBusy(false); }
     }, [match, address, isMyTurn, boardArr, matchId, mySymbol]);
 
-    const hostAvatar = useMemo(() => {
-        try {
-            return 'https://api.dicebear.com/7.x/identicon/svg?seed=De1Develbase_eth'; // Adjusted seed to match username
-        } catch {
-            return '/fallback-avatar.png'; // Fallback image if API fails
+    // Current user (host) Farcaster profile
+    const hostProfile = useMemo(() => {
+        const u = context?.user as unknown as { fid?: number; username?: unknown; displayName?: unknown; pfpUrl?: unknown; pfp?: unknown; profile?: Record<string, unknown> } | undefined;
+        if (!u) return null;
+        const username = typeof u.username === 'string' ? u.username : (typeof u.profile?.username === 'string' ? (u.profile?.username as string) : undefined);
+        const displayName = typeof u.displayName === 'string' ? u.displayName : (typeof u.profile?.displayName === 'string' ? (u.profile?.displayName as string) : (typeof u.profile?.name === 'string' ? (u.profile?.name as string) : undefined));
+        const maybePfp = (u as any)?.pfpUrl ?? (u as any)?.pfp ?? u.profile?.pfp ?? u.profile?.picture;
+        let pfpUrl: string | undefined;
+        if (typeof maybePfp === 'string') {
+            pfpUrl = maybePfp;
+        } else if (maybePfp && typeof maybePfp === 'object') {
+            const candidates = ['url','src','srcUrl','original','default','small','medium','large'] as const;
+            for (const k of candidates) {
+                const v = (maybePfp as Record<string, unknown>)[k];
+                if (typeof v === 'string') { pfpUrl = v; break; }
+            }
         }
-    }, []);
+        const fallbackSeed = username || (u?.fid != null ? `fid-${u.fid}` : address || 'you');
+        const src = pfpUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(fallbackSeed)}`;
+        return { username, displayName, src };
+    }, [context, address]);
+
+    // Opponent derived from match addresses (no Farcaster context available)
+    const opponentAddress = useMemo(() => {
+        const addrX = match?.player_x?.toLowerCase();
+        const addrO = match?.player_o?.toLowerCase();
+        if (addrX && addrX !== me) return addrX;
+        if (addrO && addrO !== me) return addrO;
+        return null;
+    }, [match, me]);
 
     const opponentAvatar = useMemo(() => {
-        try {
-            return 'https://api.dicebear.com/7.x/identicon/svg?seed=Ovittobase_eth'; // Adjusted seed to match username
-        } catch {
-            return '/fallback-avatar.png'; // Fallback image if API fails
-        }
-    }, []);
+        const seed = opponentAddress || 'opponent';
+        return `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed)}`;
+    }, [opponentAddress]);
 
     return (
         <>
@@ -133,14 +160,14 @@ export default function OnlinePlayPage() {
                             <div className="absolute -top-7 justify-center">
                                 <Image src={hostAvatar} alt="you" width={56} height={56} className="rounded-full ring-2 ring-white shadow-md object-cover" unoptimized />
                             </div>
-                            <div className="text-xs text-black font-semibold">@De1Develbase_eth</div>
+                            <div className="text-xs text-black font-semibold">{hostProfile?.username ? `@${hostProfile.username}` : 'You'}</div>
                             <button className="mt-2 w-full h-12 bg-black text-white text-2xl font-bold rounded-lg" disabled={!youAreX}>X</button>
                         </div>
                         <div className="relative p-4 pt-10 rounded-2xl bg-white text-center">
                             <div className="absolute -top-7 right-4">
                                 <Image src={opponentAvatar} alt="opponent" width={56} height={56} className="rounded-full ring-2 ring-white shadow-md object-cover" unoptimized />
                             </div>
-                            <div className="text-xs text-black font-semibold">@Ovittobase_eth</div>
+                            <div className="text-xs text-black font-semibold">{opponentAddress ? `${opponentAddress.slice(0,6)}…${opponentAddress.slice(-4)}` : (waitingForOpponent ? 'Waiting…' : 'Opponent')}</div>
                             <button className="mt-2 w-full h-12 bg-[#70FF5A] text-black text-2xl font-bold rounded-lg" disabled={!youAreO}>O</button>
                         </div>
                     </div>
