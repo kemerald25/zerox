@@ -1,7 +1,7 @@
 # ZeroX – Sleek UX Plan (Planner)
 
 ## Background and Motivation
-Elevate ZeroX from functional to delightful: sleek, minimal, mobile‑first gameplay that feels native inside Farcaster/Base Mini App. Priorities: clarity, speed, and legibility with brand green (#66c800) + lime (#b6f569), dark greys for contrast.
+Elevate ZeroX from functional to delightful: sleek, minimal, mobile‑first gameplay that feels native inside Farcaster/Base Mini App. Priorities: clarity, speed, and legibility with brand green (#70FF5A) + lime (#b6f569), dark greys for contrast.
 
 ## Key Challenges and Analysis
 - Mixed UI density: controls and info compete with the board on small screens.
