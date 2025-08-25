@@ -805,35 +805,7 @@ export default function Home() {
                     </button>
                   ))}
                 </div>
-                <div className="text-xs font-semibold mb-2 mt-3" style={{ color: '#066c00' }}>Quick actions</div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    className={`px-3 py-1 rounded border ${selectingBlock ? 'bg-[#70FF5A] text-white' : 'bg-white text-[#70FF5A]'} border-[#70FF5A] disabled:opacity-50`}
-                    disabled={usedBlock || !isPlayerTurn || gameStatus !== 'playing'}
-                    onClick={() => { if (!usedBlock) setSelectingBlock((v) => !v); }}
-                  >
-                    Block
-                  </button>
-                  <button
-                    className="px-3 py-1 rounded border bg-white text-[#70FF5A] border-[#70FF5A] disabled:opacity-50"
-                    disabled={usedHint || !isPlayerTurn || gameStatus !== 'playing'}
-                    onClick={() => {
-                      const idx = getBestPlayerMove(board);
-                      if (idx !== -1) { setHintIndex(idx); setUsedHint(true); setTimeout(() => setHintIndex(null), 3000); }
-                    }}
-                  >
-                    Hint
-                  </button>
-                  <button
-                    className={`px-3 py-1 rounded border ${doubleActive ? 'bg-[#70FF5A] text-white' : 'bg-white text-[#70FF5A]'} border-[#70FF5A] disabled:opacity-50`}
-                    disabled={usedDouble || !isPlayerTurn || gameStatus !== 'playing' || doublePendingSecond}
-                    onClick={() => { if (!usedDouble && !doublePendingSecond) setDoubleActive((v) => !v); }}
-                  >
-                    Double Move
-                  </button>
-                  {selectingBlock && <span className="text-xs">Tap a cell to block AI</span>}
-                  {doublePendingSecond && <span className="text-xs">Place your second move</span>}
-                </div>
+                
               </div>
             )}
           </div>
