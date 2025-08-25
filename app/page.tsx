@@ -789,14 +789,14 @@ export default function Home() {
                     </button>
                   ))}
                 </div>
-                <div className="flex items-center gap-2 mb-2">
+                {/* <div className="flex items-center gap-2 mb-2">
                   <button
                     className={`px-3 py-1 rounded-full text-sm border ${misere?'bg-[#70FF5A] text-white border-[#70FF5A]':'bg-white text-[#70FF5A] border-[#70FF5A]'}`}
                     onClick={() => { const next = !misere; setMisere(next); setGameStatus('playing'); setWinningLine(null); setBoard((b)=>b.map(()=>null)); }}
                   >
                     Misère
                   </button>
-                </div>
+                </div> */}
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs opacity-80">Blitz</span>
                   {(['off','7s','5s'] as const).map((v) => (
