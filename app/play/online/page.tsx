@@ -193,15 +193,19 @@ export default function OnlinePlayPage() {
 
                     <div className="grid grid-cols-2 mt-10 gap-4 mb-2">
                         <div className="relative p-4 pt-10 rounded-2xl bg-white text-center">
-                            <div className="absolute -top-7 justify-center">
-                                <Image src={hostProfile?.src || `https://api.dicebear.com/7.x/identicon/svg?seed=you`} alt="you" width={56} height={56} className="rounded-full ring-2 ring-white shadow-md object-cover" unoptimized />
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2">
+                                <div className="relative w-14 h-14 rounded-full ring-2 ring-white shadow-md overflow-hidden">
+                                    <Image src={hostProfile?.src || `https://api.dicebear.com/7.x/identicon/svg?seed=you`} alt="you" fill className="object-cover" sizes="56px" unoptimized />
+                                </div>
                             </div>
                             <div className="text-xs text-black font-semibold">{hostProfile?.username ? `@${hostProfile.username}` : 'You'}</div>
                             <button className="mt-2 w-full h-12 bg-black text-white text-2xl font-bold rounded-lg" disabled={!youAreX}>X</button>
                         </div>
                         <div className="relative p-4 pt-10 rounded-2xl bg-white text-center">
-                            <div className="absolute -top-7 right-4">
-                                <Image src={opponentAvatar} alt="opponent" width={56} height={56} className="rounded-full ring-2 ring-white shadow-md object-cover" unoptimized />
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2">
+                                <div className="relative w-14 h-14 rounded-full ring-2 ring-white shadow-md overflow-hidden">
+                                    <Image src={opponentAvatar} alt="opponent" fill className="object-cover" sizes="56px" unoptimized />
+                                </div>
                             </div>
                             <div className="text-xs text-black font-semibold">{opponentProfile?.username ? `@${opponentProfile.username}` : opponentAddress ? `${opponentAddress.slice(0,6)}…${opponentAddress.slice(-4)}` : (waitingForOpponent ? 'Waiting…' : 'Opponent')}</div>
                             <button className="mt-2 w-full h-12 bg-[#70FF5A] text-black text-2xl font-bold rounded-lg" disabled={!youAreO}>O</button>
