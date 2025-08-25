@@ -138,6 +138,28 @@ export default function OnlinePlayPage() {
     }, [match, me]);
 
     const [opponentProfile, setOpponentProfile] = useState<{ username?: string; pfpUrl?: string } | null>(null);
+    // When a player joins, ask their client to publish their Farcaster username/pfp to the backend so the opponent can see it
+    useEffect(() => {
+        (async () => {
+            try {
+                const u = context?.user as unknown as { username?: string; displayName?: string; pfpUrl?: unknown; pfp?: unknown; profile?: Record<string, unknown> } | undefined;
+                if (!u || !address) return;
+                const username = typeof u.username === 'string' ? u.username : (typeof u.profile?.username === 'string' ? (u.profile?.username as string) : undefined);
+                const maybePfp = (u as any)?.pfpUrl ?? (u as any)?.pfp ?? u.profile?.pfp ?? u.profile?.picture;
+                let pfpUrl: string | undefined;
+                if (typeof maybePfp === 'string') pfpUrl = maybePfp;
+                else if (maybePfp && typeof maybePfp === 'object') {
+                    for (const k of ['url','src','srcUrl','original','default','small','medium','large'] as const) {
+                        const v = (maybePfp as Record<string, unknown>)[k];
+                        if (typeof v === 'string') { pfpUrl = v; break; }
+                    }
+                }
+                await fetch('/api/profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address, username, pfpUrl }) });
+            } catch {}
+        })();
+    }, [context, address]);
+
+    // For displaying the opponent, try reading from our backend cache by their address
     useEffect(() => {
         let ignore = false;
         (async () => {
