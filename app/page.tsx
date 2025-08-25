@@ -492,6 +492,11 @@ export default function Home() {
       hapticLoss();
     } else if (gameStatus === 'draw') {
       playDraw();
+      // Auto-start a new round shortly after a draw
+      const id = setTimeout(() => {
+        startNewGameRound();
+      }, 1200);
+      return () => clearTimeout(id);
     }
   }, [gameStatus, startNewGameRound]);
 
