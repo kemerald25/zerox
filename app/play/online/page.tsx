@@ -140,7 +140,7 @@ export default function OnlinePlayPage() {
             </div>
             <div className="p-3 rounded-xl bg-white text-center">
               <Image src={opponentAvatar} alt="opponent" width={44} height={44} className="rounded-full object-cover mx-auto mb-2" unoptimized />
-              <div className="text-xs text-black font-semibold">@Ovittobase_eth</div>
+              <div className="text-xs text-black font-semibold">@Ovittobase.eth</div>
               <div className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-md bg-black text-white text-[11px]">
                 <span>👑</span>
                 <span>Won · 15</span>
