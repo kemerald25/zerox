@@ -1,4 +1,4 @@
--- Supabase schema for TicTacToe data ops
+-- Supabase schema for ZeroX data ops
 -- Run this in Supabase SQL editor or via the CLI (psql) against your project
 
 -- 1) Weekly leaderboard (one row per season+address)
