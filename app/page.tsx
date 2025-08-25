@@ -36,7 +36,7 @@ export default function Home() {
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState(1);
   const [streak, setStreak] = useState(0);
-  const [achievements, setAchievements] = useState<string[]>([]);
+  const [achievements, setAchievements] = useState<string[]>([]); // reserved for future badges UI
   const [dailySeed, setDailySeed] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   // Power-ups state
