@@ -83,7 +83,7 @@ export function Navbar() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
               <Link href="/" className="flex items-center gap-2">
-                <Image src="/logo.png" alt="ZeroX" width={42} height={28} className="rounded" />
+                <Image src="/logo.png" alt="ZeroX" width={40} height={40} className="rounded" />
                 <span className="text-lg font-semibold text-[#70FF5A] hover:text-[#b6f569] transition-colors">ZeroX</span>
               </Link>
             </div>
