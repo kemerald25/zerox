@@ -19,7 +19,7 @@ export function WalletCheck({ children }: { children: React.ReactNode }) {
         transition={{ duration: 0.5 }}
         className="text-center space-y-4"
       >
-        <h2 className="text-3xl font-bold" style={{ color: '#66c800' }}>
+        <h2 className="text-3xl font-bold" style={{ color: '#70FF5A' }}>
           Welcome to ZeroX
         </h2>
         <p className="text-lg text-gray-600 dark:text-gray-400">
@@ -30,7 +30,7 @@ export function WalletCheck({ children }: { children: React.ReactNode }) {
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="px-6 py-3 rounded-lg bg-[#66c800] text-white font-semibold shadow-lg hover:bg-[#66c800]/90 transition-colors"
+        className="px-6 py-3 rounded-lg bg-[#70FF5A] text-white font-semibold shadow-lg hover:bg-[#70FF5A]/90 transition-colors"
         onClick={() => connect({ connector: connectors[0] })}
       >
         Connect Wallet
