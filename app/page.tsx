@@ -748,7 +748,7 @@ export default function Home() {
             </div>
             <div className="w-full flex justify-center">
               <button
-                className="px-4 py-1.5 rounded-full text-sm border bg-white text-[#70FF5A] border-[#70FF5A]"
+                className="px-4 py-1.5 rounded-full text-sm border bg-white text-[#000000] border-[#70FF5A]"
                 onClick={() => setShowSettings((v) => !v)}
               >
                 {showSettings ? 'Close Settings' : 'Settings'}
