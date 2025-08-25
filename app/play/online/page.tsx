@@ -136,7 +136,7 @@ export default function OnlinePlayPage() {
                 <span>👑</span>
                 <span>Won · 21</span>
               </div>
-              <button className="mt-2 w-full h-16 bg-black text-white text-2xl font-bold rounded-lg" disabled={!youAreX}>X</button>
+              <button className="mt-2 w-full h-12 bg-black text-white text-2xl font-bold rounded-lg" disabled={!youAreX}>X</button>
             </div>
             <div className="p-3 rounded-xl bg-white text-center">
               <Image src={opponentAvatar} alt="opponent" width={44} height={44} className="rounded-full object-cover mx-auto mb-2" unoptimized />
