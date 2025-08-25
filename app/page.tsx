@@ -965,7 +965,7 @@ export default function Home() {
       {/* Bottom tab nav */}
       <div className="fixed left-0 right-0 bottom-0 z-40">
         <div className="mx-auto max-w-2xl">
-          <div className="flex items-stretch justify-around bg-white/90 dark:bg-black/80 border-t border-[#b6f569]/30" style={{ paddingBottom: bottomInset }}>
+          <div className="flex items-stretch justify-around bg-white border-t border-[#e5e7eb]" style={{ paddingBottom: bottomInset }}>
             <Link href="/daily" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold rounded-t-lg ${currentTab === 'daily' ? 'text-[#066c00] bg-[#b6f569]/30' : 'text-[#66c800]/70'}`}>
               <div className="flex flex-col items-center gap-0.5 relative">
                 {currentTab === 'daily' && <span className="absolute -top-2 h-1 w-8 rounded-full bg-[#66c800]" />}
