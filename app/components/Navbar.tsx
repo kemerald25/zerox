@@ -78,7 +78,7 @@ export function Navbar() {
         className="fixed top-0 left-0 right-0 h-1 bg-[#66c800] origin-left z-50"
         style={{ scaleX }}
       />
-      <nav className="sticky top-0 z-40 w-full backdrop-blur-sm bg-white/30 dark:bg-black/30 border-b border-[#b6f569]/10">
+      <nav className="sticky top-0 z-40 w-full bg-white border-b border-[#e5e7eb]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
