@@ -9,7 +9,6 @@ import { usePathname } from 'next/navigation';
 import GameBoard from './components/game/GameBoard';
 import GameControls from './components/game/GameControls';
 import GameStatus from './components/game/GameStatus';
-import { Scoreboard } from './components/game/Scoreboard';
 import { WalletCheck } from './components/WalletCheck';
 import { playMove, playAIMove, playWin, playLoss, playDraw, resumeAudio, playWarning } from '@/lib/sound';
 import { hapticTap, hapticWin, hapticLoss } from '@/lib/haptics';
