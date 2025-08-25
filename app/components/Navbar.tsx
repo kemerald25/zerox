@@ -75,7 +75,7 @@ export function Navbar() {
   return (
     <>
       <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-[#66c800] origin-left z-50"
+        className="fixed top-0 left-0 right-0 h-1 bg-[#70FF5A] origin-left z-50"
         style={{ scaleX }}
       />
       <nav className="sticky top-0 z-40 w-full bg-white border-b border-[#e5e7eb]">
@@ -84,14 +84,14 @@ export function Navbar() {
             <div className="flex items-center gap-2">
               <Link href="/" className="flex items-center gap-2">
                 <Image src="/logo.png" alt="ZeroX" width={28} height={28} className="rounded" />
-                <span className="text-lg font-semibold text-[#66c800] hover:text-[#b6f569] transition-colors">ZeroX</span>
+                <span className="text-lg font-semibold text-[#70FF5A] hover:text-[#b6f569] transition-colors">ZeroX</span>
               </Link>
             </div>
             <div className="flex items-center space-x-4">
               <div className="hidden sm:flex items-center gap-2 mr-2">
                 <button
                   aria-label="Toggle mute"
-                  className="px-2 py-1 rounded bg-[#66c800]/10 text-[#66c800]"
+                  className="px-2 py-1 rounded bg-[#70FF5A]/10 text-[#70FF5A]"
                   onClick={() => { toggleMute(); setIsMuted(!isMuted); }}
                 >{isMuted ? 'Unmute' : 'Mute'}</button>
                 <input
@@ -106,7 +106,7 @@ export function Navbar() {
               {fcUser ? (
                 <motion.div
                   whileHover={{ scale: 1.03 }}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#66c800]/10 text-[#66c800] transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#70FF5A]/10 text-[#70FF5A] transition-colors"
                 >
                   {typeof fcUser.pfpUrl === 'string' ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -122,7 +122,7 @@ export function Navbar() {
               ) : isConnected ? (
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="px-4 py-2 rounded-lg bg-[#66c800]/10 text-[#66c800] transition-colors"
+                  className="px-4 py-2 rounded-lg bg-[#70FF5A]/10 text-[#70FF5A] transition-colors"
                 >
                   {address?.slice(0, 6)}...{address?.slice(-4)}
                 </motion.div>
@@ -130,7 +130,7 @@ export function Navbar() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-4 py-2 rounded-lg bg-[#66c800]/10 text-[#66c800] hover:bg-[#66c800]/20 transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-[#70FF5A]/10 text-[#70FF5A] hover:bg-[#70FF5A]/20 transition-colors cursor-pointer"
                   onClick={() => connect({ connector: connectors[0] })}
                 >
                   Connect Wallet
