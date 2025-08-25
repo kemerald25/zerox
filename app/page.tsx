@@ -492,6 +492,7 @@ export default function Home() {
     if (gameStatus === 'won') {
       playWin();
       hapticWin();
+      try { showToast('You won!'); } catch {}
       // Auto-start a new round shortly after a win
       const id = setTimeout(() => {
         startNewGameRound();
@@ -500,6 +501,7 @@ export default function Home() {
     } else if (gameStatus === 'lost') {
       playLoss();
       hapticLoss();
+      try { showToast('You lost'); } catch {}
       // Auto-start a new round shortly after a loss
       const id = setTimeout(() => {
         startNewGameRound();
@@ -507,6 +509,7 @@ export default function Home() {
       return () => clearTimeout(id);
     } else if (gameStatus === 'draw') {
       playDraw();
+      try { showToast("It's a draw"); } catch {}
       // Auto-start a new round shortly after a draw
       const id = setTimeout(() => {
         startNewGameRound();
