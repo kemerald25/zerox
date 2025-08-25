@@ -15,11 +15,13 @@ export default function LeaderboardPage() {
   );
 }
 
+type TopRow = { rank: number; address: string; alias?: string; pfpUrl?: string; wins: number; draws: number; losses: number; points: number };
+
 function LeaderboardTab() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [season, setSeason] = React.useState<{ start: string; end: string } | null>(null);
-  const [rows, setRows] = React.useState<Array<{ rank: number; address: string; alias?: string; wins: number; draws: number; losses: number; points: number }>>([]);
+  const [rows, setRows] = React.useState<Array<TopRow>>([]);
   const [countdown, setCountdown] = React.useState<string>('');
 
   useEffect(() => {
@@ -28,7 +30,8 @@ function LeaderboardTab() {
         const res = await fetch('/api/leaderboard');
         const data = await res.json();
         setSeason(data?.season ?? null);
-        setRows(Array.isArray(data?.top) ? data.top : []);
+        const rowsFromApi = (Array.isArray(data?.top) ? data.top : []) as Array<TopRow>;
+        setRows(rowsFromApi);
       } catch {
         setError('Failed to load leaderboard');
       } finally {
