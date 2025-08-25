@@ -1,6 +1,7 @@
 import { http, createConfig } from 'wagmi';
 import { base, baseSepolia } from 'wagmi/chains';
 import { farcasterMiniApp } from '@farcaster/miniapp-wagmi-connector';
+import { injected } from 'wagmi/connectors';
 
 const CHAIN_ENV = process.env.NEXT_PUBLIC_CHAIN || 'base-sepolia';
 export const SELECTED_CHAIN = CHAIN_ENV === 'base-sepolia'
@@ -18,5 +19,9 @@ export const config = createConfig({
     [base.id]: http(SELECTED_CHAIN.id === base.id ? ACTIVE_RPC : 'https://mainnet.base.org'),
     [baseSepolia.id]: http(SELECTED_CHAIN.id === baseSepolia.id ? ACTIVE_RPC : 'https://sepolia.base.org')
   },
-  connectors: [farcasterMiniApp()],
+  connectors: [
+    // Use injected (MetaMask) in local development; Farcaster connector otherwise
+    ...(typeof window !== 'undefined' && window.location.hostname === 'localhost' ? [injected()] : []),
+    farcasterMiniApp()
+  ],
 });
