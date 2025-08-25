@@ -130,7 +130,7 @@ export default function OnlinePlayPage() {
 
           <div className="grid grid-cols-2 gap-4 mb-2">
             <div className="relative p-4 pt-10 rounded-2xl bg-white text-center">
-              <div className="absolute -top-7 just">
+              <div className="absolute -top-7 justify-center">
                 <Image src={hostAvatar} alt="you" width={56} height={56} className="rounded-full ring-2 ring-white shadow-md object-cover" unoptimized />
               </div>
               <div className="text-xs text-black font-semibold">@De1Develbase_eth</div>
