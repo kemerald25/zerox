@@ -39,6 +39,7 @@ export default function Home() {
   const [streak, setStreak] = useState(0);
   const [achievements, setAchievements] = useState<string[]>([]);
   const [dailySeed, setDailySeed] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
   // Power-ups state
   const [hintIndex, setHintIndex] = useState<number | null>(null);
   const [blockedCellIndex, setBlockedCellIndex] = useState<number | null>(null);
@@ -770,74 +771,87 @@ export default function Home() {
                 return `Win to receive ~${p} ETH. Lose and you pay ~${p}.`;
               })()}
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs opacity-80">Size</span>
-              {([3,4,5] as const).map((n) => (
-                <button
-                  key={n}
-                  className={`px-3 py-1 rounded-full text-sm border ${boardSize===n?'bg-[#66c800] text-white border-[#66c800]':'bg-white text-[#66c800] border-[#66c800]'}`}
-                  onClick={() => {
-                    setBoardSize(n as 3|4|5);
-                    setBoard(Array((n as 3|4|5) * (n as 3|4|5)).fill(null));
-                    setWinningLine(null);
-                    setGameStatus('playing');
-                  }}
-                >
-                  {n}x{n}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-2">
+            <div className="w-full flex justify-center">
               <button
-                className={`px-3 py-1 rounded-full text-sm border ${misere?'bg-[#66c800] text-white border-[#66c800]':'bg-white text-[#66c800] border-[#66c800]'}`}
-                onClick={() => { const next = !misere; setMisere(next); setGameStatus('playing'); setWinningLine(null); setBoard((b)=>b.map(()=>null)); }}
+                className="px-4 py-1.5 rounded-full text-sm border bg-white text-[#66c800] border-[#66c800]"
+                onClick={() => setShowSettings((v) => !v)}
               >
-                Misère
+                {showSettings ? 'Close Settings' : 'Settings'}
               </button>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs opacity-80">Blitz</span>
-              {(['off','7s','5s'] as const).map((v) => (
-                <button
-                  key={v}
-                  className={`px-3 py-1 rounded-full text-sm border ${blitzPreset===v?'bg-[#66c800] text-white border-[#66c800]':'bg-white text-[#66c800] border-[#66c800]'}`}
-                  onClick={() => { setBlitzPreset(v); setSecondsLeft(null); }}
-                >
-                  {v}
-                </button>
-              ))}
-            </div>
+            {showSettings && (
+              <div className="w-full max-w-md mx-auto p-3 rounded-xl bg-white/90 border border-[#66c800]/30 text-[#066c00]">
+                <div className="text-xs font-semibold mb-2" style={{ color: '#066c00' }}>Variants</div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs opacity-80">Size</span>
+                  {([3,4,5] as const).map((n) => (
+                    <button
+                      key={n}
+                      className={`px-3 py-1 rounded-full text-sm border ${boardSize===n?'bg-[#66c800] text-white border-[#66c800]':'bg-white text-[#66c800] border-[#66c800]'}`}
+                      onClick={() => {
+                        setBoardSize(n as 3|4|5);
+                        setBoard(Array((n as 3|4|5) * (n as 3|4|5)).fill(null));
+                        setWinningLine(null);
+                        setGameStatus('playing');
+                      }}
+                    >
+                      {n}x{n}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <button
+                    className={`px-3 py-1 rounded-full text-sm border ${misere?'bg-[#66c800] text-white border-[#66c800]':'bg-white text-[#66c800] border-[#66c800]'}`}
+                    onClick={() => { const next = !misere; setMisere(next); setGameStatus('playing'); setWinningLine(null); setBoard((b)=>b.map(()=>null)); }}
+                  >
+                    Misère
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs opacity-80">Blitz</span>
+                  {(['off','7s','5s'] as const).map((v) => (
+                    <button
+                      key={v}
+                      className={`px-3 py-1 rounded-full text-sm border ${blitzPreset===v?'bg-[#66c800] text-white border-[#66c800]':'bg-white text-[#66c800] border-[#66c800]'}`}
+                      onClick={() => { setBlitzPreset(v); setSecondsLeft(null); }}
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
+                <div className="text-xs font-semibold mb-2 mt-3" style={{ color: '#066c00' }}>Quick actions</div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    className={`px-3 py-1 rounded border ${selectingBlock ? 'bg-[#66c800] text-white' : 'bg-white text-[#66c800]'} border-[#66c800] disabled:opacity-50`}
+                    disabled={usedBlock || !isPlayerTurn || gameStatus !== 'playing'}
+                    onClick={() => { if (!usedBlock) setSelectingBlock((v) => !v); }}
+                  >
+                    Block
+                  </button>
+                  <button
+                    className="px-3 py-1 rounded border bg-white text-[#66c800] border-[#66c800] disabled:opacity-50"
+                    disabled={usedHint || !isPlayerTurn || gameStatus !== 'playing'}
+                    onClick={() => {
+                      const idx = getBestPlayerMove(board);
+                      if (idx !== -1) { setHintIndex(idx); setUsedHint(true); setTimeout(() => setHintIndex(null), 3000); }
+                    }}
+                  >
+                    Hint
+                  </button>
+                  <button
+                    className={`px-3 py-1 rounded border ${doubleActive ? 'bg-[#66c800] text-white' : 'bg-white text-[#66c800]'} border-[#66c800] disabled:opacity-50`}
+                    disabled={usedDouble || !isPlayerTurn || gameStatus !== 'playing' || doublePendingSecond}
+                    onClick={() => { if (!usedDouble && !doublePendingSecond) setDoubleActive((v) => !v); }}
+                  >
+                    Double Move
+                  </button>
+                  {selectingBlock && <span className="text-xs">Tap a cell to block AI</span>}
+                  {doublePendingSecond && <span className="text-xs">Place your second move</span>}
+                </div>
+              </div>
+            )}
           </div>
           <GameStatus status={gameStatus} isPlayerTurn={isPlayerTurn} secondsLeft={secondsLeft ?? null} />
-          {/* Power-ups */}
-          <div className="mb-2 flex items-center justify-center gap-2 flex-wrap" style={{ color: '#66c800' }}>
-            <button
-              className={`px-3 py-1 rounded border ${selectingBlock ? 'bg-[#66c800] text-white' : 'bg-white text-[#66c800]'} border-[#66c800] disabled:opacity-50`}
-              disabled={usedBlock || !isPlayerTurn || gameStatus !== 'playing'}
-              onClick={() => { if (!usedBlock) setSelectingBlock((v) => !v); }}
-            >
-              Block
-            </button>
-            <button
-              className="px-3 py-1 rounded border bg-white text-[#66c800] border-[#66c800] disabled:opacity-50"
-              disabled={usedHint || !isPlayerTurn || gameStatus !== 'playing'}
-              onClick={() => {
-                const idx = getBestPlayerMove(board);
-                if (idx !== -1) { setHintIndex(idx); setUsedHint(true); setTimeout(() => setHintIndex(null), 3000); }
-              }}
-            >
-              Hint
-            </button>
-            <button
-              className={`px-3 py-1 rounded border ${doubleActive ? 'bg-[#66c800] text-white' : 'bg-white text-[#66c800]'} border-[#66c800] disabled:opacity-50`}
-              disabled={usedDouble || !isPlayerTurn || gameStatus !== 'playing' || doublePendingSecond}
-              onClick={() => { if (!usedDouble && !doublePendingSecond) setDoubleActive((v) => !v); }}
-            >
-              Double Move
-            </button>
-            {selectingBlock && <span className="text-xs">Tap a cell to block AI</span>}
-            {doublePendingSecond && <span className="text-xs">Place your second move</span>}
-          </div>
           <GameBoard
             board={board}
             onCellClick={handleCellClick}
