@@ -7,7 +7,9 @@ import BottomNav from '../components/BottomNav';
 export default function PlayPage() {
   return (
     <>
-      <Home />
+      <div className="min-h-screen" style={{ backgroundColor: '#141414' }}>
+        <Home />
+      </div>
       <BottomNav />
     </>
   );
