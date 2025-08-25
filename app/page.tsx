@@ -1060,23 +1060,24 @@ function LeaderboardTab() {
           <div className="text-sm text-[#4b4b4f]">No entries yet.</div>
         ) : (
           <div className="divide-y divide-[#e5e7eb]">
-            {rows.map((r) => (
-              <div key={r.rank} className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 text-center font-bold text-[#66c800]">{r.rank}</div>
-                  {('pfpUrl' in r) && (r as unknown as { pfpUrl?: string }).pfpUrl ? (
-                    <Image src={(r as unknown as { pfpUrl: string }).pfpUrl} alt={r.alias || 'pfp'} width={24} height={24} className="rounded-full" />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full bg-[#f6f7f6] border border-[#e5e7eb]" />
-                  )}
-                  <div className="font-semibold text-[#0a0a0a]">{r.alias ? `@${r.alias}` : `${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
+            {rows.map((r) => {
+              const rr = r as unknown as { pfpUrl?: string };
+              const fallback = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent((r as any).alias || r.address)}`;
+              const src = rr.pfpUrl && typeof rr.pfpUrl === 'string' ? rr.pfpUrl : fallback;
+              return (
+                <div key={r.rank} className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 text-center font-bold text-[#66c800]">{r.rank}</div>
+                    <Image src={src} alt={(r as any).alias || 'pfp'} width={28} height={28} className="rounded-full object-cover" />
+                    <div className="font-semibold text-[#0a0a0a]">{(r as any).alias ? `@${(r as any).alias}` : `${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
+                  </div>
+                  <div className="text-xs text-right">
+                    <div className="font-semibold text-[#0a0a0a]">{r.points} pts</div>
+                    <div className="text-[#4b4b4f]">W‑D‑L {r.wins}-{r.draws}-{r.losses}</div>
+                  </div>
                 </div>
-                <div className="text-xs text-right">
-                  <div className="font-semibold text-[#0a0a0a]">{r.points} pts</div>
-                  <div className="text-[#4b4b4f]">W‑D‑L {r.wins}-{r.draws}-{r.losses}</div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
