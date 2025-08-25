@@ -286,7 +286,6 @@ export default function Home() {
     if (selectingBlock && isPlayerTurn && !board[index] && blockedCellIndex === null) {
       setBlockedCellIndex(index);
       setSelectingBlock(false);
-      setUsedBlock(true);
       playWarning();
       return;
     }
@@ -353,7 +352,6 @@ export default function Home() {
       setIsPlayerTurn(false);
       setDoubleActive(false);
       setDoublePendingSecond(false);
-      setUsedDouble(true);
       playMove();
 
       const winner2 = checkWinner(temp);
