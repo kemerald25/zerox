@@ -977,20 +977,23 @@ export default function Home() {
       <div className="fixed left-0 right-0 bottom-0 z-40">
         <div className="mx-auto max-w-2xl">
           <div className="flex items-stretch justify-around bg-white/90 dark:bg-black/80 border-t border-[#b6f569]/30" style={{ paddingBottom: bottomInset }}>
-            <Link href="/daily" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold ${currentTab === 'daily' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}>
-              <div className="flex flex-col items-center gap-0.5">
+            <Link href="/daily" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold rounded-t-lg ${currentTab === 'daily' ? 'text-[#066c00] bg-[#b6f569]/30' : 'text-[#66c800]/70'}`}>
+              <div className="flex flex-col items-center gap-0.5 relative">
+                {currentTab === 'daily' && <span className="absolute -top-2 h-1 w-8 rounded-full bg-[#66c800]" />}
                 <span aria-hidden>🗓️</span>
                 <span>Daily</span>
               </div>
             </Link>
-            <Link href="/play" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold ${currentTab === 'play' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}>
-              <div className="flex flex-col items-center gap-0.5">
+            <Link href="/play" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold rounded-t-lg ${currentTab === 'play' ? 'text-[#066c00] bg-[#b6f569]/30' : 'text-[#66c800]/70'}`}>
+              <div className="flex flex-col items-center gap-0.5 relative">
+                {currentTab === 'play' && <span className="absolute -top-2 h-1 w-8 rounded-full bg-[#66c800]" />}
                 <span aria-hidden>🎮</span>
                 <span>Play</span>
               </div>
             </Link>
-            <Link href="/leaderboard" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold ${currentTab === 'leaderboard' ? 'text-[#66c800]' : 'text-[#66c800]/70'}`}>
-              <div className="flex flex-col items-center gap-0.5">
+            <Link href="/leaderboard" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold rounded-t-lg ${currentTab === 'leaderboard' ? 'text-[#066c00] bg-[#b6f569]/30' : 'text-[#66c800]/70'}`}>
+              <div className="flex flex-col items-center gap-0.5 relative">
+                {currentTab === 'leaderboard' && <span className="absolute -top-2 h-1 w-8 rounded-full bg-[#66c800]" />}
                 <span aria-hidden>🏆</span>
                 <span>Leaderboard</span>
               </div>
