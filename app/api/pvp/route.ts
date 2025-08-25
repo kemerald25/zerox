@@ -47,7 +47,9 @@ export async function POST(req: NextRequest) {
       if (!m.player_x) next.player_x = address.toLowerCase();
       else if (!m.player_o && m.player_x.toLowerCase() !== address.toLowerCase()) next.player_o = address.toLowerCase();
       else return NextResponse.json({ ok: true, match: m });
-      next.status = (next.player_x && (m.player_o || next.player_o)) ? 'active' : 'open';
+      const hasX = (m.player_x && m.player_x.toLowerCase()) || next.player_x;
+      const hasO = (m.player_o && m.player_o.toLowerCase()) || next.player_o;
+      next.status = hasX && hasO ? 'active' : 'open';
       const { data } = await supabase.from('pvp_matches').update(next).eq('id', id).select('*').maybeSingle();
       return NextResponse.json({ match: data });
     }
