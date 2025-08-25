@@ -1,10 +1,10 @@
-# Blockchain Tic-Tac-Toe
+# ZeroX
 
-A decentralized Tic-Tac-Toe game built with Next.js and blockchain technology. Play against friends and track your scores on the blockchain!
+A decentralized ZeroX game built with Next.js and blockchain technology. Play against friends and track your scores on the blockchain!
 
 ## Features
 
-- 🎮 Classic Tic-Tac-Toe gameplay
+- 🎮 Classic ZeroX gameplay
 - ⛓️ Blockchain-based score tracking
 - 👛 Wallet integration for player identification
 - 🏆 Persistent scoreboard using smart contracts
