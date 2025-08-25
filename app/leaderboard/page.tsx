@@ -83,15 +83,14 @@ function LeaderboardTab() {
         ) : (
           <div className="divide-y divide-[#e5e7eb]">
             {rows.map((r) => {
-              const rr = r as unknown as { pfpUrl?: string };
-              const fallback = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent((r as any).alias || r.address)}`;
-              const src = rr.pfpUrl && typeof rr.pfpUrl === 'string' ? rr.pfpUrl : fallback;
+              const fallback = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(r.alias || r.address)}`;
+              const src = r.pfpUrl && typeof r.pfpUrl === 'string' ? r.pfpUrl : fallback;
               return (
                 <div key={r.rank} className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3">
                     <div className="w-6 text-center font-bold text-[#70FF5A]">{r.rank}</div>
-                    <Image src={src} alt={(r as any).alias || 'pfp'} width={42} height={42} className="rounded-md object-cover" />
-                    <div className="font-semibold text-[#0a0a0a]">{(r as any).alias ? `@${(r as any).alias}` : `${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
+                    <Image src={src} alt={r.alias || 'pfp'} width={42} height={42} className="rounded-md object-cover" />
+                    <div className="font-semibold text-[#0a0a0a]">{r.alias ? `@${r.alias}` : `${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
                   </div>
                   <div className="text-xs text-right">
                     <div className="font-semibold text-[#0a0a0a]">{r.points} pts</div>
