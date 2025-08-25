@@ -852,6 +852,12 @@ export default function Home() {
             )}
           </div>
           <GameStatus status={gameStatus} isPlayerTurn={isPlayerTurn} secondsLeft={secondsLeft ?? null} />
+          {/* Compact level/XP/streak summary above the board */}
+          <div className="mt-2 w-full max-w-md px-3 py-2 rounded-lg flex items-center justify-between text-xs" style={{ backgroundColor: '#b6f569', color: '#066c00' }}>
+            <span>Level {level}</span>
+            <span>XP {xp}</span>
+            <span>Streak {streak}🔥</span>
+          </div>
           <GameBoard
             board={board}
             onCellClick={handleCellClick}
@@ -919,20 +925,7 @@ export default function Home() {
             );
           })()}
           {/* Rematch series removed */}
-          <Scoreboard />
-          {/* Progress UI */}
-          <div className="mt-6 w-full max-w-md p-3 rounded-lg" style={{ backgroundColor: '#b6f569' }}>
-            <div className="flex justify-between" style={{ color: '#066c00' }}>
-              <div>Level {level}</div>
-              <div>XP {xp}</div>
-              <div>Streak {streak}🔥</div>
-            </div>
-            {achievements.length > 0 && (
-              <div className="mt-2 text-sm" style={{ color: '#066c00' }}>
-                Badges: {achievements.join(', ')}
-              </div>
-            )}
-          </div>
+          <div className="mt-4" />
             </>
           )}
         </>
