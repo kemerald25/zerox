@@ -15,7 +15,7 @@ export function BottomNav() {
       : 'play';
 
   return (
-    <div className="fixed left-0 right-0 bottom-0 z-40 bg-black border-t border-[#e5e7eb]" style={{ paddingBottom: bottomInset }}>
+    <div className="fixed left-0 right-0 bottom-0 z-40 border-t border-[#e5e7eb]" style={{ paddingBottom: bottomInset, backgroundColor: '#141414' }}>
       <div className="mx-auto max-w-2xl">
         <div className="flex items-stretch justify-around">
           <Link href="/daily" className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold rounded-t-lg ${currentTab === 'daily' ? 'text-[#066c00] bg-[#b6f569]/30' : 'text-[#70FF5A]/70'}`}>
