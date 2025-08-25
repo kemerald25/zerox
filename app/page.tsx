@@ -31,6 +31,7 @@ export default function Home() {
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [misere, setMisere] = useState(false);
   const [blitzPreset, setBlitzPreset] = useState<'off' | '7s' | '5s'>('off');
+  const [nextStarter, setNextStarter] = useState<'player' | 'ai'>('player');
   const computeTurnLimit = useCallback(() => (blitzPreset === '5s' ? 5 : blitzPreset === '7s' ? 7 : 15), [blitzPreset]);
   // series state removed
   const [xp, setXp] = useState(0);
@@ -59,7 +60,7 @@ export default function Home() {
     setBoard(Array(n * n).fill(null));
     setWinningLine(null);
     setGameStatus('playing');
-    setIsPlayerTurn(true);
+    setIsPlayerTurn(nextStarter === 'player');
     setSecondsLeft(computeTurnLimit());
     setOutcomeHandled(false);
     setSessionId(null);
@@ -72,7 +73,9 @@ export default function Home() {
     setUsedBlock(false);
     setUsedHint(false);
     setUsedDouble(false);
-  }, [boardSize, computeTurnLimit]);
+    // alternate who starts next round
+    setNextStarter((s) => (s === 'player' ? 'ai' : 'player'));
+  }, [boardSize, computeTurnLimit, nextStarter]);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
   const { address } = useAccount();
