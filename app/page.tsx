@@ -668,7 +668,7 @@ export default function Home() {
   const bottomNavHeight = 64 + bottomInset;
 
   return (
-    <main className="min-h-screen p-4 flex flex-col items-center" style={{ paddingBottom: bottomNavHeight }}>
+    <main className="min-h-screen p-4 flex flex-col items-center" style={{ paddingBottom: bottomNavHeight, backgroundColor: '#141414' }}>
       <WalletCheck>
         {toast && (
           <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded bg-[#70FF5A] text-white shadow">
