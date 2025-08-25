@@ -3,6 +3,7 @@
 
 import { motion, useScroll, useSpring } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAccount, useConnect } from 'wagmi';
 import React, { useEffect, useState } from 'react';
 import { toggleMute, setVolume, getVolume } from '@/lib/sound';
@@ -80,12 +81,10 @@ export function Navbar() {
       <nav className="sticky top-0 z-40 w-full backdrop-blur-sm bg-white/30 dark:bg-black/30 border-b border-[#b6f569]/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Link 
-                href="/"
-                className="text-lg font-semibold text-[#66c800] hover:text-[#b6f569] transition-colors"
-              >
-                ZeroX
+            <div className="flex items-center gap-2">
+              <Link href="/" className="flex items-center gap-2">
+                <Image src="/logo.png" alt="ZeroX" width={28} height={28} className="rounded" />
+                <span className="text-lg font-semibold text-[#66c800] hover:text-[#b6f569] transition-colors">ZeroX</span>
               </Link>
             </div>
             <div className="flex items-center space-x-4">
