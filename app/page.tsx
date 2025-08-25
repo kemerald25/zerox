@@ -277,20 +277,7 @@ export default function Home() {
     return bestMove;
   }, [difficulty, playerSymbol, minimax, getAvailableMoves, blockedCellIndex]);
 
-  const getBestPlayerMove = useCallback((squares: Array<string | null>): number => {
-    const moves = getAvailableMoves(squares);
-    if (moves.length === 0) return -1;
-    // Evaluate from player's perspective: choose move minimizing AI advantage
-    let best = moves[0];
-    let bestScore = Infinity;
-    for (const m of moves) {
-      const next = [...squares];
-      next[m] = playerSymbol;
-      const score = minimax(next, true);
-      if (score < bestScore) { bestScore = score; best = m; }
-    }
-    return best;
-  }, [getAvailableMoves, playerSymbol, minimax]);
+  // getBestPlayerMove no longer used (quick actions removed)
 
   const { recordResult, score } = useScoreboard();
 
