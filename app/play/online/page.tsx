@@ -128,14 +128,18 @@ export default function OnlinePlayPage() {
             <button className="px-3 py-1.5 rounded-lg bg-[#70FF5A] text-black text-xs" onClick={handleInvite} disabled={!matchId}>Invite</button>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="p-3 rounded-xl bg-white text-center">
-              <Image src={hostAvatar} alt="you" width={44} height={44} className="rounded-full object-cover mx-auto mb-2" unoptimized />
+          <div className="grid grid-cols-2 gap-4 mb-2">
+            <div className="relative p-4 pt-10 rounded-2xl bg-white text-center">
+              <div className="absolute -top-7 left-4">
+                <Image src={hostAvatar} alt="you" width={56} height={56} className="rounded-full ring-2 ring-white shadow-md object-cover" unoptimized />
+              </div>
               <div className="text-xs text-black font-semibold">@De1Develbase_eth</div>
               <button className="mt-2 w-full h-12 bg-black text-white text-2xl font-bold rounded-lg" disabled={!youAreX}>X</button>
             </div>
-            <div className="p-3 rounded-xl bg-white text-center">
-              <Image src={opponentAvatar} alt="opponent" width={44} height={44} className="rounded-full object-cover mx-auto mb-2" unoptimized />
+            <div className="relative p-4 pt-10 rounded-2xl bg-white text-center">
+              <div className="absolute -top-7 right-4">
+                <Image src={opponentAvatar} alt="opponent" width={56} height={56} className="rounded-full ring-2 ring-white shadow-md object-cover" unoptimized />
+              </div>
               <div className="text-xs text-black font-semibold">@Ovittobase_eth</div>
               <button className="mt-2 w-full h-12 bg-[#70FF5A] text-black text-2xl font-bold rounded-lg" disabled={!youAreO}>O</button>
             </div>
