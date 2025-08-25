@@ -1,9 +1,60 @@
-# Tic-Tac-Toe Game Project Scratchpad (1-Hour MVP)
+# ZeroX – Sleek UX Plan (Planner)
 
 ## Background and Motivation
-Building a simple tic-tac-toe game with essential features only. Core focus: playable game with basic AI and clean UI using Base Brand colors (#66c800 Green & #b6f569 Lime Green).
+Elevate ZeroX from functional to delightful: sleek, minimal, mobile‑first gameplay that feels native inside Farcaster/Base Mini App. Priorities: clarity, speed, and legibility with brand green (#66c800) + lime (#b6f569), dark greys for contrast.
 
-## Simplified MVP Features
+## Key Challenges and Analysis
+- Mixed UI density: controls and info compete with the board on small screens.
+- Inconsistent component styling (buttons, toasts) increases cognitive load.
+- Variants (4x4/5x5) need responsive tuning to stay tappable.
+- Mini‑app safe areas and overlays can block interactions.
+
+## High-level Task Breakdown
+1) Design tokens
+   - Colors, spacing scale (4/8/12), radii (md/lg/xl), shadows (subtle vs glow), type scale.
+   - Success: tokens referenced in classNames or CSS vars with consistent usage.
+2) Navbar cleanup
+   - Left: logo + ZeroX text. Right: compact mute/volume. Progress bar remains.
+   - Success: header height stable; no wrap on small devices.
+3) Play layout
+   - Top: compact control pills (Size 3/4/5, Misère, Blitz Off/7s/5s) with icon badges.
+   - Middle: player card(s) optional; below: responsive board with reduced gaps.
+   - Bottom: primary CTA row (Share Result / Challenge) shown only after game end.
+   - Success: fits iPhone SE width without horizontal scroll.
+4) Daily screen
+   - Single hero card, bold CTA, accordion tips.
+   - Success: 1‑scroll view; clear CTA.
+5) Leaderboard/Sprint
+   - Card list with avatar, alias, points; sprint panel matched style.
+   - Success: uniform cards; text never overlaps.
+6) Toasts and haptics
+   - Unified toast style, top‑center; subtle haptics for key actions.
+   - Success: no overlapping toasts; 2s auto‑dismiss.
+7) A11y and responsive
+   - Reduced motion toggle; ensure 4.5:1 contrast where text on color.
+   - Success: passes quick contrast check; 44px min tap targets.
+
+## Project Status Board
+- [ ] Define ZeroX design tokens
+- [ ] Simplify navbar
+- [ ] Redesign Play layout controls as pills
+- [ ] Tighten GameBoard responsiveness for 4x4/5x5 (done baseline)
+- [ ] Standardize primary/secondary buttons
+- [ ] Restyle Daily card
+- [ ] Restyle Leaderboard/Sprint
+- [ ] Standardize toast styles
+- [ ] Add reduced motion + haptics toggles
+
+## Current Status / Progress Tracking
+- Power‑ups, blitz, auto‑start after outcomes implemented.
+- Initial responsive tweaks for board shipped.
+
+## Executor's Feedback or Assistance Requests
+- Confirm preferred typography: system stack vs imported font.
+- Provide final logo sizes/variants (light/dark) if different from /public/logo.png.
+
+## Lessons
+- Avoid overlays (add‑mini‑app) when requiring payment action; hide during settlement.
 1. Core Game
    - 3x3 grid with brand colors
    - Basic player vs AI gameplay
