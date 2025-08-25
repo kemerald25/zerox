@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       const blitz: 'off'|'7s'|'5s' = (body?.blitz === '5s' || body?.blitz === '7s') ? body.blitz : 'off';
       const n = size * size;
       const board = JSON.stringify(Array(n).fill(null));
-      const row: any = { invited_by: invited_by ?? null, size, misere, blitz, board };
+      const row: any = { invited_by: invited_by ?? null, size, misere, blitz, board, next_turn: 'X', status: 'open' };
       if (invited_by) row.player_x = invited_by.toLowerCase();
       const { data, error } = await supabase.from('pvp_matches').insert(row).select('*').maybeSingle();
       if (error || !data) return NextResponse.json({ error: 'create_failed' }, { status: 500 });
@@ -50,6 +50,9 @@ export async function POST(req: NextRequest) {
       const hasX = (m.player_x && m.player_x.toLowerCase()) || next.player_x;
       const hasO = (m.player_o && m.player_o.toLowerCase()) || next.player_o;
       next.status = hasX && hasO ? 'active' : 'open';
+      if (next.status === 'active' && !m.next_turn && !next.next_turn) {
+        next.next_turn = 'X';
+      }
       const { data } = await supabase.from('pvp_matches').update(next).eq('id', id).select('*').maybeSingle();
       return NextResponse.json({ match: data });
     }
