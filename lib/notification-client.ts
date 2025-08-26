@@ -100,6 +100,10 @@ export async function sendBulkNotification({
     // Get all active notification tokens
     const tokens = await getAllActiveNotificationTokens();
     
+    console.log('=== BULK NOTIFICATION DEBUG ===');
+    console.log('Available tokens:', tokens.length);
+    console.log('First few tokens:', tokens.slice(0, 3));
+    
     if (tokens.length === 0) {
       console.log('No active notification tokens found');
       return result;
@@ -119,15 +123,26 @@ export async function sendBulkNotification({
       tokensByUrl.get(token.url)!.push(token.token);
     });
 
+    console.log('URLs found:', Array.from(tokensByUrl.keys()));
+    console.log('Tokens per URL:', Object.fromEntries(
+      Array.from(tokensByUrl.entries()).map(([url, tokens]) => [url, tokens.length])
+    ));
+
     // Send to each URL in batches of 100 (Farcaster limit)
     for (const [url, urlTokens] of tokensByUrl) {
+      console.log(`Processing URL: ${url} with ${urlTokens.length} tokens`);
+      
       const batches = [];
       for (let i = 0; i < urlTokens.length; i += 100) {
         batches.push(urlTokens.slice(i, i + 100));
       }
 
-      for (const batch of batches) {
+      console.log(`Created ${batches.length} batches for ${url}`);
+
+      for (const [batchIndex, batch] of batches.entries()) {
         try {
+          console.log(`Sending batch ${batchIndex + 1}/${batches.length} to ${url} (${batch.length} tokens)`);
+          
           const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -142,8 +157,11 @@ export async function sendBulkNotification({
             }),
           });
 
+          console.log(`Response from ${url}:`, response.status, response.statusText);
+
           if (response.status === 200) {
             const responseJson = await response.json();
+            console.log(`Response body from ${url}:`, responseJson);
             
             // Handle successful tokens
             if (responseJson.successfulTokens) {
@@ -163,6 +181,8 @@ export async function sendBulkNotification({
             }
           } else {
             console.error(`Failed to send batch to ${url}:`, response.status);
+            const errorText = await response.text();
+            console.error(`Error response:`, errorText);
             result.totalFailed += batch.length;
           }
         } catch (error) {
@@ -173,6 +193,7 @@ export async function sendBulkNotification({
     }
 
     console.log(`Bulk notification completed: ${result.totalSent} sent, ${result.totalFailed} failed`);
+    console.log('=== END BULK NOTIFICATION DEBUG ===');
     
   } catch (error) {
     console.error('Bulk notification failed:', error);
