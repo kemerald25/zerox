@@ -514,7 +514,7 @@ export default function Home() {
       }, 1200);
       return () => clearTimeout(id);
     }
-  }, [gameStatus, startNewGameRound]);
+  }, [gameStatus, startNewGameRound, recordResult, resultRecorded, showToast]);
 
   // Series removed
 

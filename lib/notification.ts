@@ -1,13 +1,6 @@
 import type { MiniAppNotificationDetails } from "@farcaster/frame-sdk";
 import { supabase } from "./supabase";
 
-const notificationServiceKey =
-  process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME ?? "minikit";
-
-function getUserNotificationDetailsKey(fid: number): string {
-  return `${notificationServiceKey}:user:${fid}`;
-}
-
 export async function getUserNotificationDetails(
   fid: number,
 ): Promise<MiniAppNotificationDetails | null> {

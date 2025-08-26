@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import BottomNav from '../components/BottomNav';
 
@@ -30,7 +30,7 @@ export default function DailyPage() {
   const { address } = useAccount();
 
   // Generate calendar data for specified month
-  const generateCalendarDays = (monthDate: Date): DayStatus[] => {
+  const generateCalendarDays = useCallback((monthDate: Date): DayStatus[] => {
     const days: DayStatus[] = [];
     const month = monthDate.getMonth();
     const year = monthDate.getFullYear();
@@ -96,9 +96,9 @@ export default function DailyPage() {
     }
     
     return days;
-  };
+  }, []);
 
-  const navigateMonth = (direction: 'prev' | 'next') => {
+  const navigateMonth = useCallback((direction: 'prev' | 'next') => {
     const newMonth = new Date(currentMonth);
     if (direction === 'prev') {
       newMonth.setMonth(newMonth.getMonth() - 1);
@@ -107,13 +107,13 @@ export default function DailyPage() {
     }
     setCurrentMonth(newMonth);
     setDayStatuses(generateCalendarDays(newMonth));
-  };
+  }, [currentMonth, generateCalendarDays]);
 
-  const goToToday = () => {
+  const goToToday = useCallback(() => {
     const today = new Date();
     setCurrentMonth(today);
     setDayStatuses(generateCalendarDays(today));
-  };
+  }, [generateCalendarDays]);
 
   // Fetch daily seed
   useEffect(() => {
@@ -129,7 +129,7 @@ export default function DailyPage() {
   // Initialize calendar
   useEffect(() => {
     setDayStatuses(generateCalendarDays(currentMonth));
-  }, [currentMonth]);
+  }, [currentMonth, generateCalendarDays]);
 
   // Check daily status when address changes
   useEffect(() => {
@@ -168,63 +168,41 @@ export default function DailyPage() {
   }, [address, dailySeed]);
 
   // Fetch calendar data separately
-  useEffect(() => {
+  const fetchCalendarData = useCallback(async () => {
     if (!address || dayStatuses.length === 0) return;
     
-    const fetchCalendarData = async () => {
-      try {
-        const r = await fetch('/api/daily', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address })
+    try {
+      const r = await fetch('/api/daily', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address })
+      });
+      const j = await r.json();
+      if (j.ok && j.checkins) {
+        // Update calendar with real data
+        const updatedDays = dayStatuses.map(day => {
+          const checkin = j.checkins[day.date];
+          return {
+            ...day,
+            completed: checkin?.completed || false,
+            bonusClaimed: checkin?.bonusClaimed || false
+          };
         });
-        const j = await r.json();
-        if (j.ok && j.checkins) {
-          // Update calendar with real data
-          const updatedDays = dayStatuses.map(day => {
-            const checkin = j.checkins[day.date];
-            return {
-              ...day,
-              completed: checkin?.completed || false,
-              bonusClaimed: checkin?.bonusClaimed || false
-            };
-          });
-          setDayStatuses(updatedDays);
-        }
-      } catch {}
-    };
+        setDayStatuses(updatedDays);
+      }
+    } catch {}
+  }, [address, dayStatuses]);
 
+  useEffect(() => {
     fetchCalendarData();
-  }, [address, dayStatuses.length]);
+  }, [fetchCalendarData]);
 
   // Refresh calendar when daily status changes
   useEffect(() => {
     if (dailyStatus && address && dayStatuses.length > 0) {
-      const fetchCalendarData = async () => {
-        try {
-          const r = await fetch('/api/daily', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ address })
-          });
-          const j = await r.json();
-          if (j.ok && j.checkins) {
-            const updatedDays = dayStatuses.map(day => {
-              const checkin = j.checkins[day.date];
-              return {
-                ...day,
-                completed: checkin?.completed || false,
-                bonusClaimed: checkin?.bonusClaimed || false
-              };
-            });
-            setDayStatuses(updatedDays);
-          }
-        } catch {}
-      };
-      
       fetchCalendarData();
     }
-  }, [dailyStatus, address, dayStatuses.length]);
+  }, [dailyStatus, address, dayStatuses.length, fetchCalendarData]);
 
   const handlePlayChallenge = () => {
     if (!dailySeed) return;
@@ -315,7 +293,7 @@ export default function DailyPage() {
           <div className="p-4 rounded-lg border border-[#e5e7eb] bg-white">
             <div className="text-xl font-bold mb-2 text-[#0a0a0a]">Daily Challenge</div>
             <div className="text-sm mb-2 text-[#4b4b4f]">
-              Beat the AI on hard mode with today's seed to earn bonus faucet and XP.
+              Beat the AI on hard mode with today&apos;s seed to earn bonus faucet and XP.
             </div>
             
             {/* Streak Display */}
@@ -440,7 +418,7 @@ export default function DailyPage() {
                     {dailyStatus.streak >= 7 && dailyStatus.streak < 14 && `🚀 Week 1 complete! Aim for 2 weeks!`}
                     {dailyStatus.streak >= 14 && dailyStatus.streak < 21 && `💪 Halfway there! Push for 3 weeks!`}
                     {dailyStatus.streak >= 21 && dailyStatus.streak < 30 && `🌟 Almost there! Just ${30 - dailyStatus.streak} more days!`}
-                    {dailyStatus.streak >= 30 && `🏆 Legend! You've completed the full 30-day challenge!`}
+                    {dailyStatus.streak >= 30 && `🏆 Legend! You&apos;ve completed the full 30-day challenge!`}
                   </div>
                   {dailyStatus.streak > 0 && dailyStatus.streak < 30 && (
                     <div className="text-xs text-blue-600 mt-1">
@@ -454,7 +432,7 @@ export default function DailyPage() {
             <details className="text-xs opacity-90 mb-3">
               <summary className="cursor-pointer">How it works</summary>
               <div className="mt-2 text-left text-[#4b4b4f]">
-                - You must play with symbol X and difficulty Hard using today's seed.<br/>
+                - You must play with symbol X and difficulty Hard using today&apos;s seed.<br/>
                 - Winning auto-claims a one-time bonus to your wallet (rate-limited daily).<br/>
                 - Draws/losses do not qualify, but still count for XP and streaks.<br/>
                 - Maintain your streak by completing challenges daily!
@@ -472,14 +450,14 @@ export default function DailyPage() {
             >
               {!dailySeed ? 'Loading…' : 
                dailyStatus?.completed ? 'Challenge Completed Today' : 
-               'Play Today\'s Challenge'}
+               'Play Today&apos;s Challenge'}
             </button>
             
             <div className="mt-4 text-sm text-[#4b4b4f]">
               {address ? (
                 dailyStatus?.completed ? 
                   'Great job! Come back tomorrow for the next challenge.' :
-                  'Complete today\'s challenge to maintain your streak!'
+                  'Complete today&apos;s challenge to maintain your streak!'
               ) : (
                 'Connect wallet to track streak'
               )}

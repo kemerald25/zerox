@@ -2,13 +2,24 @@
 import React, { useState } from 'react';
 import { useAccount } from 'wagmi';
 
+interface NotificationResult {
+  success?: boolean;
+  message?: string;
+  error?: string;
+  result?: {
+    totalSent: number;
+    totalFailed: number;
+    rateLimitedTokens: string[];
+  };
+}
+
 export default function AdminNotifyPage() {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [targetUrl, setTargetUrl] = useState('');
   const [notificationId, setNotificationId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<NotificationResult | null>(null);
   const { address } = useAccount();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,7 +59,7 @@ export default function AdminNotifyPage() {
       } else {
         setResult({ error: data.error });
       }
-    } catch (error) {
+    } catch {
       setResult({ error: 'Failed to send notification' });
     } finally {
       setIsLoading(false);
@@ -63,7 +74,7 @@ export default function AdminNotifyPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
-          <p className="text-gray-600">You don't have permission to access this page.</p>
+          <p className="text-gray-600">You don&apos;t have permission to access this page.</p>
         </div>
       </div>
     );

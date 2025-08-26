@@ -67,7 +67,7 @@ async function getCurrentStreak(address: string): Promise<number> {
     if (error || !data) return 0;
     
     let streak = 0;
-    let currentDate = new Date(todayStr);
+    const currentDate = new Date(todayStr);
     
     for (const entry of data) {
       if (entry.completed) {
