@@ -350,7 +350,7 @@ export default function Home() {
       if (winner) {
         const isWin = winner === playerSymbol;
         setGameStatus(isWin ? 'won' : 'lost');
-        recordResult(isWin ? 'win' : 'loss');
+        // recordResult will be called in useEffect - don't call here
         if (sessionId) {
           try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: isWin ? 'win' : 'loss', settled: isWin }) }); } catch {}
         }
@@ -360,7 +360,7 @@ export default function Home() {
       }
       if (getAvailableMoves(newBoard).length === 0) {
         setGameStatus('draw');
-        recordResult('draw');
+        // recordResult will be called in useEffect - don't call here
         if (sessionId) {
           try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: 'draw', settled: true }) }); } catch {}
         }
@@ -392,7 +392,7 @@ export default function Home() {
       if (winner2) {
         const isWin = winner2 === playerSymbol;
         setGameStatus(isWin ? 'won' : 'lost');
-        recordResult(isWin ? 'win' : 'loss');
+        // recordResult will be called in useEffect - don't call here
         if (sessionId) {
           try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: isWin ? 'win' : 'loss', settled: isWin }) }); } catch {}
         }
@@ -400,7 +400,7 @@ export default function Home() {
       }
       if (getAvailableMoves(temp).length === 0) {
         setGameStatus('draw');
-        recordResult('draw');
+        // recordResult will be called in useEffect - don't call here
         if (sessionId) {
           try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: 'draw', settled: true }) }); } catch {}
         }
@@ -422,7 +422,6 @@ export default function Home() {
     if (winner) {
       const isWin = winner === playerSymbol;
       setGameStatus(isWin ? 'won' : 'lost');
-      recordResult(isWin ? 'win' : 'loss');
       // Update session on immediate result
       if (sessionId) {
         try {
@@ -433,7 +432,6 @@ export default function Home() {
     }
     if (getAvailableMoves(newBoard).length === 0) {
       setGameStatus('draw');
-      recordResult('draw');
       if (sessionId) {
         try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: 'draw', settled: true }) }); } catch {}
       }
@@ -460,15 +458,13 @@ export default function Home() {
           if (winner) {
             const didPlayerWin = winner === playerSymbol;
             setGameStatus(didPlayerWin ? 'won' : 'lost');
-            // Record AI-determined outcome
-            recordResult(didPlayerWin ? 'win' : 'loss');
+            // recordResult will be called in useEffect - don't call here
             if (sessionId) {
               (async () => { try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: didPlayerWin ? 'win' : 'loss', settled: didPlayerWin }) }); } catch {} })();
             }
           } else if (getAvailableMoves(newBoard).length === 0) {
             setGameStatus('draw');
-            // Record draw when determined on AI turn
-            recordResult('draw');
+            // recordResult will be called in useEffect - don't call here
             if (sessionId) {
               (async () => { try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: 'draw', settled: true }) }); } catch {} })();
             }
@@ -479,11 +475,13 @@ export default function Home() {
 
       return () => clearTimeout(timer);
     }
-  }, [board, isPlayerTurn, playerSymbol, getAIMove, gameStatus, checkWinner, getAvailableMoves, recordResult, mustSettle, sessionId, blockedCellIndex]);
+  }, [board, isPlayerTurn, playerSymbol, getAIMove, gameStatus, checkWinner, getAvailableMoves, mustSettle, sessionId, blockedCellIndex]);
 
-  // Outcome sounds
+  // Outcome sounds and onchain recording
   useEffect(() => {
-    // Ensure on-chain record is prompted once for any outcome
+    // IMPORTANT: This is the ONLY place where recordResult should be called
+    // All other game logic should only set gameStatus, not call recordResult
+    // This prevents duplicate transactions from being sent
     if ((gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') && !resultRecorded) {
       try { recordResult(gameStatus === 'won' ? 'win' : gameStatus === 'lost' ? 'loss' : 'draw'); } catch {}
       setResultRecorded(true);
