@@ -77,15 +77,18 @@ export async function POST(request: Request) {
     );
   }
 
+  // Try to extract address from the event if available
+  const address = event.address || null;
+
   switch (event.event) {
-    case "frame_added":
+    case "miniapp_added":
       console.log(
-        "frame_added",
+        "miniapp_added",
         "event.notificationDetails",
         event.notificationDetails,
       );
       if (event.notificationDetails) {
-        await setUserNotificationDetails(fid, event.notificationDetails);
+        await setUserNotificationDetails(fid, event.notificationDetails, address);
         await sendFrameNotification({
           fid,
           title: `Welcome to ${appName}`,
@@ -96,14 +99,14 @@ export async function POST(request: Request) {
       }
 
       break;
-    case "frame_removed": {
-      console.log("frame_removed");
+    case "miniapp_removed": {
+      console.log("miniapp_removed");
       await deleteUserNotificationDetails(fid);
       break;
     }
     case "notifications_enabled": {
       console.log("notifications_enabled", event.notificationDetails);
-      await setUserNotificationDetails(fid, event.notificationDetails);
+      await setUserNotificationDetails(fid, event.notificationDetails, address);
       await sendFrameNotification({
         fid,
         title: `Welcome to ${appName}`,

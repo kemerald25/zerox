@@ -88,6 +88,24 @@ create table if not exists public.payout_logs (
 );
 create index if not exists payout_logs_day_idx on public.payout_logs (day);
 
+-- 7) User Notification Tokens (for Farcaster Mini App notifications)
+create table if not exists public.user_notifications (
+  id uuid not null default gen_random_uuid(),
+  address text not null,
+  fid integer not null,
+  notification_token text not null,
+  notification_url text not null,
+  is_active boolean not null default true,
+  inserted_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint user_notifications_pkey primary key (id),
+  constraint user_notifications_address_fid_unique unique (address, fid)
+);
+
+create index if not exists user_notifications_address_idx on public.user_notifications (address);
+create index if not exists user_notifications_fid_idx on public.user_notifications (fid);
+create index if not exists user_notifications_active_idx on public.user_notifications (is_active);
+
 -- 6) Brackets (8-player single-elim, best-of-3)
 create table if not exists public.brackets (
   id uuid not null default gen_random_uuid(),
@@ -188,6 +206,16 @@ end $$;
 
 do $$ begin
   if not exists (
+    select 1 from pg_trigger where tgname = 'trg_user_notifications_touch'
+  ) then
+    create trigger trg_user_notifications_touch
+      before update on public.user_notifications
+      for each row execute function public.touch_updated_at();
+  end if;
+end $$;
+
+do $$ begin
+  if not exists (
     select 1 from pg_trigger where tgname = 'trg_daily_checkins_touch'
   ) then
     create trigger trg_daily_checkins_touch
@@ -229,6 +257,7 @@ end $$;
 -- Enable RLS for new tables
 alter table public.payout_logs enable row level security;
 alter table public.daily_checkins enable row level security;
+alter table public.user_notifications enable row level security;
 alter table public.brackets enable row level security;
 alter table public.bracket_players enable row level security;
 alter table public.bracket_matches enable row level security;
@@ -282,6 +311,17 @@ do $$ begin
   if not exists (select 1 from pg_policies where policyname = 'checkins_upsert') then
     create policy checkins_insert on public.daily_checkins for insert with check (true);
     create policy checkins_update on public.daily_checkins for update using (true) with check (true);
+  end if;
+end $$;
+
+-- Policies for user notifications
+do $$ begin
+  if not exists (select 1 from pg_policies where policyname = 'notifications_select') then
+    create policy notifications_select on public.user_notifications for select using (true);
+  end if;
+  if not exists (select 1 from pg_policies where policyname = 'notifications_upsert') then
+    create policy notifications_insert on public.user_notifications for insert with check (true);
+    create policy notifications_update on public.user_notifications for update using (true) with check (true);
   end if;
 end $$;
 

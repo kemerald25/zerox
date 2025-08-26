@@ -1,32 +1,43 @@
-import { sendFrameNotification } from "@/lib/notification-client";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
+import { sendBulkNotification } from '@/lib/notification-client';
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json();
-    const { fid, notification } = body;
+    const body = await req.json();
+    const { title, body: message, targetUrl, notificationId } = body;
 
-    const result = await sendFrameNotification({
-      fid,
-      title: notification.title,
-      body: notification.body,
-      notificationDetails: notification.notificationDetails,
-    });
-
-    if (result.state === "error") {
+    // Validate required fields
+    if (!title || !message) {
       return NextResponse.json(
-        { error: result.error },
-        { status: 500 },
+        { error: 'Title and body are required' },
+        { status: 400 }
       );
     }
 
-    return NextResponse.json({ success: true }, { status: 200 });
+    // Optional: Add authentication/authorization here
+    // For now, anyone can send notifications (you might want to restrict this)
+
+    console.log('Sending bulk notification:', { title, message, targetUrl, notificationId });
+
+    // Send the notification to all users
+    const result = await sendBulkNotification({
+      title,
+      body: message,
+      targetUrl,
+      notificationId,
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Bulk notification sent',
+      result,
+    });
+
   } catch (error) {
+    console.error('Failed to send bulk notification:', error);
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 400 },
+      { error: 'Failed to send notification' },
+      { status: 500 }
     );
   }
 }
