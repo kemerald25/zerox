@@ -61,79 +61,22 @@ create table if not exists public.game_sessions (
 );
 create index if not exists game_sessions_address_idx on public.game_sessions (address, created_at desc);
 
--- Triggers to maintain updated_at columns
-create or replace function public.touch_updated_at()
-returns trigger language plpgsql as $$
-begin
-  new.updated_at = now();
-  return new;
-end;$$;
+-- 5) Daily Check-ins (30-day streak tracking)
+create table if not exists public.daily_checkins (
+  address text not null,
+  day date not null,
+  completed boolean not null default false,
+  game_result text, -- 'win' | 'loss' | 'draw'
+  bonus_claimed boolean not null default false,
+  inserted_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint daily_checkins_pkey primary key (address, day)
+);
 
-do $$ begin
-  if not exists (
-    select 1 from pg_trigger where tgname = 'trg_leaderboard_entries_touch'
-  ) then
-    create trigger trg_leaderboard_entries_touch
-      before update on public.leaderboard_entries
-      for each row execute function public.touch_updated_at();
-  end if;
-end $$;
+create index if not exists daily_checkins_address_idx on public.daily_checkins (address, day desc);
+create index if not exists daily_checkins_completed_idx on public.daily_checkins (day, completed);
 
-do $$ begin
-  if not exists (
-    select 1 from pg_trigger where tgname = 'trg_sprint_entries_touch'
-  ) then
-    create trigger trg_sprint_entries_touch
-      before update on public.sprint_entries
-      for each row execute function public.touch_updated_at();
-  end if;
-end $$;
-
-do $$ begin
-  if not exists (
-    select 1 from pg_trigger where tgname = 'trg_loss_settlements_touch'
-  ) then
-    create trigger trg_loss_settlements_touch
-      before update on public.loss_settlements
-      for each row execute function public.touch_updated_at();
-  end if;
-end $$;
-
-do $$ begin
-  if not exists (
-    select 1 from pg_trigger where tgname = 'trg_game_sessions_touch'
-  ) then
-    create trigger trg_game_sessions_touch
-      before update on public.game_sessions
-      for each row execute function public.touch_updated_at();
-  end if;
-end $$;
-
--- RLS: Enable and allow anon read + upsert for MVP
--- Note: For stricter security, switch server code to use the service role key
---       and limit anon to SELECT only.
-alter table public.leaderboard_entries enable row level security;
-alter table public.sprint_entries enable row level security;
-alter table public.loss_settlements enable row level security;
-alter table public.game_sessions enable row level security;
-
--- New tables RLS enablement
--- payout_logs and brackets tables
--- (created below after triggers section)
-
--- Policies (anon role)
-do $$ begin
-  if not exists (select 1 from pg_policies where policyname = 'lb_select_all') then
-    create policy lb_select_all on public.leaderboard_entries for select using (true);
-  end if;
-  if not exists (select 1 from pg_policies where policyname = 'lb_upsert_anon') then
-    create policy lb_upsert_anon on public.leaderboard_entries for insert with check (true);
-    create policy lb_update_anon on public.leaderboard_entries for update using (true) with check (true);
-  end if;
-end $$;
-
-
--- 5) Payout logs for faucet caps (per-address per-day)
+-- 6) Payout logs for faucet caps (per-address per-day)
 create table if not exists public.payout_logs (
   address text not null,
   day date not null,
@@ -184,6 +127,54 @@ create table if not exists public.bracket_matches (
 );
 create index if not exists bracket_matches_bracket_idx on public.bracket_matches (bracket_id, round);
 
+-- Triggers to maintain updated_at columns
+create or replace function public.touch_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end;$$;
+
+do $$ begin
+  if not exists (
+    select 1 from pg_trigger where tgname = 'trg_leaderboard_entries_touch'
+  ) then
+    create trigger trg_leaderboard_entries_touch
+      before update on public.leaderboard_entries
+      for each row execute function public.touch_updated_at();
+  end if;
+end $$;
+
+do $$ begin
+  if not exists (
+    select 1 from pg_trigger where tgname = 'trg_sprint_entries_touch'
+  ) then
+    create trigger trg_sprint_entries_touch
+      before update on public.sprint_entries
+      for each row execute function public.touch_updated_at();
+  end if;
+end $$;
+
+do $$ begin
+  if not exists (
+    select 1 from pg_trigger where tgname = 'trg_loss_settlements_touch'
+  ) then
+    create trigger trg_loss_settlements_touch
+      before update on public.loss_settlements
+      for each row execute function public.touch_updated_at();
+  end if;
+end $$;
+
+do $$ begin
+  if not exists (
+    select 1 from pg_trigger where tgname = 'trg_game_sessions_touch'
+  ) then
+    create trigger trg_game_sessions_touch
+      before update on public.game_sessions
+      for each row execute function public.touch_updated_at();
+  end if;
+end $$;
+
 -- Triggers for new tables
 do $$ begin
   if not exists (
@@ -191,6 +182,16 @@ do $$ begin
   ) then
     create trigger trg_payout_logs_touch
       before update on public.payout_logs
+      for each row execute function public.touch_updated_at();
+  end if;
+end $$;
+
+do $$ begin
+  if not exists (
+    select 1 from pg_trigger where tgname = 'trg_daily_checkins_touch'
+  ) then
+    create trigger trg_daily_checkins_touch
+      before update on public.daily_checkins
       for each row execute function public.touch_updated_at();
   end if;
 end $$;
@@ -227,6 +228,7 @@ end $$;
 
 -- Enable RLS for new tables
 alter table public.payout_logs enable row level security;
+alter table public.daily_checkins enable row level security;
 alter table public.brackets enable row level security;
 alter table public.bracket_players enable row level security;
 alter table public.bracket_matches enable row level security;
@@ -269,6 +271,17 @@ do $$ begin
   if not exists (select 1 from pg_policies where policyname = 'payout_upsert') then
     create policy payout_upsert on public.payout_logs for insert with check (true);
     create policy payout_update on public.payout_logs for update using (true) with check (true);
+  end if;
+end $$;
+
+-- Policies for daily check-ins
+do $$ begin
+  if not exists (select 1 from pg_policies where policyname = 'checkins_select') then
+    create policy checkins_select on public.daily_checkins for select using (true);
+  end if;
+  if not exists (select 1 from pg_policies where policyname = 'checkins_upsert') then
+    create policy checkins_insert on public.daily_checkins for insert with check (true);
+    create policy checkins_update on public.daily_checkins for update using (true) with check (true);
   end if;
 end $$;
 
