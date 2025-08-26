@@ -143,6 +143,7 @@ export async function sendBulkNotification({
         try {
           console.log(`Sending batch ${batchIndex + 1}/${batches.length} to ${url} (${batch.length} tokens)`);
           
+          // Use the correct Farcaster notification format
           const response = await fetch(url, {
             method: 'POST',
             headers: {

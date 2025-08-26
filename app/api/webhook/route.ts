@@ -59,69 +59,138 @@ function decode(encoded: string) {
 }
 
 export async function POST(request: Request) {
-  const requestJson = await request.json();
+  console.log('=== WEBHOOK CALLED ===');
+  console.log('Request received at:', new Date().toISOString());
+  
+  try {
+    const requestJson = await request.json();
+    console.log('Webhook payload:', JSON.stringify(requestJson, null, 2));
 
-  const { header: encodedHeader, payload: encodedPayload } = requestJson;
+    // Check if this is a test request
+    if (requestJson.test) {
+      console.log('Test request received, returning success');
+      return Response.json({ success: true, message: 'Test webhook working' });
+    }
 
-  const headerData = decode(encodedHeader);
-  const event = decode(encodedPayload);
+    // Validate required fields for Farcaster webhook
+    if (!requestJson.header || !requestJson.payload) {
+      console.log('Missing header or payload in webhook request');
+      return Response.json({ 
+        success: false, 
+        error: "Missing header or payload" 
+      }, { status: 400 });
+    }
 
-  const { fid, key } = headerData;
+    const { header: encodedHeader, payload: encodedPayload } = requestJson;
 
-  const valid = await verifyFidOwnership(fid, key);
+    let headerData, event;
+    try {
+      headerData = decode(encodedHeader);
+      event = decode(encodedPayload);
+      console.log('Decoded header:', headerData);
+      console.log('Decoded event:', event);
+    } catch (decodeError) {
+      console.error('Failed to decode header or payload:', decodeError);
+      return Response.json({ 
+        success: false, 
+        error: "Failed to decode header or payload" 
+      }, { status: 400 });
+    }
 
-  if (!valid) {
+    if (!headerData.fid || !headerData.key) {
+      console.log('Missing FID or key in header data');
+      return Response.json({ 
+        success: false, 
+        error: "Missing FID or key in header" 
+      }, { status: 400 });
+    }
+
+    const { fid, key } = headerData;
+
+    const valid = await verifyFidOwnership(fid, key);
+    console.log('FID ownership verification result:', valid);
+
+    if (!valid) {
+      console.log('FID ownership verification failed');
+      return Response.json(
+        { success: false, error: "Invalid FID ownership" },
+        { status: 401 },
+      );
+    }
+
+    // Try to extract address from the event if available
+    const address = event.address || null;
+    console.log('Extracted address:', address);
+
+    switch (event.event) {
+      case "miniapp_added":
+        console.log(
+          "miniapp_added event received",
+          "event.notificationDetails",
+          event.notificationDetails,
+        );
+        if (event.notificationDetails) {
+          console.log('Saving notification details for FID:', fid);
+          console.log('Token:', event.notificationDetails.token);
+          console.log('URL:', event.notificationDetails.url);
+          
+          await setUserNotificationDetails(fid, event.notificationDetails, address);
+          console.log('Notification details saved successfully');
+          
+          console.log('Sending welcome notification');
+          await sendFrameNotification({
+            fid,
+            title: `Welcome to ${appName}`,
+            body: `Thank you for adding ${appName}`,
+          });
+          console.log('Welcome notification sent');
+        } else {
+          console.log('No notification details in event, deleting user');
+          await deleteUserNotificationDetails(fid);
+        }
+
+        break;
+      case "miniapp_removed": {
+        console.log("miniapp_removed event received");
+        await deleteUserNotificationDetails(fid);
+        break;
+      }
+      case "notifications_enabled": {
+        console.log("notifications_enabled event received", event.notificationDetails);
+        if (event.notificationDetails) {
+          console.log('Saving notification details for FID:', fid);
+          console.log('Token:', event.notificationDetails.token);
+          console.log('URL:', event.notificationDetails.url);
+          
+          await setUserNotificationDetails(fid, event.notificationDetails, address);
+          console.log('Notification details saved successfully');
+          
+          await sendFrameNotification({
+            fid,
+            title: `Welcome to ${appName}`,
+            body: `Thank you for enabling notifications for ${appName}`,
+          });
+          console.log('Welcome notification sent');
+        }
+        break;
+      }
+      case "notifications_disabled": {
+        console.log("notifications_disabled event received");
+        await deleteUserNotificationDetails(fid);
+        break;
+      }
+      default:
+        console.log('Unknown event type:', event.event);
+    }
+
+    console.log('Webhook processed successfully');
+    return Response.json({ success: true });
+    
+  } catch (error) {
+    console.error('Webhook error:', error);
     return Response.json(
-      { success: false, error: "Invalid FID ownership" },
-      { status: 401 },
+      { success: false, error: 'Webhook processing failed' },
+      { status: 500 }
     );
   }
-
-  // Try to extract address from the event if available
-  const address = event.address || null;
-
-  switch (event.event) {
-    case "miniapp_added":
-      console.log(
-        "miniapp_added",
-        "event.notificationDetails",
-        event.notificationDetails,
-      );
-      if (event.notificationDetails) {
-        await setUserNotificationDetails(fid, event.notificationDetails, address);
-        await sendFrameNotification({
-          fid,
-          title: `Welcome to ${appName}`,
-          body: `Thank you for adding ${appName}`,
-        });
-      } else {
-        await deleteUserNotificationDetails(fid);
-      }
-
-      break;
-    case "miniapp_removed": {
-      console.log("miniapp_removed");
-      await deleteUserNotificationDetails(fid);
-      break;
-    }
-    case "notifications_enabled": {
-      console.log("notifications_enabled", event.notificationDetails);
-      await setUserNotificationDetails(fid, event.notificationDetails, address);
-      await sendFrameNotification({
-        fid,
-        title: `Welcome to ${appName}`,
-        body: `Thank you for enabling notifications for ${appName}`,
-      });
-
-      break;
-    }
-    case "notifications_disabled": {
-      console.log("notifications_disabled");
-      await deleteUserNotificationDetails(fid);
-
-      break;
-    }
-  }
-
-  return Response.json({ success: true });
 }
