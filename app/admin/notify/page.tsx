@@ -20,7 +20,24 @@ export default function AdminNotifyPage() {
   const [notificationId, setNotificationId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<NotificationResult | null>(null);
+  const [farcasterUsername, setFarcasterUsername] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { address } = useAccount();
+
+  const handleAuthenticate = async () => {
+    if (!farcasterUsername.trim() || !address) {
+      alert('Please enter your Farcaster username and ensure wallet is connected');
+      return;
+    }
+
+    // Check if the username matches the admin username
+    if (farcasterUsername.trim().toLowerCase() === 'defidevrel') {
+      setIsAuthenticated(true);
+    } else {
+      alert('Access denied. Only defidevrel can access this admin panel.');
+      setFarcasterUsername('');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,15 +83,49 @@ export default function AdminNotifyPage() {
     }
   };
 
-  // Simple admin check - you might want to implement proper admin authentication
-  const isAdmin = address === process.env.NEXT_PUBLIC_ADMIN_ADDRESS;
-
-  if (!isAdmin) {
+  // Show authentication form if not authenticated
+  if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
-          <p className="text-gray-600">You don&apos;t have permission to access this page.</p>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-md mx-auto px-4">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">Admin Authentication</h1>
+            
+            {!address ? (
+              <div className="text-center">
+                <p className="text-red-600 mb-4">Please connect your wallet first</p>
+                <p className="text-sm text-gray-600">You need to connect your Farcaster wallet to access the admin panel.</p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Connected wallet: <span className="font-mono text-xs">{address}</span>
+                </p>
+                
+                <div className="mb-4">
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                    Farcaster Username
+                  </label>
+                  <input
+                    type="text"
+                    id="username"
+                    value={farcasterUsername}
+                    onChange={(e) => setFarcasterUsername(e.target.value)}
+                    className="w-full px-3 py-2 border text-black border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#70FF5A] focus:border-transparent"
+                    placeholder="Enter your Farcaster username"
+                    required
+                  />
+                </div>
+
+                <button
+                  onClick={handleAuthenticate}
+                  className="w-full bg-[#70FF5A] text-white py-2 px-4 rounded-md hover:bg-[#5cef4a] transition-colors"
+                >
+                  Authenticate
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -84,7 +135,12 @@ export default function AdminNotifyPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Send Bulk Notification</h1>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">Send Bulk Notification</h1>
+            <div className="text-sm text-gray-600">
+              Logged in as: <span className="font-semibold text-[#70FF5A]">@{farcasterUsername}</span>
+            </div>
+          </div>
           
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -196,6 +252,15 @@ export default function AdminNotifyPage() {
               <li>• Notifications are batched in groups of 100 for efficiency</li>
               <li>• Users can click notifications to open your app</li>
             </ul>
+          </div>
+
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setIsAuthenticated(false)}
+              className="text-sm text-gray-500 hover:text-gray-700 underline"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </div>
