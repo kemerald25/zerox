@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import Pusher from 'pusher';
 
+interface Player {
+  player_address: string;
+  player_symbol: 'X' | 'O';
+}
+
 const pusher = new Pusher({
   appId: process.env.PUSHER_APP_ID!,
   key: process.env.NEXT_PUBLIC_PUSHER_KEY!,
@@ -12,6 +17,8 @@ const pusher = new Pusher({
 
 export async function POST(req: Request) {
   try {
+    if (!supabase) return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+    
     const { roomCode, playerAddress, moveIndex } = await req.json();
 
     // Validate input
@@ -39,7 +46,7 @@ export async function POST(req: Request) {
     }
 
     // Get player's symbol
-    const player = room.players.find((p: any) => p.player_address === playerAddress);
+    const player = room.players.find((p: Player) => p.player_address === playerAddress);
     if (!player) {
       return NextResponse.json({ error: 'Player not found in room' }, { status: 400 });
     }
@@ -52,11 +59,11 @@ export async function POST(req: Request) {
     gameState[moveIndex] = player.player_symbol;
 
     // Find next player
-    const nextPlayer = room.players.find((p: any) => p.player_address !== playerAddress);
+    const nextPlayer = room.players.find((p: Player) => p.player_address !== playerAddress);
 
     // Check for winner
     const winner = checkWinner(gameState);
-    const isDraw = !winner && gameState.every((cell: any) => cell !== null);
+    const isDraw = !winner && gameState.every((cell: string | null) => cell !== null);
 
     // Update room state
     const { error: updateError } = await supabase
