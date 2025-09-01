@@ -32,6 +32,51 @@ export default function OnlinePlayPage() {
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const [playerId, setPlayerId] = useState<string>('');
+    
+    // Utility function to detect if we're running in Farcaster
+    const isInFarcaster = useMemo(() => {
+        if (typeof window === 'undefined') return false; // Server-side safety
+        
+        // Check multiple indicators of Farcaster environment
+        const hostname = window.location.hostname;
+        const pathname = window.location.pathname;
+        const hasFarcasterContext = Boolean(context?.user);
+        
+        // Primary check: are we on farcaster.xyz domain?
+        if (hostname === 'farcaster.xyz') return true;
+        
+        // Secondary check: does the path contain miniapps?
+        if (pathname.includes('/miniapps/')) return true;
+        
+        // Tertiary check: do we have Farcaster user context?
+        if (hasFarcasterContext) return true;
+        
+        // Additional check: look for Farcaster-specific query parameters or headers
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('farcaster') || urlParams.has('fc')) return true;
+        
+        return false;
+    }, [context?.user]);
+    
+    // Get the miniapp configuration with fallbacks
+    const miniappConfig = useMemo(() => {
+        const miniappId = process.env.NEXT_PUBLIC_FARCASTER_MINIAPP_ID || 'hBoHi9UcgI9H';
+        const miniappName = process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || 'zerox';
+        return { miniappId, miniappName };
+    }, []);
+    
+    // Debug logging for Farcaster detection
+    useEffect(() => {
+        if (typeof window === 'undefined') return; // Server-side safety
+        console.log('Farcaster detection:', {
+            hostname: window.location.hostname,
+            pathname: window.location.pathname,
+            hasContext: Boolean(context?.user),
+            isInFarcaster,
+            miniappConfig
+        });
+    }, [isInFarcaster, context?.user, miniappConfig]);
+    
     useEffect(() => {
         let id = (address || '').toLowerCase();
         if (!id) {
@@ -68,6 +113,14 @@ export default function OnlinePlayPage() {
                 const url = new URL(window.location.href);
                 const existing = url.searchParams.get('match_id');
                 const wantJoin = url.searchParams.get('join');
+                
+                // If we're on the external site and have a match_id, redirect to Farcaster miniapp
+                if (existing && wantJoin && !isInFarcaster && typeof window !== 'undefined') {
+                    const farcasterUrl = `https://farcaster.xyz/miniapps/${miniappConfig.miniappId}/${miniappConfig.miniappName}/play/online?match_id=${existing}&join=1`;
+                    window.location.href = farcasterUrl;
+                    return;
+                }
+                
                 if (existing && (wantJoin === '1' || wantJoin === 'true')) {
                     await fetch('/api/pvp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'join', id: existing, address: myId }) });
                     setMatchId(existing);
@@ -78,7 +131,7 @@ export default function OnlinePlayPage() {
                 }
             } catch { }
         })();
-    }, [myId]);
+    }, [myId, isInFarcaster, miniappConfig]);
 
     // Polling
     useEffect(() => {
@@ -106,10 +159,24 @@ export default function OnlinePlayPage() {
 
     const handleInvite = async () => {
         if (!matchId) return;
-        const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
-        const url = `${base}/play/online?match_id=${matchId}&join=1`;
-        try { await composeCast({ text: `Play ZeroX with me! ${url}`, embeds: [url] }); return; } catch { }
-        try { await navigator.clipboard.writeText(url); } catch { }
+        
+        let url: string;
+        if (isInFarcaster) {
+            // Generate Farcaster miniapp URL
+            url = `https://farcaster.xyz/miniapps/${miniappConfig.miniappId}/${miniappConfig.miniappName}/play/online?match_id=${matchId}&join=1`;
+        } else {
+            // Generate external URL for non-Farcaster environments
+            const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
+            url = `${base}/play/online?match_id=${matchId}&join=1`;
+        }
+        
+        try { 
+            await composeCast({ text: `Play ZeroX with me! ${url}`, embeds: [url] }); 
+            return; 
+        } catch { }
+        try { 
+            await navigator.clipboard.writeText(url); 
+        } catch { }
     };
 
     const handleCellClick = useCallback(async (index: number) => {
@@ -199,8 +266,17 @@ export default function OnlinePlayPage() {
 
     const handleShareGameResult = async (match: PvpMatch, result: 'win' | 'loss' | 'draw') => {
         if (!matchId) return;
-        const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
-        const url = `${base}/play/online?match_id=${matchId}`;
+        
+        let url: string;
+        if (isInFarcaster) {
+            // Generate Farcaster miniapp URL
+            url = `https://farcaster.xyz/miniapps/${miniappConfig.miniappId}/${miniappConfig.miniappName}/play/online?match_id=${matchId}`;
+        } else {
+            // Generate external URL for non-Farcaster environments
+            const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
+            url = `${base}/play/online?match_id=${matchId}`;
+        }
+        
         let text = `I played ZeroX with ${opponentProfile?.username || opponentAddress || 'someone'} and `;
         if (result === 'win') {
             text += `🎉 I won!`;
@@ -218,6 +294,8 @@ export default function OnlinePlayPage() {
         }
     };
 
+
+
     return (
         <>
             <div className="min-h-[100svh] relative bg-white">
@@ -226,6 +304,24 @@ export default function OnlinePlayPage() {
                     <div className="absolute -right-8 bottom-10 text-[220px] font-bold leading-none text-black/5 select-none">O</div>
                 </div>
                 <div className="relative max-w-md mx-auto px-4 pt-2 pb-24 min-h-[100svh] flex flex-col">
+                    {/* Show redirect message if not in Farcaster */}
+                    {!isInFarcaster && matchId && (
+                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                            <p className="text-sm text-blue-800">
+                                🔗 This game is designed for Farcaster. 
+                                <br />
+                                <a 
+                                    href={`https://farcaster.xyz/miniapps/${miniappConfig.miniappId}/${miniappConfig.miniappName}/play/online?match_id=${matchId}&join=1`}
+                                    className="text-blue-600 underline font-medium"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    Open in Farcaster →
+                                </a>
+                            </p>
+                        </div>
+                    )}
+                    
                     <div className="flex items-center justify-between mb-10">
                         <div className="text-sm font-semibold text-black">Play with Friends</div>
                         <button className="px-3 py-1.5 rounded-lg bg-[#70FF5A] text-black text-xs" onClick={handleInvite} disabled={!matchId}>Invite</button>
