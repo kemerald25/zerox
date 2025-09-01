@@ -109,14 +109,14 @@ export default function Home() {
   const handleShareResult = useCallback(async () => {
     const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
     
-    // Create rich game result text
-    const resultText = gameStatus === 'won' ? '🎉 I won!' : 
-                       gameStatus === 'lost' ? '😔 I lost!' : 
-                       "🎮 It's a draw!";
+    // Create viral game result text with urgency and FOMO
+    const resultText = gameStatus === 'won' ? '🎉 I JUST WON!' : 
+                      gameStatus === 'lost' ? '😔 I lost but learned!' : 
+                      "🎮 It's a draw - rematch time!";
     
-    const gameText = `🎮 TicTacToe vs AI\n${resultText}\n\n🤖 Difficulty: ${difficulty}\n👤 My Symbol: ${playerSymbol}\n\n🎯 Play here: ${appUrl}`;
+    const viralText = `${resultText}\n\n🎮 ZeroX TicTacToe on Base\n🤖 Difficulty: ${difficulty}\n👤 My Symbol: ${playerSymbol}\n\n🚨 LIMITED TIME: 24hr Tournament starts NOW!\n💎 Win ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH per game\n\n🎯 Play here: ${appUrl}\n\n#ZeroX #TicTacToe #Base #Farcaster #Web3Gaming #ViralGaming`;
     
-    const payload: { text: string; embeds?: [string] } = { text: gameText, embeds: [appUrl] as [string] };
+    const payload: { text: string; embeds?: [string] } = { text: viralText, embeds: [appUrl] as [string] };
     
     try {
       await composeCast(payload);
@@ -129,8 +129,8 @@ export default function Home() {
     } catch {}
     
     try {
-      await navigator.clipboard.writeText(gameText);
-      showToast('Game result copied to clipboard!');
+      await navigator.clipboard.writeText(viralText);
+      showToast('Viral game result copied! 🚀');
     } catch {}
   }, [composeCast, gameStatus, difficulty, playerSymbol, showToast]);
 
@@ -675,6 +675,124 @@ export default function Home() {
     return () => clearTimeout(id);
   }, [secondsLeft, gameStatus, isPlayerTurn]);
 
+  // Tournament countdown timer for viral FOMO
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const tournamentStart = new Date().getTime() + (60 * 60 * 1000); // Start in 1 hour
+      const distance = tournamentStart - now;
+      
+      const hours = Math.floor(distance / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      
+      const countdownElement = document.getElementById('tournament-countdown');
+      if (countdownElement) {
+        if (distance > 0) {
+          countdownElement.innerHTML = `Starts in: <span class="text-red-500">${hours}h ${minutes}m ${seconds}s</span>`;
+        } else {
+          countdownElement.innerHTML = `<span class="text-green-500">🎉 TOURNAMENT LIVE! 🎉</span>`;
+        }
+      }
+    };
+    
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Handle incoming challenges from Farcaster
+  useEffect(() => {
+    if (!context?.location) return;
+    
+    const loc = context.location as unknown;
+    type CastObj = { hash: string; text: string; author: { username?: string; fid: number } };
+    type CastEmbedLoc = { type: 'cast_embed'; cast: CastObj };
+    
+    // Check if this is a challenge from another player
+    if (loc && typeof (loc as CastEmbedLoc).type === 'string' && (loc as CastEmbedLoc).type === 'cast_embed') {
+      const cast = (loc as CastEmbedLoc).cast;
+      if (cast.text.includes('🎮') || cast.text.toLowerCase().includes('challenge')) {
+        showToast(`${cast.author.username || cast.author.fid} challenged you!`);
+        // Auto-select X and set difficulty
+        setPlayerSymbol('X');
+        setDifficulty('hard');
+      }
+    }
+  }, [context?.location, showToast]);
+
+  // Auto-cast every win for maximum viral growth
+  useEffect(() => {
+    if (gameStatus === 'won' && address) {
+      // Auto-cast victory to Farcaster for viral growth
+      const autoCastVictory = async () => {
+        const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
+        const viralText = `🎉 JUST WON at ZeroX TicTacToe! 🚀\n\n🔥 Difficulty: ${difficulty}\n⚡ Symbol: ${playerSymbol}\n💎 Won ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH\n\n🎮 Challenge me: ${appUrl}\n\n#ZeroX #TicTacToe #Base #Farcaster #Web3Gaming`;
+        
+        try {
+          await composeCast({ text: viralText, embeds: [appUrl] as [string] });
+        } catch {
+          try {
+            await (sdk as unknown as { actions?: { composeCast?: (p: { text: string; embeds?: [string] }) => Promise<void> } }).actions?.composeCast?.({ text: viralText, embeds: [appUrl] as [string] });
+          } catch {}
+        }
+      };
+      
+      // Delay auto-cast to let user see win animation first
+      setTimeout(autoCastVictory, 2000);
+    }
+  }, [gameStatus, address, difficulty, playerSymbol, composeCast]);
+
+  // Handle direct challenges to other players
+  const handleChallenge = useCallback(async (username?: string) => {
+    const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
+    const challengeText = username 
+      ? `🎮 Hey @${username}, I challenge you to TicTacToe!\n\n💎 Winner gets ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH\n🎯 Accept here: ${appUrl}\n\n#ZeroX #TicTacToe #Challenge`
+      : `🎮 Who wants to play TicTacToe?\n\n💎 Winner gets ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH\n🎯 Accept here: ${appUrl}\n\n#ZeroX #TicTacToe #Challenge`;
+    
+    try {
+      // Send Farcaster cast
+      await composeCast({ text: challengeText, embeds: [appUrl] as [string] });
+      
+      // Send direct notification if username provided
+      if (username) {
+        try {
+          const response = await fetch('/api/notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username,
+              title: '🎮 New TicTacToe Challenge!',
+              body: `You've been challenged to a game! Winner gets ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH`,
+              cta: 'Accept Challenge',
+              url: appUrl
+            })
+          });
+          
+          if (response.ok) {
+            showToast('Challenge & notification sent! 🎮');
+          } else {
+            // Still show success since the cast worked
+            showToast('Challenge sent! 🎮');
+          }
+        } catch {
+          // Still show success since the cast worked
+          showToast('Challenge sent! 🎮');
+        }
+      } else {
+        showToast('Challenge posted! 🎮');
+      }
+    } catch {
+      try {
+        // Fallback to SDK cast
+        await (sdk as unknown as { actions?: { composeCast?: (p: { text: string; embeds?: [string] }) => Promise<void> } }).actions?.composeCast?.({ text: challengeText, embeds: [appUrl] as [string] });
+        showToast(username ? 'Challenge sent! 🎮' : 'Challenge posted! 🎮');
+      } catch {
+        showToast('Failed to send challenge 😔');
+      }
+    }
+  }, [composeCast, showToast]);
+
   // remove auto-advance; handled via rematch modal
 
   // Account for bottom nav height + safe area
@@ -711,6 +829,16 @@ export default function Home() {
         <h1 className="text-4xl font-bold mb-3" style={{ color: '#000000' }}>
           ZeroX
         </h1>
+        
+        {/* 24-HOUR VIRAL TOURNAMENT BANNER */}
+        <div className="w-full max-w-md mb-4 p-4 rounded-xl bg-gradient-to-r from-[#066c00] to-[#0a8500] text-center shadow-lg border-2 border-[#70FF5A] animate-pulse">
+          <div className="text-2xl font-bold text-[#70FF5A] mb-2">🚨 24HR TOURNAMENT 🚨</div>
+          <div className="text-sm text-[#b6f569] mb-2 font-semibold">10x XP • Special Badges • Prize Pool</div>
+          <div className="text-lg font-bold text-[#70FF5A]" id="tournament-countdown">
+            Starts in: <span className="text-white font-bold">Loading...</span>
+          </div>
+          <div className="text-xs text-[#b6f569] mt-2 font-medium">Join 1000+ players already competing!</div>
+        </div>
         
         
         {showAddPrompt && (
@@ -922,18 +1050,62 @@ export default function Home() {
           {(gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') && (
             <div className="mt-4 flex flex-col sm:flex-row gap-3 items-center">
               <button
-                className="px-4 py-2 rounded-lg bg-[#70FF5A] text-white"
+                className="px-4 py-2 rounded-lg bg-[#066c00] text-[#70FF5A] font-bold hover:bg-[#0a8500] transition-colors"
                 onClick={handleShareResult}
               >
                 Share Result
               </button>
-              {/* <button
-                className="px-4 py-2 rounded-lg bg-[#b6f569] text-[#70FF5A] border border-[#70FF5A]"
+              <button
+                className="px-4 py-2 rounded-lg bg-[#70FF5A] text-[#066c00] font-bold hover:bg-[#b6f569] transition-colors"
+                onClick={() => handleChallenge()}
               >
-                Share Challenge
-              </button> */}
+                Challenge Anyone
+              </button>
             </div>
           )}
+          
+          {/* Direct Challenge UI */}
+          <div className="mt-4 w-full max-w-md p-4 rounded-xl bg-gradient-to-r from-[#066c00] to-[#0a8500] border-2 border-[#70FF5A]">
+            <div className="text-lg font-bold mb-2 text-center text-[#70FF5A]">🎮 Challenge Friends</div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="@username"
+                className="flex-1 px-3 py-2 rounded-lg border-2 border-[#70FF5A] bg-white/90 text-[#066c00] font-medium placeholder:text-[#066c00]/60 focus:outline-none focus:border-[#b6f569] focus:bg-white"
+                onChange={(e) => {
+                  const username = e.target.value.trim().replace('@', '');
+                  if (username) {
+                    showToast(`Challenge @${username}?`);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const username = e.currentTarget.value.trim().replace('@', '');
+                    if (username) {
+                      handleChallenge(username);
+                      e.currentTarget.value = '';
+                    }
+                  }
+                }}
+              />
+              <button
+                className="px-4 py-2 rounded-lg bg-[#70FF5A] text-[#066c00] font-bold whitespace-nowrap hover:bg-[#b6f569] transition-colors"
+                onClick={() => {
+                  const input = document.querySelector('input[placeholder="@username"]') as HTMLInputElement;
+                  const username = input?.value.trim().replace('@', '');
+                  if (username) {
+                    handleChallenge(username);
+                    input.value = '';
+                  }
+                }}
+              >
+                Send Challenge
+              </button>
+            </div>
+            <div className="text-xs text-center mt-2 text-[#b6f569] font-medium">
+              Type a username and press Enter or click Send Challenge
+            </div>
+          </div>
           {/* Attribution for cast embed entry */}
           {(() => {
             const loc = context?.location as unknown;
