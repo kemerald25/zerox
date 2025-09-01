@@ -14,10 +14,9 @@ import { playMove, playAIMove, playWin, playLoss, playDraw, resumeAudio, playWar
 import { hapticTap, hapticWin, hapticLoss } from '@/lib/haptics';
 import { useAccount, useSendTransaction } from 'wagmi';
 import { useMiniKit, useIsInMiniApp, useComposeCast, useViewProfile } from '@coinbase/onchainkit/minikit';
-import { useRouter } from 'next/navigation';
+
 
 export default function Home() {
-  const router = useRouter();
   useEffect(() => {
     sdk.actions.ready();
   }, []);
@@ -92,37 +91,9 @@ export default function Home() {
     if (!isFrameReady) setFrameReady();
   }, [isFrameReady, setFrameReady]);
 
-  // If a user lands on the root or Play route with a PVP match link (?match_id=...), redirect to /play/online
-  useEffect(() => {
-    try {
-      const url = new URL(window.location.href);
-      const mid = url.searchParams.get('match_id');
-      const join = url.searchParams.get('join') ?? '1';
-      const onPlayOnline = window.location.pathname.startsWith('/play/online');
-      if (mid && !onPlayOnline) {
-        router.replace(`/play/online?match_id=${encodeURIComponent(mid)}&join=${encodeURIComponent(join)}`);
-      }
-    } catch {}
-  }, [router]);
+  // PVP feature removed - no more match_id handling
 
-  // Farcaster-only: some clients drop query params on embeds. Try to recover match link from cast text.
-  useEffect(() => {
-    try {
-      const loc = context?.location as unknown as { type?: string; cast?: { text?: string; embeds?: string[] } } | undefined;
-      if (!loc || loc.type !== 'cast_embed') return;
-      const text = loc.cast?.text || '';
-      const embeds = Array.isArray(loc.cast?.embeds) ? (loc.cast?.embeds as string[]) : [];
-      const candidates = [text, ...embeds].join(' ');
-      const m = candidates.match(/match_id=([a-zA-Z0-9_-]+)/);
-      if (m && m[1]) {
-        const mid = m[1];
-        const onPlayOnline = window.location.pathname.startsWith('/play/online');
-        if (!onPlayOnline) {
-          router.replace(`/play/online?match_id=${encodeURIComponent(mid)}&join=1`);
-        }
-      }
-    } catch {}
-  }, [context, router]);
+  // PVP feature removed - no more match link recovery from cast text
 
   // Prompt to add Mini App after ~5s if not already added
   const [showAddPrompt, setShowAddPrompt] = useState(false);

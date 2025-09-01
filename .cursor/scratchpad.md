@@ -60,6 +60,8 @@ Elevate ZeroX from functional to delightful: sleek, minimal, mobile‑first game
 
 ## Lessons
 - Avoid overlays (add‑mini‑app) when requiring payment action; hide during settlement.
+- **PvP removal requires systematic cleanup across database, API, UI, and navigation layers**
+- **Successfully removed PvP feature by: 1) Removing database table and policies, 2) Deleting API route, 3) Removing UI page, 4) Updating navigation, 5) Cleaning up main page code, 6) Testing all routes work correctly. The app now has a cleaner, focused AI-only gameplay experience.**
 1. Core Game
    - 3x3 grid with brand colors
    - Basic player vs AI gameplay

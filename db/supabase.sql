@@ -262,35 +262,7 @@ alter table public.brackets enable row level security;
 alter table public.bracket_players enable row level security;
 alter table public.bracket_matches enable row level security;
 
--- 7) PVP head-to-head matches
-create table if not exists public.pvp_matches (
-  id uuid not null default gen_random_uuid(),
-  player_x text,
-  player_o text,
-  invited_by text,
-  board text not null default '[]', -- JSON.stringify of array
-  next_turn text not null default 'X', -- 'X' | 'O'
-  size integer not null default 3,
-  misere boolean not null default false,
-  blitz text not null default 'off', -- 'off'|'7s'|'5s'
-  status text not null default 'open', -- 'open'|'active'|'done'
-  winner text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  constraint pvp_matches_pkey primary key (id)
-);
-create index if not exists pvp_matches_status_idx on public.pvp_matches (status, created_at desc);
-
-do $$ begin
-  if not exists (
-    select 1 from pg_trigger where tgname = 'trg_pvp_matches_touch'
-  ) then
-    create trigger trg_pvp_matches_touch
-      before update on public.pvp_matches
-      for each row execute function public.touch_updated_at();
-  end if;
-end $$;
-alter table public.pvp_matches enable row level security;
+-- PVP feature removed - table and related objects deleted
 
 -- Policies for payout logs
 do $$ begin
@@ -356,16 +328,7 @@ do $$ begin
   end if;
 end $$;
 
--- Policies for pvp matches
-do $$ begin
-  if not exists (select 1 from pg_policies where policyname = 'pvp_select') then
-    create policy pvp_select on public.pvp_matches for select using (true);
-  end if;
-  if not exists (select 1 from pg_policies where policyname = 'pvp_insert') then
-    create policy pvp_insert on public.pvp_matches for insert with check (true);
-    create policy pvp_update on public.pvp_matches for update using (true) with check (true);
-  end if;
-end $$;
+-- PVP policies removed
 
 do $$ begin
   if not exists (select 1 from pg_policies where policyname = 'sprint_select_all') then
