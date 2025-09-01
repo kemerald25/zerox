@@ -14,6 +14,8 @@ const pusher = new Pusher({
 // Create a new room
 export async function POST(req: Request) {
   try {
+    if (!supabase) return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+
     const { roomCode, hostAddress, hostName, hostPfp } = await req.json();
 
     // Validate input
@@ -77,6 +79,8 @@ export async function POST(req: Request) {
 // Join an existing room
 export async function PUT(req: Request) {
   try {
+    if (!supabase) return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+
     const { roomCode, playerAddress, playerName, playerPfp } = await req.json();
 
     // Validate input
@@ -160,6 +164,8 @@ export async function PUT(req: Request) {
 // Get room status
 export async function GET(req: Request) {
   try {
+    if (!supabase) return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+
     const { searchParams } = new URL(req.url);
     const roomCode = searchParams.get('roomCode');
 
