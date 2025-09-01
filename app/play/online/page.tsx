@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useAccount } from 'wagmi';
 import { useMiniKit, useComposeCast } from '@coinbase/onchainkit/minikit';
 import GameBoard from '@/app/components/game/GameBoard';
+import MatchResultCard from '@/app/components/game/MatchResultCard';
 import BottomNav from '@/app/components/BottomNav';
 
 type PvpMatch = {
@@ -201,7 +202,18 @@ export default function OnlinePlayPage() {
         if (!matchId) return;
         const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
         const url = `${base}/play/online?match_id=${matchId}`;
-        let text = `I played ZeroX with ${opponentProfile?.username || opponentAddress || 'someone'} and `;
+        
+        // Create engaging share text
+        let text = `🎮 Just finished a game of ZeroX! `;
+        
+        if (opponentProfile?.username) {
+            text += `Played with @${opponentProfile.username} and `;
+        } else if (opponentAddress) {
+            text += `Played with ${opponentAddress.slice(0,6)}…${opponentAddress.slice(-4)} and `;
+        } else {
+            text += `Played and `;
+        }
+        
         if (result === 'win') {
             text += `🎉 I won!`;
         } else if (result === 'loss') {
@@ -209,6 +221,13 @@ export default function OnlinePlayPage() {
         } else {
             text += `🎮 It's a draw!`;
         }
+        
+        // Add game details
+        const gameType = `${match.size}x${match.size}`;
+        if (match.misere) text += `\n\nGame: ${gameType} Misère`;
+        else if (match.blitz !== 'off') text += `\n\nGame: ${gameType} Blitz ${match.blitz}`;
+        else text += `\n\nGame: ${gameType}`;
+        
         text += `\n\n${url}`;
 
         try {
@@ -282,23 +301,30 @@ export default function OnlinePlayPage() {
                     </div>
 
                     {match?.status === 'done' && (
-                        <div className="mt-4 text-center">
-                            <div className="mb-2 text-lg font-semibold">
-                                {match?.winner ? 
-                                    (match.winner === mySymbol ? '🎉 You Win!' : '😔 You Lose') : 
-                                    '🎮 It\'s a draw!'}
+                        <div className="mt-4">
+                            {/* Rich Match Result Card */}
+                            <div className="mb-4">
+                                <MatchResultCard
+                                    match={match}
+                                    playerId={myId}
+                                    opponentProfile={opponentProfile}
+                                    hostProfile={hostProfile}
+                                />
                             </div>
                             
-                            <button
-                                onClick={() => handleShareGameResult(
-                                    match, 
-                                    match?.winner === mySymbol ? 'win' : 
-                                    match?.winner ? 'loss' : 'draw'
-                                )}
-                                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                            >
-                                📤 Share Result on Farcaster
-                            </button>
+                            {/* Share Button */}
+                            <div className="text-center">
+                                <button
+                                    onClick={() => handleShareGameResult(
+                                        match, 
+                                        match?.winner === mySymbol ? 'win' : 
+                                        match?.winner ? 'loss' : 'draw'
+                                    )}
+                                    className="px-6 py-2 bg-[#70FF5A] text-black rounded-lg hover:bg-[#60e54a] transition-colors font-semibold"
+                                >
+                                    📤 Share Result on Farcaster
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
