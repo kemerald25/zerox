@@ -113,7 +113,7 @@ export default function Home() {
                       gameStatus === 'lost' ? '😔 I lost but learned!' : 
                       "🎮 It's a draw - rematch time!";
     
-    const viralText = `${resultText}\n\n🎮 ZeroX TicTacToe on Base\n🤖 Difficulty: ${difficulty}\n👤 My Symbol: ${playerSymbol}\n\n🚨 LIMITED TIME: 24hr Tournament starts NOW!\n💎 Win ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH per game\n\n🎯 Play here: ${appUrl}\n\n#ZeroX #TicTacToe #Base #Farcaster #Web3Gaming #ViralGaming`;
+    const viralText = `${resultText}\n\n🎮 ZeroX TicTacToe on Base\n🤖 Difficulty: ${difficulty}\n👤 My Symbol: ${playerSymbol}\n\n💎 Win ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH per game\n\n🎯 Play here: ${appUrl}`;
     
     const payload: { text: string; embeds?: [string] } = { text: viralText, embeds: [appUrl] as [string] };
     
@@ -658,31 +658,7 @@ export default function Home() {
     return () => clearTimeout(id);
   }, [secondsLeft, gameStatus, isPlayerTurn]);
 
-  // Tournament countdown timer for viral FOMO
-  useEffect(() => {
-    const updateCountdown = () => {
-      const now = new Date().getTime();
-      const tournamentStart = new Date().getTime() + (60 * 60 * 1000); // Start in 1 hour
-      const distance = tournamentStart - now;
-      
-      const hours = Math.floor(distance / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-      
-      const countdownElement = document.getElementById('tournament-countdown');
-      if (countdownElement) {
-        if (distance > 0) {
-          countdownElement.innerHTML = `Starts in: <span class="text-red-500">${hours}h ${minutes}m ${seconds}s</span>`;
-        } else {
-          countdownElement.innerHTML = `<span class="text-green-500">🎉 TOURNAMENT LIVE! 🎉</span>`;
-        }
-      }
-    };
-    
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-    return () => clearInterval(interval);
-  }, []);
+
 
   // Handle incoming challenges from Farcaster
   useEffect(() => {
@@ -710,7 +686,7 @@ export default function Home() {
       // Auto-cast victory to Farcaster for viral growth
       const autoCastVictory = async () => {
         const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
-        const viralText = `🎉 JUST WON at ZeroX TicTacToe! 🚀\n\n🔥 Difficulty: ${difficulty}\n⚡ Symbol: ${playerSymbol}\n💎 Won ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH\n\n🎮 Challenge me: ${appUrl}\n\n#ZeroX #TicTacToe #Base #Farcaster #Web3Gaming`;
+        const viralText = `🎉 JUST WON at ZeroX TicTacToe! 🚀\n\n🔥 Difficulty: ${difficulty}\n⚡ Symbol: ${playerSymbol}\n💎 Won ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH\n\n🎮 Challenge me: ${appUrl}`;
         
         try {
           await composeCast({ text: viralText, embeds: [appUrl] as [string] });
@@ -822,16 +798,7 @@ export default function Home() {
           ZeroX
         </h1>
         
-        {/* 24-HOUR VIRAL TOURNAMENT BANNER */}
-        <div className="w-full max-w-md mb-4 p-4 rounded-xl bg-gradient-to-r from-[#066c00] to-[#0a8500] text-center shadow-lg border-2 border-[#70FF5A] animate-pulse">
-          <div className="text-2xl font-bold text-[#70FF5A] mb-2">🚨 24HR TOURNAMENT 🚨</div>
-          <div className="text-sm text-[#b6f569] mb-2 font-semibold">10x XP • Special Badges • Prize Pool</div>
-          <div className="text-lg font-bold text-[#70FF5A]" id="tournament-countdown">
-            Starts in: <span className="text-white font-bold">Loading...</span>
-          </div>
-          <div className="text-xs text-[#b6f569] mt-2 font-medium">Join 1000+ players already competing!</div>
-        </div>
-        
+
         
         {showAddPrompt && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import React from 'react';
@@ -15,11 +16,11 @@ interface GameBoardProps {
 
 const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn, winningLine, size = 3, hintIndex = null, disabledCells = [] }) => {
   // Brand colors
-  const GREEN = '#70FF5A';
-  const LIME_GREEN = '#b6f569';
-  const BLACK = '#0a0a0a';
+  const BLACK = '#000000';
+  const GREEN = '#00FF1A';
 
   // Responsive tweaks based on board size
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const gapPx = size >= 5 ? 4 : size === 4 ? 6 : 8; // tighter gaps for larger grids
   const borderWidth = size >= 5 ? 1 : 2; // thinner borders for dense boards
   const fontClass = size >= 5 ? 'text-xl' : size === 4 ? 'text-2xl' : 'text-4xl';
@@ -27,16 +28,11 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn,
   return (
     <div className="w-full max-w-md mx-auto">
       <motion.div 
-        className="grid aspect-square p-2"
+        className="grid aspect-square"
         style={{ 
-          backgroundColor: '#ffffff',
-          padding: '8px', 
-          borderRadius: '16px',
-          boxShadow: `0 0 24px ${GREEN}30`,
           display: 'grid',
           gridTemplateColumns: `repeat(${size}, 1fr)`,
-          gap: `${gapPx}px`,
-          border: `2px dashed ${GREEN}`
+          gap: '16px'
         }}
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -45,12 +41,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn,
         {board.map((cell, index) => {
           const isWinningCell = Array.isArray(winningLine) && winningLine.includes(index);
           const isDisabled = disabledCells.includes(index);
-          const row = Math.floor(index / size);
-          const col = index % size;
-          const isDarkTile = ((row + col) % 2 === 0);
-          const baseBg = isDarkTile ? BLACK : '#ffffff';
-          const bg = isWinningCell ? LIME_GREEN : baseBg;
-          const symbolColor = isWinningCell ? BLACK : (isDarkTile ? '#ffffff' : BLACK);
+          const bg = cell === 'X' ? BLACK : cell === 'O' ? GREEN : '#f3f4f6';
+          const symbolColor = cell ? '#ffffff' : '#000000';
           return (
           <motion.button
             key={index}
@@ -62,16 +54,14 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onCellClick, isPlayerTurn,
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
             className={`
               aspect-square flex items-center justify-center
-              ${fontClass} font-bold rounded-lg
+              text-4xl font-bold rounded-xl
               ${cell || isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}
-              ${isPlayerTurn && !cell && !isDisabled ? 'hover:bg-opacity-90' : ''}
-              transition-colors duration-200
+              ${isPlayerTurn && !cell && !isDisabled ? 'hover:bg-gray-200' : ''}
+              transition-all duration-200
             `}
             style={{
               backgroundColor: bg,
               color: symbolColor,
-              border: `${borderWidth}px dashed ${isWinningCell ? GREEN : '#e5e7eb'}`,
-              boxShadow: isWinningCell ? `0 0 18px ${GREEN}60` : `0 0 6px ${BLACK}10`,
               opacity: isDisabled ? 0.5 : 1
             }}
           >
