@@ -746,49 +746,73 @@ export default function Home() {
   // Handle direct challenges to other players
   const handleChallenge = useCallback(async (username?: string) => {
     const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
-    const challengeText = username 
-      ? `🎮 Hey @${username}, I challenge you to TicTacToe!\n\n💎 Winner gets ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH\n🎯 Accept here: ${appUrl}\n\n#ZeroX #TicTacToe #Challenge`
-      : `🎮 Who wants to play TicTacToe?\n\n💎 Winner gets ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH\n🎯 Accept here: ${appUrl}\n\n#ZeroX #TicTacToe #Challenge`;
     
-    try {
-      // Send Farcaster cast
-      await composeCast({ text: challengeText, embeds: [appUrl] as [string] });
-      
-      // Send direct notification if username provided
-      if (username) {
+    // If username provided, verify user exists first
+    if (username) {
+      try {
+        // Try to verify user exists via notification API
+        const verifyResponse = await fetch(`/api/notify/verify?username=${encodeURIComponent(username)}`);
+        const verifyData = await verifyResponse.json();
+        
+        if (!verifyData?.exists) {
+          showToast(`@${username} not found on Farcaster 😔`);
+          return;
+        }
+        
+        // Get proper case for username
+        const properUsername = verifyData.username || username;
+        
+        // Create challenge text with verified @username
+        const challengeText = `🎮 Hey @${properUsername}, I challenge you to ZeroX!\n\n💎 Winner gets ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH\n🎯 Accept here: ${appUrl}`;
+        
         try {
-          const response = await fetch('/api/notify', {
+          // Send Farcaster cast with verified username
+          await composeCast({ text: challengeText, embeds: [appUrl] as [string] });
+          
+          // Send direct notification
+          const notifyResponse = await fetch('/api/notify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              username,
-              title: '🎮 New TicTacToe Challenge!',
-              body: `You've been challenged to a game! Winner gets ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH`,
+              username: properUsername,
+              title: '🎮 New ZeroX Challenge!',
+              body: `You've been challenged to ZeroX! Winner gets ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH`,
               cta: 'Accept Challenge',
               url: appUrl
             })
           });
           
-          if (response.ok) {
+          if (notifyResponse.ok) {
             showToast('Challenge & notification sent! 🎮');
           } else {
-            // Still show success since the cast worked
             showToast('Challenge sent! 🎮');
           }
         } catch {
-          // Still show success since the cast worked
-          showToast('Challenge sent! 🎮');
+          try {
+            // Fallback to SDK cast
+            await (sdk as unknown as { actions?: { composeCast?: (p: { text: string; embeds?: [string] }) => Promise<void> } }).actions?.composeCast?.({ text: challengeText, embeds: [appUrl] as [string] });
+            showToast('Challenge sent! 🎮');
+          } catch {
+            showToast('Failed to send challenge 😔');
+          }
         }
-      } else {
-        showToast('Challenge posted! 🎮');
-      }
-    } catch {
-      try {
-        // Fallback to SDK cast
-        await (sdk as unknown as { actions?: { composeCast?: (p: { text: string; embeds?: [string] }) => Promise<void> } }).actions?.composeCast?.({ text: challengeText, embeds: [appUrl] as [string] });
-        showToast(username ? 'Challenge sent! 🎮' : 'Challenge posted! 🎮');
       } catch {
-        showToast('Failed to send challenge 😔');
+        showToast('Failed to verify username 😔');
+      }
+    } else {
+      // Open challenge to everyone
+      const challengeText = `🎮 Who wants to play ZeroX?\n\n💎 Winner gets ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH\n🎯 Accept here: ${appUrl}`;
+      
+      try {
+        await composeCast({ text: challengeText, embeds: [appUrl] as [string] });
+        showToast('Challenge posted! 🎮');
+      } catch {
+        try {
+          await (sdk as unknown as { actions?: { composeCast?: (p: { text: string; embeds?: [string] }) => Promise<void> } }).actions?.composeCast?.({ text: challengeText, embeds: [appUrl] as [string] });
+          showToast('Challenge posted! 🎮');
+        } catch {
+          showToast('Failed to post challenge 😔');
+        }
       }
     }
   }, [composeCast, showToast]);
