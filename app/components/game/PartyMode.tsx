@@ -194,15 +194,15 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
       {/* Lobby */}
       {gameState === 'lobby' && !roomCode && (
         <div className="text-center">
-          <h2 className="text-4xl font-bold mb-4" style={{ fontFamily: 'var(--font-game)' }}>
+          <h2 className="text-4xl text-black font-bold mb-4" style={{ fontFamily: 'var(--font-game)' }}>
             PARTY MODE
           </h2>
-          <p className="text-lg mb-8">Play together with your friends</p>
+          <p className="text-lg text-black mb-8">Play together with your friends</p>
           
           {/* Player info */}
           <div className="mb-8">
             {playerPfp && (
-              <div className="w-24 h-24 mx-auto mb-4">
+              <div className="w-24 text-black h-24 mx-auto mb-4">
                 <Image
                   src={playerPfp}
                   alt={playerName || 'Player'}
@@ -212,7 +212,7 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
                 />
               </div>
             )}
-            <div className="text-lg font-medium">{playerName || playerAddress.slice(0, 6)}</div>
+            <div className="text-lg text-black font-medium">{playerName || playerAddress.slice(0, 6)}</div>
           </div>
 
           {/* Action buttons */}
