@@ -197,6 +197,27 @@ export default function OnlinePlayPage() {
         return opponentProfile?.pfpUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed)}`;
     }, [opponentAddress, opponentProfile]);
 
+    const handleShareGameResult = async (match: PvpMatch, result: 'win' | 'loss' | 'draw') => {
+        if (!matchId) return;
+        const base = process.env.NEXT_PUBLIC_URL || window.location.origin;
+        const url = `${base}/play/online?match_id=${matchId}`;
+        let text = `I played ZeroX with ${opponentProfile?.username || opponentAddress || 'someone'} and `;
+        if (result === 'win') {
+            text += `🎉 I won!`;
+        } else if (result === 'loss') {
+            text += `😔 I lost.`;
+        } else {
+            text += `🎮 It's a draw!`;
+        }
+        text += `\n\n${url}`;
+
+        try {
+            await composeCast({ text: text, embeds: [url] });
+        } catch {
+            try { await navigator.clipboard.writeText(text); } catch { }
+        }
+    };
+
     return (
         <>
             <div className="min-h-[100svh] relative bg-white">
@@ -259,6 +280,27 @@ export default function OnlinePlayPage() {
                             size={size}
                         />
                     </div>
+
+                    {match?.status === 'done' && (
+                        <div className="mt-4 text-center">
+                            <div className="mb-2 text-lg font-semibold">
+                                {match?.winner ? 
+                                    (match.winner === mySymbol ? '🎉 You Win!' : '😔 You Lose') : 
+                                    '🎮 It\'s a draw!'}
+                            </div>
+                            
+                            <button
+                                onClick={() => handleShareGameResult(
+                                    match, 
+                                    match?.winner === mySymbol ? 'win' : 
+                                    match?.winner ? 'loss' : 'draw'
+                                )}
+                                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                            >
+                                📤 Share Result on Farcaster
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
             <BottomNav />

@@ -129,21 +129,31 @@ export default function Home() {
   // Share handlers reused in main UI and modal
   const handleShareResult = useCallback(async () => {
     const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
-    const resultText = gameStatus === 'won' ? 'I won!' : gameStatus === 'lost' ? 'I lost!' : "It's a draw!";
-    const text = `${resultText} ZeroX vs AI (${difficulty}). Play here: ${appUrl}`;
-    const payload: { text: string; embeds?: [string] } = { text, embeds: [appUrl] as [string] };
+    
+    // Create rich game result text
+    const resultText = gameStatus === 'won' ? '🎉 I won!' : 
+                       gameStatus === 'lost' ? '😔 I lost!' : 
+                       "🎮 It's a draw!";
+    
+    const gameText = `🎮 TicTacToe vs AI\n${resultText}\n\n🤖 Difficulty: ${difficulty}\n👤 My Symbol: ${playerSymbol}\n\n🎯 Play here: ${appUrl}`;
+    
+    const payload: { text: string; embeds?: [string] } = { text: gameText, embeds: [appUrl] as [string] };
+    
     try {
       await composeCast(payload);
       return;
     } catch {}
+    
     try {
       await (sdk as unknown as { actions?: { composeCast?: (p: { text: string; embeds?: [string] }) => Promise<void> } }).actions?.composeCast?.(payload);
       return;
     } catch {}
+    
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(gameText);
+      showToast('Game result copied to clipboard!');
     } catch {}
-  }, [composeCast, gameStatus, difficulty]);
+  }, [composeCast, gameStatus, difficulty, playerSymbol, showToast]);
 
   // handleShareChallenge removed (unused)
 
