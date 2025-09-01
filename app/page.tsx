@@ -69,6 +69,14 @@ export default function Home() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [resultRecorded, setResultRecorded] = useState(false);
 
+  // Transaction completion modal
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [transactionResult, setTransactionResult] = useState<{
+    gameStatus: 'won' | 'lost' | 'draw';
+    payout?: string;
+    transactionHash?: string;
+  } | null>(null);
+
   const { address } = useAccount();
   const { sendTransactionAsync } = useSendTransaction();
   const { context, isFrameReady, setFrameReady } = useMiniKit();
@@ -526,6 +534,26 @@ export default function Home() {
     }
   }, [gameStatus, startNewGameRound, recordResult, resultRecorded, showToast]);
 
+  // Handle transaction completion and show modal
+  useEffect(() => {
+    // Simulate transaction completion after a delay
+    if (resultRecorded && (gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw')) {
+      const timer = setTimeout(() => {
+        const payout = gameStatus === 'won' ? '0.00002' : undefined;
+        const transactionHash = '0x1234...5678'; // You can get this from the actual transaction
+        
+        setTransactionResult({
+          gameStatus,
+          payout,
+          transactionHash
+        });
+        setShowTransactionModal(true);
+      }, 2000); // Show modal after 2 seconds to simulate transaction completion
+      
+      return () => clearTimeout(timer);
+    }
+  }, [resultRecorded, gameStatus]);
+
   // Series removed
 
   // Update progress XP/streak/achievements
@@ -864,6 +892,61 @@ export default function Home() {
             hintIndex={hintIndex}
             disabledCells={!isPlayerTurn && blockedCellIndex !== null ? [blockedCellIndex] : []}
           />
+
+          {/* Transaction Completion Modal */}
+          {showTransactionModal && transactionResult && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl p-6 max-w-md w-full text-center">
+                <div className="text-4xl mb-4">
+                  {transactionResult.gameStatus === 'won' ? '🎉' : 
+                   transactionResult.gameStatus === 'lost' ? '😔' : '🎮'}
+                </div>
+                
+                <h2 className="text-2xl font-bold mb-2">
+                  {transactionResult.gameStatus === 'won' ? 'You Won!' : 
+                   transactionResult.gameStatus === 'lost' ? 'You Lost' : "It's a Draw!"}
+                </h2>
+                
+                {transactionResult.gameStatus === 'won' && transactionResult.payout && (
+                  <div className="mb-4 p-3 bg-green-100 rounded-lg">
+                    <p className="text-green-800 font-semibold">
+                      You have received a payout of {transactionResult.payout} ETH
+                    </p>
+                  </div>
+                )}
+                
+                {transactionResult.transactionHash && (
+                  <div className="mb-4 p-2 bg-gray-100 rounded text-xs text-gray-600">
+                    <p>Transaction: {transactionResult.transactionHash.slice(0, 6)}...{transactionResult.transactionHash.slice(-4)}</p>
+                  </div>
+                )}
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowTransactionModal(false);
+                      setTransactionResult(null);
+                    }}
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                  >
+                    Close
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      handleShareResult();
+                      setShowTransactionModal(false);
+                      setTransactionResult(null);
+                    }}
+                    className="flex-1 px-4 py-2 bg-[#70FF5A] text-white rounded-lg hover:bg-[#60E54A] transition-colors"
+                  >
+                    📤 Share Game Results
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Social actions */}
           {(gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') && (
             <div className="mt-4 flex flex-col sm:flex-row gap-3 items-center">
@@ -875,7 +958,6 @@ export default function Home() {
               </button>
               {/* <button
                 className="px-4 py-2 rounded-lg bg-[#b6f569] text-[#70FF5A] border border-[#70FF5A]"
-                onClick={handleShareChallenge}
               >
                 Share Challenge
               </button> */}
