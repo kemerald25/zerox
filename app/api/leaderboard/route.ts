@@ -23,12 +23,14 @@ function seasonEndISO(): string {
 export async function GET() {
   const season = seasonStartISO();
   if (!supabase) return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top: [] });
+  // Get unique entries by address, taking the latest alias/pfp
   const { data, error } = await supabase
     .from('leaderboard_entries')
     .select('address,alias,pfp_url,wins,draws,losses,points')
     .eq('season', season)
     .order('points', { ascending: false })
     .order('wins', { ascending: false })
+    .order('updated_at', { ascending: false })
     .limit(10);
   if (error) return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top: [] });
   const top = (data || []).map((r: { address: string; alias?: string | null; pfp_url?: string | null; wins: number; draws: number; losses: number; points: number; }, i: number) => ({ rank: i + 1, address: r.address, alias: r.alias ?? undefined, pfpUrl: r.pfp_url ?? undefined, wins: r.wins, draws: r.draws, losses: r.losses, points: r.points }));
@@ -49,11 +51,13 @@ export async function POST(req: NextRequest) {
     const delta = { win: { w: 1, d: 0, l: 0, p: 3 }, draw: { w: 0, d: 1, l: 0, p: 1 }, loss: { w: 0, d: 0, l: 1, p: 0 } }[result];
 
     // Upsert season row
+    // Get the latest entry for this address in this season
     const { data: rows } = await supabase
       .from('leaderboard_entries')
       .select('*')
       .eq('season', season)
       .eq('address', addr)
+      .order('updated_at', { ascending: false })
       .limit(1);
     const existing: any = rows && rows.length ? rows[0] : null;
     const next: any = existing ?? { address: addr, alias: alias ?? undefined, pfp_url: null, wins: 0, draws: 0, losses: 0, points: 0 };

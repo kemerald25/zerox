@@ -30,9 +30,8 @@ export default function Home() {
   const [winningLine, setWinningLine] = useState<number[] | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [misere] = useState(false);
-  const [blitzPreset, setBlitzPreset] = useState<'off' | '7s' | '5s'>('off');
   const [nextStarter, setNextStarter] = useState<'player' | 'ai'>('player');
-  const computeTurnLimit = useCallback(() => (blitzPreset === '5s' ? 5 : blitzPreset === '7s' ? 7 : 15), [blitzPreset]);
+  const computeTurnLimit = useCallback(() => 15, []);
   // series state removed
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState(1);
@@ -164,22 +163,7 @@ export default function Home() {
     post();
   }, [address, gameStatus, context]);
 
-  // Post wins to sprint window
-  useEffect(() => {
-    const post = async () => {
-      if (!address) return;
-      if (gameStatus !== 'won') return;
-      try {
-        await fetch('/api/sprint', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address, result: 'win' })
-        });
-        try { showToast('Posted win to Sprint'); } catch {}
-      } catch {}
-    };
-    post();
-  }, [address, gameStatus, blitzPreset, showToast]);
+
 
   // Gate gameplay if an unpaid loss settlement exists
   const [mustSettle, setMustSettle] = useState(false);
@@ -194,7 +178,7 @@ export default function Home() {
       } catch { setMustSettle(false); }
     };
     check();
-  }, [address, gameStatus, blitzPreset]);
+  }, [address, gameStatus]);
 
   // Hide add-mini-app prompt if payment is required so it doesn't block clicks
   useEffect(() => {
@@ -533,11 +517,10 @@ export default function Home() {
       if (!address) return;
       if (gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') {
         try {
-          const xpBonus = (blitzPreset === '5s' ? 4 : blitzPreset === '7s' ? 2 : 0);
           const res = await fetch('/api/progress', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ address, result: gameStatus === 'won' ? 'win' : gameStatus === 'lost' ? 'loss' : 'draw', xpBonus })
+            body: JSON.stringify({ address, result: gameStatus === 'won' ? 'win' : gameStatus === 'lost' ? 'loss' : 'draw' })
           });
           const data = await res.json();
           if (data?.xp != null) {
@@ -577,7 +560,7 @@ export default function Home() {
       }
     };
     run();
-  }, [address, gameStatus, blitzPreset]);
+  }, [address, gameStatus]);
 
   // daily seed fetch removed (unused)
 
@@ -968,18 +951,7 @@ export default function Home() {
                     Misère
                   </button>
                 </div> */}
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs opacity-80">Blitz</span>
-                  {(['off','7s','5s'] as const).map((v) => (
-                    <button
-                      key={v}
-                      className={`px-3 py-1 rounded-full text-sm border ${blitzPreset===v?'bg-[#70FF5A] text-white border-[#70FF5A]':'bg-white text-[#70FF5A] border-[#70FF5A]'}`}
-                      onClick={() => { setBlitzPreset(v); setSecondsLeft(null); }}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
+
                 
               </div>
             )}

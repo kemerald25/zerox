@@ -6,9 +6,8 @@ import BottomNav from '../components/BottomNav';
 export default function LeaderboardPage() {
   return (
     <>
-      <div className="min-h-screen pt-10" style={{ backgroundColor: '#ffffff' }}>
+      <div className="min-h-screen pt-10">
         <LeaderboardTab />
-        <SprintSection />
       </div>
       <BottomNav />
     </>
@@ -16,6 +15,7 @@ export default function LeaderboardPage() {
 }
 
 type TopRow = { rank: number; address: string; alias?: string; pfpUrl?: string; wins: number; draws: number; losses: number; points: number };
+type TabType = 'weekly' | 'alltime';
 
 function LeaderboardTab() {
   const [loading, setLoading] = React.useState(true);
@@ -23,13 +23,16 @@ function LeaderboardTab() {
   const [season, setSeason] = React.useState<{ start: string; end: string } | null>(null);
   const [rows, setRows] = React.useState<Array<TopRow>>([]);
   const [countdown, setCountdown] = React.useState<string>('');
+  const [activeTab, setActiveTab] = React.useState<TabType>('weekly');
 
   useEffect(() => {
     const load = async () => {
+      setLoading(true);
       try {
-        const res = await fetch('/api/leaderboard');
+        const endpoint = activeTab === 'weekly' ? '/api/leaderboard' : '/api/leaderboard/alltime';
+        const res = await fetch(endpoint);
         const data = await res.json();
-        setSeason(data?.season ?? null);
+        setSeason(activeTab === 'weekly' ? (data?.season ?? null) : null);
         const rowsFromApi = (Array.isArray(data?.top) ? data.top : []) as Array<TopRow>;
         setRows(rowsFromApi);
       } catch {
@@ -39,7 +42,7 @@ function LeaderboardTab() {
       }
     };
     load();
-  }, []);
+  }, [activeTab]);
 
   useEffect(() => {
     if (!season?.end) return;
@@ -59,110 +62,96 @@ function LeaderboardTab() {
   }, [season]);
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="p-4 rounded-xl border border-[#e5e7eb] bg-white">
-        <div className="flex items-center justify-between mb-2">
-          <div className="font-bold text-[#0a0a0a]">Top 10</div>
-          {season && (
-            <div className="text-xs text-[#4b4b4f]">Season: {season.start} → {season.end}</div>
-          )}
-        </div>
-        {season && (
-          <div className="text-xs mb-3 text-[#4b4b4f]">Ends in <span className="font-semibold text-[#70FF5A]">{countdown}</span></div>
-        )}
-        {loading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-10 rounded-lg bg-[#f6f7f6] animate-pulse" />
-            ))}
-          </div>
-        ) : error ? (
-          <div className="text-sm text-red-500">{error}</div>
-        ) : rows.length === 0 ? (
-          <div className="text-sm text-[#4b4b4f]">No entries yet.</div>
-        ) : (
-          <div className="divide-y divide-[#e5e7eb]">
-            {rows.map((r) => {
-              const fallback = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(r.alias || r.address)}`;
-              const src = r.pfpUrl && typeof r.pfpUrl === 'string' ? r.pfpUrl : fallback;
-              return (
-                <div key={r.rank} className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 text-center font-bold text-[#70FF5A]">{r.rank}</div>
-                    <Image src={src} alt={r.alias || 'pfp'} width={42} height={42} className="rounded-md object-cover" />
-                    <div className="font-semibold text-[#0a0a0a]">{r.alias ? `@${r.alias}` : `${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
-                  </div>
-                  <div className="text-xs text-right">
-                    <div className="font-semibold text-[#0a0a0a]">{r.points} pts</div>
-                    <div className="text-[#4b4b4f]">W‑D‑L {r.wins}-{r.draws}-{r.losses}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+    <div className="w-full max-w-md mx-auto px-4">
+      <h1 className="text-4xl font-black text-center mb-8 text-black tracking-wider">LEADERBOARD</h1>
+      
+      <div className="flex justify-center gap-8 mb-6">
+        <button 
+          className={`text-lg font-bold pb-1 border-b-2 transition-colors ${
+            activeTab === 'weekly' 
+              ? 'text-black border-black' 
+              : 'text-[#9CA3AF] border-transparent'
+          }`}
+          onClick={() => setActiveTab('weekly')}
+        >
+          WEEKLY
+        </button>
+        <button 
+          className={`text-lg font-bold pb-1 border-b-2 transition-colors ${
+            activeTab === 'alltime' 
+              ? 'text-black border-black' 
+              : 'text-[#9CA3AF] border-transparent'
+          }`}
+          onClick={() => setActiveTab('alltime')}
+        >
+          ALL TIME
+        </button>
       </div>
-    </div>
-  );
-}
 
-function SprintSection() {
-  const [rows, setRows] = React.useState<Array<{ rank: number; address: string; wins: number }>>([]);
-  const [endsIn, setEndsIn] = React.useState<string>('');
-
-  useEffect(() => {
-    let timer: ReturnType<typeof setInterval> | undefined;
-    const load = async () => {
-      try {
-        const res = await fetch('/api/sprint');
-        const data = await res.json();
-        if (Array.isArray(data?.top)) setRows(data.top);
-        const endIso = data?.window?.end;
-        if (endIso) {
-          const end = new Date(endIso).getTime();
-          const tick = () => {
-            const diff = Math.max(0, end - Date.now());
-            const m = Math.floor((diff % 3600000) / 60000);
-            const s = Math.floor((diff % 60000) / 1000);
-            setEndsIn(`${m}m ${s}s`);
-          };
-          tick();
-          if (timer) clearInterval(timer);
-          timer = setInterval(tick, 1000);
-        }
-      } catch {}
-    };
-    load();
-    const poll = setInterval(load, 5000);
-    return () => { clearInterval(poll); if (timer) clearInterval(timer); };
-  }, []);
-
-  return (
-    <div className="w-full max-w-md mx-auto mt-4">
-      <div className="p-4 rounded-xl border border-[#e5e7eb] bg-white">
-        <div className="flex items-center justify-between mb-2">
-          <div className="font-bold text-[#0a0a0a]">Sprint (10 min)</div>
-          <div className="text-xs text-[#4b4b4f]">Ends in <span className="font-semibold text-[#70FF5A]">{endsIn}</span></div>
+      {loading ? (
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-16 rounded-2xl bg-[#F3F4F6] animate-pulse" />
+          ))}
         </div>
-        {rows.length === 0 ? (
-          <div className="text-sm text-[#4b4b4f]">No wins yet in this window.</div>
-        ) : (
-          <div className="divide-y divide-[#e5e7eb]">
-            {rows.map((r) => (
-              <div key={r.rank} className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 text-center font-bold text-[#70FF5A]">{r.rank}</div>
-                  <div className="font-semibold text-[#0a0a0a]">{`${r.address.slice(0,6)}…${r.address.slice(-4)}`}</div>
+      ) : error ? (
+        <div className="text-sm text-black text-center">{error}</div>
+      ) : rows.length === 0 ? (
+        <div className="text-sm text-[#9CA3AF] text-center">No entries yet.</div>
+      ) : (
+        <div className="space-y-3">
+          {rows.map((r) => {
+            const fallback = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(r.alias || r.address)}`;
+            const src = r.pfpUrl && typeof r.pfpUrl === 'string' ? r.pfpUrl : fallback;
+            
+            // Trophy colors for top 3
+            const trophyEmoji = r.rank === 1 ? '🥇' : 
+                              r.rank === 2 ? '🥈' :
+                              r.rank === 3 ? '🥉' : null;
+            
+            return (
+              <div key={r.rank} 
+                className="flex items-center justify-between p-4 bg-white rounded-2xl border border-[#F3F4F6]">
+                <div className="flex items-center gap-4">
+                  {trophyEmoji ? (
+                    <div className="w-8 h-8 flex items-center justify-center text-xl">
+                      {trophyEmoji}
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 flex items-center justify-center text-[#9CA3AF] font-medium">
+                      {r.rank}
+                    </div>
+                  )}
+                  <Image 
+                    src={src} 
+                    alt={r.alias || 'pfp'} 
+                    width={40} 
+                    height={40} 
+                    className="rounded-full object-cover"
+                  />
+                  <div className="font-medium text-lg text-black">
+                    {r.alias ? `@${r.alias}` : `${r.address.slice(0,6)}…${r.address.slice(-4)}`}
+                  </div>
                 </div>
-                <div className="text-xs text-[#4b4b4f]">{r.wins} wins</div>
+                <div className="text-xl font-black text-black">
+                  {r.points}
+                </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            );
+          })}
+        </div>
+      )}
+
+      {activeTab === 'weekly' && season && (
+        <div className="mt-6 text-center text-sm text-[#9CA3AF]">
+          Season ends in <span className="font-bold text-black">{countdown}</span>
+        </div>
+      )}
     </div>
   );
 }
+
+
 
 
 
