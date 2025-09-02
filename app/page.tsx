@@ -721,27 +721,49 @@ export default function Home() {
     }
   }, [context?.location, showToast]);
 
-  // Auto-cast every win for maximum viral growth
+  // Share game results with embedded card
   useEffect(() => {
     if (gameStatus === 'won' && address) {
-      // Auto-cast victory to Farcaster for viral growth
-      const autoCastVictory = async () => {
-        const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
-        const viralText = `🎉 JUST WON at ZeroX TicTacToe! 🚀\n\n🔥 Difficulty: ${difficulty}\n⚡ Symbol: ${playerSymbol}\n💎 Won ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH\n\n🎮 Challenge me: ${appUrl}`;
-        
+      // Get user info from context
+      const username = context?.user?.username;
+      const pfpUrl = context?.user?.pfpUrl;
+      
+      // Prepare share data
+      const shareData = {
+        playerName: username,
+        playerPfp: pfpUrl,
+        opponentName: 'AI',
+        opponentPfp: '/default-avatar.png',
+        playerSymbol,
+        result: 'won' as const,
+        roomCode: difficulty || 'AI',
+        timestamp: Date.now()
+      };
+
+      // Generate share URL with encoded data
+      const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
+      const shareUrl = `${appUrl}/share?data=${encodeURIComponent(btoa(JSON.stringify(shareData)))}`;
+      
+      // Share text with embedded card
+      const shareText = `🎮 ZeroX Party Mode!\n\n🏆 Victory!\n🆚 vs AI (${difficulty})\n⚡ Played as: ${playerSymbol}\n\n🎯 Join the fun: ${shareUrl}`;
+      
+      // Delay share to let user see win animation first
+      setTimeout(async () => {
         try {
-          await composeCast({ text: viralText, embeds: [appUrl] as [string] });
-        } catch {
+          await composeCast({
+            text: shareText,
+            embeds: [shareUrl] as [string]
+          });
+        } catch (e) {
+          console.error('Failed to share on Farcaster:', e);
           try {
-            await (sdk as unknown as { actions?: { composeCast?: (p: { text: string; embeds?: [string] }) => Promise<void> } }).actions?.composeCast?.({ text: viralText, embeds: [appUrl] as [string] });
+            await navigator.clipboard.writeText(shareText);
+            showToast('Copied to clipboard! 📋');
           } catch {}
         }
-      };
-      
-      // Delay auto-cast to let user see win animation first
-      setTimeout(autoCastVictory, 2000);
+      }, 2000);
     }
-  }, [gameStatus, address, difficulty, playerSymbol, composeCast]);
+  }, [gameStatus, address, difficulty, playerSymbol, composeCast, context?.user, showToast]);
 
   // Handle direct challenges to other players
   const handleChallenge = useCallback(async (username?: string) => {

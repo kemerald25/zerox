@@ -6,7 +6,7 @@ import BottomNav from '../components/BottomNav';
 export default function LeaderboardPage() {
   return (
     <>
-      <div className="min-h-screen pt-10">
+      <div className="min-h-screen pt-10 pb-24">
         <LeaderboardTab />
       </div>
       <BottomNav />
