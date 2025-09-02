@@ -4,7 +4,6 @@ import { useScoreboard } from '@/lib/useScoreboard';
 import React, { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { sdk } from '@farcaster/miniapp-sdk';
-// import Link from 'next/link';
 import GameBoard from './components/game/GameBoard';
 import BottomNav from './components/BottomNav';
 import GameControls from './components/game/GameControls';
@@ -13,7 +12,7 @@ import { WalletCheck } from './components/WalletCheck';
 import { playMove, playAIMove, playWin, playLoss, playDraw, resumeAudio, playWarning } from '@/lib/sound';
 import { hapticTap, hapticWin, hapticLoss } from '@/lib/haptics';
 import { useAccount, useSendTransaction } from 'wagmi';
-import { useMiniKit, useIsInMiniApp, useComposeCast, useViewProfile } from '@coinbase/onchainkit/minikit';
+import { useMiniKit, useIsInMiniApp, useViewProfile } from '@coinbase/onchainkit/minikit';
 
 
 export default function Home() {
@@ -79,7 +78,6 @@ export default function Home() {
   const { sendTransactionAsync } = useSendTransaction();
   const { context, isFrameReady, setFrameReady } = useMiniKit();
   const { isInMiniApp } = useIsInMiniApp();
-  const { composeCast } = useComposeCast();
   const viewProfile = useViewProfile();
   // Simple toast
   const [toast, setToast] = useState<string | null>(null);
@@ -115,23 +113,26 @@ export default function Home() {
     
     const viralText = `${resultText}\n\n🎮 ZeroX on Base\n🤖 Difficulty: ${difficulty}\n👤 My Symbol: ${playerSymbol}\n\n💎 Win ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH per game\n\n🎯 Play here: ${appUrl}`;
     
-    const payload: { text: string; embeds?: [string] } = { text: viralText, embeds: [appUrl] as [string] };
-    
     try {
-      await composeCast(payload);
-      return;
-    } catch {}
-    
-    try {
-      await (sdk as unknown as { actions?: { composeCast?: (p: { text: string; embeds?: [string] }) => Promise<void> } }).actions?.composeCast?.(payload);
-      return;
-    } catch {}
-    
-    try {
-      await navigator.clipboard.writeText(viralText);
-      showToast('Viral game result copied! 🚀');
-    } catch {}
-  }, [composeCast, gameStatus, difficulty, playerSymbol, showToast]);
+      const result = await sdk.actions.composeCast({ 
+        text: viralText,
+        embeds: [appUrl] as [string],
+        close: false
+      });
+      
+      // Check if user actually posted the cast
+      if (result?.cast) {
+        showToast('Game result shared! 🚀');
+        return;
+      }
+    } catch (e) {
+      console.error('Failed to share on Farcaster:', e);
+      try {
+        await navigator.clipboard.writeText(viralText);
+        showToast('Copied to clipboard! 📋');
+      } catch {}
+    }
+  }, [gameStatus, difficulty, playerSymbol, showToast]);
 
   // handleShareChallenge removed (unused)
 
@@ -749,9 +750,20 @@ export default function Home() {
       
       // Share after transaction is recorded
       try {
-        composeCast({
+        sdk.actions.composeCast({ 
           text: shareText,
-          embeds: [shareUrl] as [string]
+          embeds: [shareUrl] as [string],
+          close: false
+        }).then(result => {
+          if (result?.cast) {
+            showToast('Game result shared! 🚀');
+          }
+        }).catch(e => {
+          console.error('Failed to share on Farcaster:', e);
+          try {
+            navigator.clipboard.writeText(shareText);
+            showToast('Copied to clipboard! 📋');
+          } catch {}
         });
       } catch (e) {
         console.error('Failed to share on Farcaster:', e);
@@ -761,7 +773,7 @@ export default function Home() {
         } catch {}
       }
     }
-  }, [gameStatus, address, difficulty, playerSymbol, composeCast, context?.user, showToast, resultRecorded]);
+  }, [gameStatus, address, difficulty, playerSymbol, context?.user, showToast, resultRecorded]);
 
   // Handle direct challenges to other players
   const handleChallenge = useCallback(async (username?: string) => {
@@ -776,51 +788,39 @@ export default function Home() {
       const challengeText = `🎮 Hey @${cleanUsername}, I challenge you to ZeroX!\n\n💎 Winner gets ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH\n🎯 Accept here: ${appUrl}`;
       
       try {
-        // Try composeCast first
-        await composeCast({
+        const result = await sdk.actions.composeCast({
           text: challengeText,
-          embeds: [appUrl] as [string]
+          embeds: [appUrl] as [string],
+          close: false
         });
-        showToast('Challenge sent! 🎮');
-      } catch {
-        try {
-          // Fallback to SDK cast
-          await (sdk as unknown as { actions?: { composeCast?: (p: { text: string; embeds?: [string] }) => Promise<void> } })
-            .actions?.composeCast?.({
-              text: challengeText,
-              embeds: [appUrl] as [string]
-            });
+        
+        if (result?.cast) {
           showToast('Challenge sent! 🎮');
-        } catch {
-          showToast('Failed to send challenge 😔');
         }
+      } catch (e) {
+        console.error('Failed to send challenge:', e);
+        showToast('Failed to send challenge 😔');
       }
     } else {
       // Open challenge to everyone
       const challengeText = `🎮 Who wants to play ZeroX?\n\n💎 Winner gets ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH\n🎯 Accept here: ${appUrl}`;
       
       try {
-        // Try composeCast first
-        await composeCast({
+        const result = await sdk.actions.composeCast({
           text: challengeText,
-          embeds: [appUrl] as [string]
+          embeds: [appUrl] as [string],
+          close: false
         });
-        showToast('Challenge posted! 🎮');
-      } catch {
-        try {
-          // Fallback to SDK cast
-          await (sdk as unknown as { actions?: { composeCast?: (p: { text: string; embeds?: [string] }) => Promise<void> } })
-            .actions?.composeCast?.({
-              text: challengeText,
-              embeds: [appUrl] as [string]
-            });
+        
+        if (result?.cast) {
           showToast('Challenge posted! 🎮');
-        } catch {
-          showToast('Failed to post challenge 😔');
         }
+      } catch (e) {
+        console.error('Failed to post challenge:', e);
+        showToast('Failed to post challenge 😔');
       }
     }
-  }, [composeCast, showToast]);
+  }, [showToast]);
 
   // remove auto-advance; handled via rematch modal
 
@@ -1137,8 +1137,17 @@ export default function Home() {
                     className="px-3 py-1 rounded bg-[#70FF5A] text-white"
                     onClick={async () => {
                       try {
-                        await composeCast({ text: `Thanks @${author.username || author.fid} for sharing! 🙏`, parent: { type: 'cast', hash: cast.hash } });
-                      } catch {}
+                        const result = await sdk.actions.composeCast({ 
+                          text: `Thanks @${author.username || author.fid} for sharing! 🙏`, 
+                          parent: { type: 'cast', hash: cast.hash },
+                          close: false
+                        });
+                        if (result?.cast) {
+                          showToast('Thanks sent! 🙏');
+                        }
+                      } catch (e) {
+                        console.error('Failed to send thanks:', e);
+                      }
                     }}
                   >
                     Thank them
