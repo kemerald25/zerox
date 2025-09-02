@@ -23,13 +23,11 @@ export async function generateMetadata({
       images: [`${baseUrl}/splash.png`],
     },
     other: {
-      // Farcaster Frame metadata
       "fc:frame": "vNext",
       "fc:frame:image": `${baseUrl}/splash.png`,
-      "fc:frame:button:1": "Play ZeroX",
-      "fc:frame:button:1:action": "post",
+      "fc:frame:button:1": "Launch ZeroX",
+      "fc:frame:button:1:action": "post_redirect",
       "fc:frame:post_url": `${baseUrl}/api/frame`,
-      "fc:frame:image:aspect_ratio": "1.91:1",
     },
   };
 
@@ -68,13 +66,11 @@ export async function generateMetadata({
         images: [ogImageUrl],
       },
       other: {
-        // Farcaster Frame metadata
         "fc:frame": "vNext",
         "fc:frame:image": ogImageUrl,
-        "fc:frame:button:1": "Play ZeroX",
-        "fc:frame:button:1:action": "post",
+        "fc:frame:button:1": "Launch ZeroX",
+        "fc:frame:button:1:action": "post_redirect",
         "fc:frame:post_url": `${baseUrl}/api/frame`,
-        "fc:frame:image:aspect_ratio": "1.91:1",
       },
     };
   } catch (error) {
