@@ -32,20 +32,21 @@ export function generateShareUrl(data: GameShareData): string {
 }
 
 export async function shareToFarcaster(data: GameShareData) {
+  const shareUrl = generateShareUrl(data);
+  const resultText = data.result === 'won' ? '🏆 Victory!' : 
+                    data.result === 'lost' ? '😔 Good Game!' : 
+                    '🤝 Draw!';
+
+  const shareText = `🎮 ZeroX Party Mode!\n\n${resultText}\n${data.opponentName ? `🆚 vs @${data.opponentName}` : '🆚 vs Anonymous'}\n⚡ Played as: ${data.playerSymbol}`;
+
   try {
-    const shareUrl = generateShareUrl(data);
-    
-    // Try using SDK
-    const result = await sdk.actions.composeCast({
-      text: `🎮 ZeroX Party Mode!\n\n🏆 Victory!\n🆚 vs AI\n⚡ Played as: ${data.playerSymbol}`,
+    // Use SDK directly like minicolours
+    await sdk.actions.composeCast({
+      text: shareText,
       embeds: [shareUrl] as [string],
       channelKey: "zerox",
       close: false
     });
-
-    if (!result?.cast) {
-      throw new Error('No cast created');
-    }
   } catch (e) {
     console.error('Failed to share:', e);
     throw e;
