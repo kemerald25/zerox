@@ -9,6 +9,7 @@ import GameBoard from './GameBoard';
 import { GameResultCard } from './GameResultCard';
 import { shareToFarcaster } from '@/lib/farcaster-share';
 import { JoinRoomForm } from './JoinRoomForm';
+import { useScoreboard } from '@/lib/useScoreboard';
 
 interface PartyModeProps {
   playerAddress: string;
@@ -19,11 +20,14 @@ interface PartyModeProps {
 export default function PartyMode({ playerAddress, playerName, playerPfp }: PartyModeProps) {
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [gameState, setGameState] = useState<'lobby' | 'playing' | 'result'>('lobby');
-  const [opponent, setOpponent] = useState<{name?: string; pfp?: string} | null>(null);
+  const [opponent, setOpponent] = useState<{name?: string; pfp?: string; address?: string} | null>(null);
   const [timer, setTimer] = useState<number | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinRoomInput, setJoinRoomInput] = useState('');
+  const [gameResult, setGameResult] = useState<'won' | 'lost' | 'draw' | null>(null);
+  
+  const { recordResult, isRecording } = useScoreboard();
   // Brand colors
   const BLACK = '#000000';
   const GREEN = '#00FF1A';
@@ -64,17 +68,30 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
     channel.bind('move-made', (data: {
       gameState: Array<string | null>;
       winner: string | null;
+      isDraw: boolean;
     }) => {
       setBoard(data.gameState);
-      if (data.winner) {
+      if (data.winner || data.isDraw) {
         setGameState('result');
+        
+        // Determine game result
+        if (data.isDraw) {
+          setGameResult('draw');
+          recordResult('draw');
+        } else if (data.winner === playerAddress) {
+          setGameResult('won');
+          recordResult('win');
+        } else {
+          setGameResult('lost');
+          recordResult('loss');
+        }
       }
     });
 
     return () => {
       pusher.unsubscribe(`room-${roomCode}`);
     };
-  }, [roomCode, pusher]);
+  }, [roomCode, pusher, playerAddress, recordResult]);
 
   // Generate a random 4-letter room code
   const generateRoomCode = () => {
@@ -436,7 +453,7 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
               opponentName={opponent?.name}
               opponentPfp={opponent?.pfp}
               playerSymbol={'X'}
-              result={'won'}
+              result={gameResult || 'won'}
               roomCode={roomCode || ''}
             />
           </div>

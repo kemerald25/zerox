@@ -452,12 +452,53 @@ export default function Home() {
 
   // Outcome sounds and onchain recording
   useEffect(() => {
-    // IMPORTANT: This is the ONLY place where recordResult should be called
-    // All other game logic should only set gameStatus, not call recordResult
-    // This prevents duplicate transactions from being sent
+    // Record result immediately when game ends
     if ((gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') && !resultRecorded) {
-      try { recordResult(gameStatus === 'won' ? 'win' : gameStatus === 'lost' ? 'loss' : 'draw'); } catch {}
-      setResultRecorded(true);
+      const result = gameStatus === 'won' ? 'win' : gameStatus === 'lost' ? 'loss' : 'draw';
+      
+      // Record result onchain first
+      try { 
+        recordResult(result);
+        setResultRecorded(true);
+        
+        // Then handle payout/charge
+        if (address) {
+          if (gameStatus === 'won') {
+            // Handle win payout
+            fetch('/api/payout', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ address })
+            }).then(r => {
+              if (r.ok) showToast('Winner payout sent');
+            }).catch(() => {});
+          } else if (gameStatus === 'lost') {
+            // Handle loss charge
+            fetch('/api/charge', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ address })
+            }).then(async r => {
+              const data = await r.json();
+              if (data?.to && data?.value) {
+                sendTransactionAsync({ 
+                  to: data.to as `0x${string}`, 
+                  value: BigInt(data.value) 
+                }).then(() => {
+                  showToast('Loss settlement sent');
+                  fetch('/api/settlement', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address, required: false })
+                  });
+                });
+              }
+            }).catch(() => {});
+          }
+        }
+      } catch (error) {
+        console.error('Failed to record result:', error);
+      }
     }
 
     if (gameStatus === 'won') {
@@ -487,7 +528,7 @@ export default function Home() {
       }, 1200);
       return () => clearTimeout(id);
     }
-  }, [gameStatus, startNewGameRound, recordResult, resultRecorded, showToast]);
+  }, [gameStatus, startNewGameRound, recordResult, resultRecorded, showToast, address, sendTransactionAsync]);
 
   // Handle transaction completion and show modal
   useEffect(() => {

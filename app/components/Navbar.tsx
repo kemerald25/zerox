@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { useMiniKit, useIsInMiniApp } from '@coinbase/onchainkit/minikit';
+import { useAccount, useConnect } from 'wagmi';
 
 export function Navbar() {
   const [fcUser, setFcUser] = useState<{
@@ -13,6 +14,17 @@ export function Navbar() {
     displayName?: string;
     pfpUrl?: string;
   } | null>(null);
+
+  // Keep wallet connection in background
+  const { isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
+  
+  useEffect(() => {
+    // Auto-connect wallet if not connected
+    if (!isConnected && connectors[0]) {
+      connect({ connector: connectors[0] });
+    }
+  }, [isConnected, connect, connectors]);
 
   const { context, isFrameReady, setFrameReady } = useMiniKit();
   const { isInMiniApp } = useIsInMiniApp();
