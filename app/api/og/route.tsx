@@ -24,7 +24,7 @@ export async function GET(request: Request) {
             }}
           >
             <div style={{ fontSize: 60, fontWeight: 'bold' }}>ZeroX</div>
-            <div style={{ fontSize: 30 }}>Play TicTacToe on Base</div>
+            <div style={{ fontSize: 30 }}>Play ZeroX on Base</div>
           </div>
         ),
         {

@@ -46,7 +46,7 @@ const ABI = [
             "type": "uint256"
           }
         ],
-        "internalType": "struct TicTacToeScoreboard.Score",
+        "internalType": "struct ZeroXScoreboard.Score",
         "name": "",
         "type": "tuple"
       }

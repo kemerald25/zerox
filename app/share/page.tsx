@@ -6,6 +6,14 @@ import Link from 'next/link';
 import { GameResultCard } from '@/app/components/game/GameResultCard';
 import { decodeShareData, type GameShareData } from '@/lib/farcaster-share';
 
+function LoadingSpinner() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-[#00FF1A] border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
+
 function ShareContent() {
   const searchParams = useSearchParams();
   const [shareData, setShareData] = useState<GameShareData | null>(null);
@@ -41,11 +49,7 @@ function ShareContent() {
   }
 
   if (!shareData) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-[#00FF1A] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -71,13 +75,7 @@ function ShareContent() {
 
 export default function SharePage() {
   return (
-    <Suspense 
-      fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="w-8 h-8 border-4 border-[#00FF1A] border-t-transparent rounded-full animate-spin" />
-        </div>
-      }
-    >
+    <Suspense fallback={<LoadingSpinner />}>
       <ShareContent />
     </Suspense>
   );

@@ -1,6 +1,6 @@
-# ZeroX - Social TicTacToe on Base & Farcaster
+# ZeroX - Social Game on Base & Farcaster
 
-ZeroX is a social-first implementation of TicTacToe built for Base and Farcaster, focusing on competitive play and social sharing.
+ZeroX is a social-first game built for Base and Farcaster, focusing on competitive play and social sharing.
 
 ## 🎮 Game Modes
 

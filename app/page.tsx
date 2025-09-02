@@ -113,7 +113,7 @@ export default function Home() {
                       gameStatus === 'lost' ? '😔 I lost but learned!' : 
                       "🎮 It's a draw - rematch time!";
     
-    const viralText = `${resultText}\n\n🎮 ZeroX TicTacToe on Base\n🤖 Difficulty: ${difficulty}\n👤 My Symbol: ${playerSymbol}\n\n💎 Win ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH per game\n\n🎯 Play here: ${appUrl}`;
+    const viralText = `${resultText}\n\n🎮 ZeroX on Base\n🤖 Difficulty: ${difficulty}\n👤 My Symbol: ${playerSymbol}\n\n💎 Win ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH per game\n\n🎯 Play here: ${appUrl}`;
     
     const payload: { text: string; embeds?: [string] } = { text: viralText, embeds: [appUrl] as [string] };
     
