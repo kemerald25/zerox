@@ -724,7 +724,8 @@ export default function Home() {
   }, [context?.location, showToast]);
 
   // Share game results after transaction is recorded
-  useEffect(() => {
+  // TODO: Re-enable auto-cast feature once sharing is perfected
+  /*useEffect(() => {
     if (gameStatus === 'won' && address && resultRecorded) {
       // Get user info from context
       const username = context?.user?.username;
@@ -757,7 +758,7 @@ export default function Home() {
           }
         });
     }
-  }, [gameStatus, address, difficulty, playerSymbol, context?.user, showToast, resultRecorded]);
+  }, [gameStatus, address, difficulty, playerSymbol, context?.user, showToast, resultRecorded]);*/
 
   // Handle direct challenges to other players
   const handleChallenge = useCallback(async (username?: string) => {
