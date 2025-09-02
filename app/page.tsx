@@ -3,6 +3,7 @@
 import { useScoreboard } from '@/lib/useScoreboard';
 import React, { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { sdk } from '@farcaster/miniapp-sdk';
 import { shareToFarcaster, GameShareData } from '@/lib/farcaster-share';
 import GameBoard from './components/game/GameBoard';
