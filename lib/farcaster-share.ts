@@ -22,7 +22,7 @@ export function decodeShareData(encoded: string): GameShareData {
 
 export function generateShareUrl(data: GameShareData): string {
   const baseUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
-  const encoded = btoa(JSON.stringify(data));
+  const encoded = encodeURIComponent(btoa(JSON.stringify(data)));
   return `${baseUrl}/share?data=${encoded}`;
 }
 
@@ -32,26 +32,31 @@ export async function shareToFarcaster(data: GameShareData) {
                     data.result === 'lost' ? '😔 Good Game!' : 
                     '🤝 Draw!';
 
-  const shareText = `🎮 ZeroX Party Mode!\n\n${resultText}\n${data.opponentName ? `🆚 vs @${data.opponentName}` : '🆚 vs Anonymous'}\n⚡ Played as: ${data.playerSymbol}\n\n🎯 Join the fun: ${shareUrl}`;
+  const shareText = `🎮 ZeroX Party Mode!\n\n${resultText}\n${data.opponentName ? `🆚 vs @${data.opponentName}` : '🆚 vs Anonymous'}\n⚡ Played as: ${data.playerSymbol}\n\n🎯 Join the fun:`;
 
   try {
-    // Try using SDK first
-    try {
-      const result = await sdk.actions.composeCast({
-        text: shareText,
-        embeds: [shareUrl] as [string],
-        close: false
-      });
-      if (result?.cast) {
-        return;
-      }
-    } catch {}
+    // Try using SDK
+    const result = await sdk.actions.composeCast({
+      text: shareText,
+      embeds: [shareUrl] as [string],
+      close: false
+    });
 
-    // Last resort - copy to clipboard
-    await navigator.clipboard.writeText(shareText);
-    throw new Error('Copied to clipboard - no Farcaster SDK available');
+    if (result?.cast) {
+      return;
+    }
+
+    // If no cast was created but no error thrown, try clipboard
+    await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
+    throw new Error('Copied to clipboard - no cast created');
   } catch (e) {
     console.error('Failed to share:', e);
-    throw e;
+    // Try clipboard as last resort
+    try {
+      await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
+      throw new Error('Copied to clipboard - share failed');
+    } catch (clipboardError) {
+      throw e; // Re-throw original error if clipboard fails
+    }
   }
 }

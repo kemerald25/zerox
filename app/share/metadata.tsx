@@ -13,22 +13,38 @@ export async function generateMetadata({
   const resolvedSearchParams = await searchParams;
   const data = resolvedSearchParams.data;
   
-  if (!data) {
-    return {
+  const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+  const defaultMetadata = {
+    title: "ZeroX Game",
+    description: "Play ZeroX and share your results!",
+    openGraph: {
       title: "ZeroX Game",
       description: "Play ZeroX and share your results!",
-    };
-  }
+      images: [`${baseUrl}/splash.png`],
+    },
+    other: {
+      // Farcaster Frame metadata
+      "fc:frame": "vNext",
+      "fc:frame:image": `${baseUrl}/splash.png`,
+      "fc:frame:button:1": "Play ZeroX",
+      "fc:frame:button:1:action": "post",
+      "fc:frame:post_url": `${baseUrl}/api/frame`,
+      "fc:frame:image:aspect_ratio": "1.91:1",
+    },
+  };
 
-  // Create OG image URL with the same encoded parameter
-  const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
-  const ogImageUrl = `${baseUrl}/api/og?data=${data}`;
+  if (!data) {
+    return defaultMetadata;
+  }
 
   try {
     const shareData = decodeShareData(data);
     const playerName = shareData.playerName || 'Anonymous';
     const result = shareData.result === 'won' ? 'won against' : shareData.result === 'lost' ? 'lost to' : 'drew with';
     const opponent = shareData.opponentName || 'AI';
+
+    // Create OG image URL with the same encoded parameter
+    const ogImageUrl = `${baseUrl}/api/og?data=${encodeURIComponent(data)}`;
 
     return {
       title: `${playerName} ${result} ${opponent} in ZeroX!`,
@@ -42,7 +58,7 @@ export async function generateMetadata({
             width: 1200,
             height: 630,
             alt: `Game result: ${playerName} ${result} ${opponent}`,
-          },
+          }
         ],
       },
       twitter: {
@@ -52,28 +68,17 @@ export async function generateMetadata({
         images: [ogImageUrl],
       },
       other: {
-        // Farcaster frame metadata for proper embed generation
-        "fc:frame": JSON.stringify({
-          version: "next",
-          imageUrl: ogImageUrl,
-          button: {
-            title: `Play ZeroX`,
-            action: {
-              type: "launch_frame",
-              name: "ZeroX Game",
-              url: baseUrl,
-              splashImageUrl: `${baseUrl}/splash.png`,
-              splashBackgroundColor: "#000000",
-            },
-          },
-        }),
+        // Farcaster Frame metadata
+        "fc:frame": "vNext",
+        "fc:frame:image": ogImageUrl,
+        "fc:frame:button:1": "Play ZeroX",
+        "fc:frame:button:1:action": "post",
+        "fc:frame:post_url": `${baseUrl}/api/frame`,
+        "fc:frame:image:aspect_ratio": "1.91:1",
       },
     };
   } catch (error) {
     console.error("Failed to decode share data:", error);
-    return {
-      title: "ZeroX Game",
-      description: "Play ZeroX and share your results!",
-    };
+    return defaultMetadata;
   }
 }
