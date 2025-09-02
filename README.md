@@ -1,111 +1,168 @@
-# ZeroX
+# ZeroX - Social TicTacToe on Base & Farcaster
 
-A decentralized ZeroX game built with Next.js and blockchain technology. Play against friends and track your scores on the blockchain!
+ZeroX is a social-first implementation of TicTacToe built for Base and Farcaster, focusing on competitive play and social sharing.
 
-## Features
+## 🎮 Game Modes
 
-- 🎮 Classic ZeroX gameplay
-- ⛓️ Blockchain-based score tracking
-- 👛 Wallet integration for player identification
-- 🏆 Persistent scoreboard using smart contracts
-- 🔔 Real-time notifications for game events
-- 🌓 Dark/light mode support
+### 1. Party Mode
+- Create or join rooms with 4-letter codes
+- Play against friends in real-time
+- Share results directly to Farcaster
+- Beautiful shareable result cards
 
-## Tech Stack
+### 2. Daily Challenge
+- New challenge every day
+- Compete on the daily leaderboard
+- Earn rewards for completing challenges
+- Track your daily streak
 
-- [Next.js](https://nextjs.org) - React framework for the frontend
-- [MiniKit](https://docs.base.org/builderkits/minikit/overview) - Base blockchain integration
-- [OnchainKit](https://www.base.org/builders/onchainkit) - Blockchain utilities
-- [Tailwind CSS](https://tailwindcss.com) - Styling
-- Solidity Smart Contracts - For scoreboard functionality
+### 3. Practice Mode
+- Play against AI
+- Multiple difficulty levels
+- Perfect your strategy
+- No stakes, just practice
 
-## Getting Started
+## 🏆 Competitive Features
+
+### Leaderboard System
+- Weekly rankings
+- All-time stats
+- Win/loss tracking
+- Player profiles
+
+### Rewards
+- Win ETH for victories
+- Daily bonus rewards
+- Special achievements
+- Seasonal rewards
+
+## 🔄 Real-time Gameplay
+
+### Party Mode Flow
+1. **Create Room**
+   - Click "CREATE ROOM"
+   - Get a unique 4-letter code
+   - Share with friends
+
+2. **Join Room**
+   - Enter room code
+   - Connect with opponent
+   - Start playing instantly
+
+3. **Gameplay**
+   - Real-time moves
+   - Live opponent status
+   - Turn timer
+   - Game state sync
+
+4. **Results**
+   - Beautiful result cards
+   - Share on Farcaster
+   - Instant rewards
+   - Play again option
+
+## 🌐 Social Features
+
+### Farcaster Integration
+- One-click sharing
+- Challenge friends
+- Share victories
+- Embedded game results
+
+### Challenge System
+- Direct challenges
+- Room code sharing
+- Cast-to-play functionality
+- Auto-join from casts
+
+## 💻 Technical Stack
+
+### Frontend
+- Next.js 13 App Router
+- React 18
+- Tailwind CSS
+- Framer Motion
+
+### Backend
+- Supabase Database
+- Pusher WebSockets
+- Redis Caching
+- Base Smart Contracts
+
+### Integrations
+- Farcaster SDK
+- Base MiniKit
+- OnchainKit
+- Wagmi
+
+## 🔧 Development
 
 1. Install dependencies:
-```bash
+\`\`\`bash
 npm install
 # or
 yarn install
-# or
-pnpm install
-# or
-bun install
-```
+\`\`\`
 
 2. Set up environment variables:
-Copy `.env.example` to `.env.local` and fill in the required values:
+\`\`\`bash
+cp .env.example .env.local
+\`\`\`
 
-```bash
-# Shared/OnchainKit variables
-NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME=
-NEXT_PUBLIC_URL=
-NEXT_PUBLIC_ICON_URL=
-NEXT_PUBLIC_ONCHAINKIT_API_KEY=
+Required variables:
+- \`NEXT_PUBLIC_URL\`: Your app URL
+- \`NEXT_PUBLIC_PUSHER_KEY\`: Pusher key for real-time
+- \`NEXT_PUBLIC_SUPABASE_URL\`: Supabase URL
+- \`NEXT_PUBLIC_SUPABASE_ANON_KEY\`: Supabase anon key
 
-# Frame metadata
-FARCASTER_HEADER=
-FARCASTER_PAYLOAD=
-FARCASTER_SIGNATURE=
-NEXT_PUBLIC_APP_ICON=
-NEXT_PUBLIC_APP_SUBTITLE=
-NEXT_PUBLIC_APP_DESCRIPTION=
-NEXT_PUBLIC_APP_SPLASH_IMAGE=
-NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR=
-NEXT_PUBLIC_APP_PRIMARY_CATEGORY=
-NEXT_PUBLIC_APP_HERO_IMAGE=
-NEXT_PUBLIC_APP_TAGLINE=
-NEXT_PUBLIC_APP_OG_TITLE=
-NEXT_PUBLIC_APP_OG_DESCRIPTION=
-NEXT_PUBLIC_APP_OG_IMAGE=
-
-# Redis config for notifications
-REDIS_URL=
-REDIS_TOKEN=
-```
-
-3. Start the development server:
-```bash
+3. Run development server:
+\`\`\`bash
 npm run dev
-```
+\`\`\`
 
-The game will be available at [http://localhost:3000](http://localhost:3000).
+## 📱 Features in Detail
 
-## Game Components
+### Real-time Game State
+- WebSocket connections via Pusher
+- Instant move updates
+- Player presence tracking
+- Game state synchronization
 
-- `GameBoard.tsx` - The main game board interface
-- `GameControls.tsx` - Game control buttons and player actions
-- `GameStatus.tsx` - Current game state display
-- `Scoreboard.tsx` - Blockchain-based score tracking
-- `WalletCheck.tsx` - Wallet connection management
+### Social Sharing
+- Shareable result cards
+- Direct Farcaster integration
+- Challenge links
+- Embedded results
 
-## Smart Contracts
+### User Profiles
+- Farcaster integration
+- Win/loss statistics
+- Achievement tracking
+- Player rankings
 
-The game uses the `TicTacToeScoreboard.sol` smart contract to track player scores on the blockchain. The contract includes:
+### Smart Contract Integration
+- Automated payouts
+- Secure transactions
+- Verifiable results
+- On-chain statistics
 
-- Player statistics tracking
-- Win/loss/draw recording
-- Historical game data storage
+## 🔐 Security
 
-## Notifications
+- Rate limiting on game actions
+- Move validation
+- Anti-cheat measures
+- Secure WebSocket connections
+- Protected API endpoints
 
-The game includes a Redis-backed notification system that alerts players about:
+## 📈 Future Plans
 
-- Game turns
-- Game completion
-- Score updates
-- Opponent actions
+- Tournament mode
+- Team battles
+- Custom board sizes
+- More social features
+- Enhanced rewards
+- Mobile app
 
-## Contributing
+## 📄 License
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is open source and available under the MIT license.
-
-## Learn More
-
-- [MiniKit Documentation](https://docs.base.org/builderkits/minikit/overview)
-- [OnchainKit Documentation](https://docs.base.org/builderkits/onchainkit/getting-started)
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+MIT License - see LICENSE file for details

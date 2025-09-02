@@ -6,6 +6,9 @@ import { useComposeCast } from '@coinbase/onchainkit/minikit';
 import Image from 'next/image';
 import PusherClient from 'pusher-js';
 import GameBoard from './GameBoard';
+import { GameResultCard } from './GameResultCard';
+import { shareToFarcaster } from '@/lib/farcaster-share';
+import { JoinRoomForm } from './JoinRoomForm';
 
 interface PartyModeProps {
   playerAddress: string;
@@ -139,27 +142,25 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
     }
   };
 
-  const shareResult = async (result: {
-    winner: string;
-    matchDate: string;
-    playerSymbol: string;
-    opponentName: string;
-    roomCode: string;
-  }) => {
-    const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
-    
+  const handleShare = async () => {
     try {
-      // Create an embed-friendly result message
-      const resultText = `🎮 ZeroX Match Results!\n\n${
-        result.winner === playerAddress ? "🏆 Victory!" : "👏 Good game!"
-      }\n\n🆚 vs @${result.opponentName}\n🎯 Room: ${result.roomCode}\n⚡ Played as: ${result.playerSymbol}\n\n📅 ${result.matchDate}\n\n🎯 Play now: ${appUrl}`;
-      
-      await composeCast({
-        text: resultText,
-        embeds: [appUrl] as [string]
+      await shareToFarcaster({
+        playerName,
+        playerPfp,
+        opponentName: opponent?.name,
+        opponentPfp: opponent?.pfp,
+        playerSymbol: 'X', // You are always X as host
+        result: 'won', // TODO: Update based on actual game result
+        roomCode: roomCode || '',
+        timestamp: Date.now()
       });
     } catch (error) {
-      console.error('Failed to share result:', error);
+      if (error instanceof Error && error.message === 'Copied to clipboard - no Farcaster SDK available') {
+        showToast('Copied to clipboard! 📋');
+      } else {
+        console.error('Failed to share:', error);
+        showToast('Failed to share 😔');
+      }
     }
   };
 
@@ -415,34 +416,50 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
 
       {/* Game Result */}
       {gameState === 'result' && (
-        <div className="text-center p-6 rounded-xl border-2 border-[#70FF5A] bg-white">
-          <h2 className="text-4xl font-bold mb-4 text-[#066c00]" style={{ fontFamily: 'var(--font-game)' }}>
-            YOU WON!
-          </h2>
-          
-          <div className="my-6 p-4 rounded-xl bg-gradient-to-r from-[#066c00] to-[#0a8500]">
-            <div className="text-6xl font-bold mb-2 text-[#70FF5A]">GG!</div>
-            <div className="text-xl text-[#b6f569]">Amazing game!</div>
+        <div className="flex flex-col gap-4 items-center w-full grow pb-8">
+          <div className="flex flex-col w-full items-center">
+            <h1 className="text-[39px] font-bold text-black text-center leading-[42px] w-full">
+              YOU WON!
+            </h1>
+            <p className="text-sm font-normal text-black text-center mt-2">
+              You completed the game!
+            </p>
+            <p className="text-xs font-normal text-gray-600 text-center mt-1">
+              Share your victory or play again!
+            </p>
           </div>
 
-          <div className="flex gap-4 mt-8">
+          <div className="w-full grow">
+            <GameResultCard
+              playerName={playerName}
+              playerPfp={playerPfp}
+              opponentName={opponent?.name}
+              opponentPfp={opponent?.pfp}
+              playerSymbol={'X'}
+              result={'won'}
+              roomCode={roomCode || ''}
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 w-full">
             <button
-              onClick={() => shareResult({
-                winner: playerAddress,
-                matchDate: new Date().toLocaleDateString(),
-                playerSymbol: 'X',
-                opponentName: opponent?.name || 'Anonymous',
-                roomCode: roomCode || ''
-              })}
-              className="flex-1 py-3 px-6 rounded-full bg-[#70FF5A] text-[#066c00] font-bold hover:bg-[#b6f569] transition-colors"
-              style={{ fontFamily: 'var(--font-game)' }}
+              className="grow h-[51px] bg-[#00FF1A] border border-black rounded-[39px] flex items-center justify-center text-[30px] font-bold text-black hover:bg-[#00DD17] transition-colors"
+              style={{
+                boxShadow: "0px 4px 0px 0px rgba(0, 0, 0, 1)",
+                letterSpacing: "7.5%",
+              }}
+              onClick={handleShare}
             >
               SHARE
             </button>
             <button
+              className="grow h-[51px] bg-white hover:bg-gray-50 border border-black rounded-[39px] flex items-center justify-center text-[30px] font-bold text-black transition-colors"
+              style={{
+                boxShadow: "0px 4px 0px 0px rgba(0, 0, 0, 1)",
+                letterSpacing: "7.5%",
+              }}
               onClick={() => setGameState('lobby')}
-              className="flex-1 py-3 px-6 rounded-full bg-[#066c00] text-[#70FF5A] font-bold hover:bg-[#0a8500] transition-colors"
-              style={{ fontFamily: 'var(--font-game)' }}
             >
               PLAY AGAIN
             </button>
@@ -505,51 +522,25 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
         </div>
       )}
 
-      {/* Join Room Modal */}
+      {/* Join Room Form */}
       {showJoinModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
-            <h3 className="text-2xl font-bold mb-4 text-[#066c00]" style={{ fontFamily: 'var(--font-game)' }}>
-              Join Room
-            </h3>
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-[#066c00] mb-2">
-                Enter Room Code
-              </label>
-              <input
-                type="text"
-                value={joinRoomInput}
-                onChange={(e) => setJoinRoomInput(e.target.value.toUpperCase())}
-                maxLength={4}
-                placeholder="ABCD"
-                className="w-full px-4 py-3 text-2xl font-bold text-center rounded-lg border-2 border-[#70FF5A] focus:outline-none focus:border-[#066c00] text-[#066c00] placeholder-[#b6f569]"
-              />
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  if (joinRoomInput) {
-                    joinRoom(joinRoomInput);
-                    setShowJoinModal(false);
-                    setJoinRoomInput('');
-                  }
-                }}
-                className="flex-1 py-3 px-6 rounded-full bg-[#70FF5A] text-[#066c00] font-bold hover:bg-[#b6f569] transition-colors"
-              >
-                Join
-              </button>
-              <button
-                onClick={() => {
-                  setShowJoinModal(false);
-                  setJoinRoomInput('');
-                }}
-                className="flex-1 py-3 px-6 rounded-full bg-white text-[#066c00] font-bold border-2 border-[#70FF5A] hover:bg-[#b6f569]/10 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+        <JoinRoomForm
+          playerName={playerName}
+          playerPfp={playerPfp}
+          roomCode={joinRoomInput}
+          setRoomCode={setJoinRoomInput}
+          onJoinRoom={() => {
+            if (joinRoomInput.trim() && joinRoomInput.length === 4) {
+              joinRoom(joinRoomInput);
+              setShowJoinModal(false);
+              setJoinRoomInput('');
+            }
+          }}
+          onBack={() => {
+            setShowJoinModal(false);
+            setJoinRoomInput('');
+          }}
+        />
       )}
     </div>
   );
