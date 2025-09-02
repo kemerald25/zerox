@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import Image from 'next/image';
 import BottomNav from '../components/BottomNav';
+import { getEthPrice } from '@/lib/price';
 
 export default function LeaderboardPage() {
   return (
@@ -24,6 +25,23 @@ function LeaderboardTab() {
   const [rows, setRows] = React.useState<Array<TopRow>>([]);
   const [countdown, setCountdown] = React.useState<string>('');
   const [activeTab, setActiveTab] = React.useState<TabType>('weekly');
+  const [ethPrice, setEthPrice] = React.useState<number | null>(null);
+
+  // Get payout amount from env
+  const payoutAmount = process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002';
+  const payoutEth = parseFloat(payoutAmount);
+
+  // Fetch ETH price
+  useEffect(() => {
+    getEthPrice().then(setEthPrice).catch(console.error);
+    
+    // Refresh price every 5 minutes
+    const interval = setInterval(() => {
+      getEthPrice().then(setEthPrice).catch(console.error);
+    }, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -109,6 +127,10 @@ function LeaderboardTab() {
                               r.rank === 2 ? '🥈' :
                               r.rank === 3 ? '🥉' : null;
             
+            // Calculate earnings
+            const ethEarned = r.wins * payoutEth;
+            const usdEarned = ethPrice ? (ethEarned * ethPrice).toFixed(2) : null;
+            
             return (
               <div key={r.rank} 
                 className="flex items-center justify-between p-4 bg-white rounded-2xl border border-[#F3F4F6]">
@@ -129,12 +151,25 @@ function LeaderboardTab() {
                     height={40} 
                     className="rounded-full object-cover"
                   />
-                  <div className="font-medium text-lg text-black">
-                    {r.alias ? `@${r.alias}` : `${r.address.slice(0,6)}…${r.address.slice(-4)}`}
+                  <div>
+                    <div className="font-medium text-lg text-black">
+                      {r.alias ? `@${r.alias}` : `${r.address.slice(0,6)}…${r.address.slice(-4)}`}
+                    </div>
+                    <div className="text-sm text-[#70FF5A] font-semibold">
+                      ${usdEarned || '0.00'} earned
+                      <span className="text-xs text-[#9CA3AF] ml-1">
+                        ({ethEarned.toFixed(5)} ETH)
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div className="text-xl font-black text-black">
-                  {r.points}
+                <div className="text-right">
+                  <div className="text-xl font-black text-black">
+                    {r.points}
+                  </div>
+                  <div className="text-sm text-[#9CA3AF]">
+                    {r.wins}W {r.draws}D {r.losses}L
+                  </div>
                 </div>
               </div>
             );
@@ -150,8 +185,3 @@ function LeaderboardTab() {
     </div>
   );
 }
-
-
-
-
-
