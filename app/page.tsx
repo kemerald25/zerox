@@ -721,9 +721,9 @@ export default function Home() {
     }
   }, [context?.location, showToast]);
 
-  // Share game results with embedded card
+  // Share game results after transaction is recorded
   useEffect(() => {
-    if (gameStatus === 'won' && address) {
+    if (gameStatus === 'won' && address && resultRecorded) {
       // Get user info from context
       const username = context?.user?.username;
       const pfpUrl = context?.user?.pfpUrl;
@@ -747,23 +747,21 @@ export default function Home() {
       // Share text with embedded card
       const shareText = `🎮 ZeroX Party Mode!\n\n🏆 Victory!\n🆚 vs AI (${difficulty})\n⚡ Played as: ${playerSymbol}\n\n🎯 Join the fun: ${shareUrl}`;
       
-      // Delay share to let user see win animation first
-      setTimeout(async () => {
+      // Share after transaction is recorded
+      try {
+        composeCast({
+          text: shareText,
+          embeds: [shareUrl] as [string]
+        });
+      } catch (e) {
+        console.error('Failed to share on Farcaster:', e);
         try {
-          await composeCast({
-            text: shareText,
-            embeds: [shareUrl] as [string]
-          });
-        } catch (e) {
-          console.error('Failed to share on Farcaster:', e);
-          try {
-            await navigator.clipboard.writeText(shareText);
-            showToast('Copied to clipboard! 📋');
-          } catch {}
-        }
-      }, 2000);
+          navigator.clipboard.writeText(shareText);
+          showToast('Copied to clipboard! 📋');
+        } catch {}
+      }
     }
-  }, [gameStatus, address, difficulty, playerSymbol, composeCast, context?.user, showToast]);
+  }, [gameStatus, address, difficulty, playerSymbol, composeCast, context?.user, showToast, resultRecorded]);
 
   // Handle direct challenges to other players
   const handleChallenge = useCallback(async (username?: string) => {

@@ -1,82 +1,78 @@
-'use client';
+import { decodeShareData } from "@/lib/farcaster-share";
+import { GameResultCard } from "@/app/components/game/GameResultCard";
+import Link from "next/link";
 
-import { Suspense, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { GameResultCard } from '@/app/components/game/GameResultCard';
-import { decodeShareData, type GameShareData } from '@/lib/farcaster-share';
-
-function LoadingSpinner() {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-8 h-8 border-4 border-[#00FF1A] border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
+interface PageProps {
+  searchParams: Promise<{
+    data?: string;
+  }>;
 }
 
-function ShareContent() {
-  const searchParams = useSearchParams();
-  const [shareData, setShareData] = useState<GameShareData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    try {
-      const data = searchParams.get('data');
-      if (!data) {
-        setError('No share data found');
-        return;
-      }
-      const decoded = decodeShareData(data);
-      setShareData(decoded);
-    } catch {
-      setError('Invalid share data');
-    }
-  }, [searchParams]);
-
-  if (error) {
+export default async function SharePage({ searchParams }: PageProps) {
+  const resolvedSearchParams = await searchParams;
+  const data = resolvedSearchParams.data;
+  
+  if (!data) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <h1 className="text-2xl font-bold text-black mb-4">Oops! Something went wrong</h1>
-        <p className="text-gray-600 mb-8">{error}</p>
-        <Link
-          href="/"
-          className="px-6 py-3 bg-[#00FF1A] text-black font-bold rounded-full hover:bg-[#00DD17] transition-colors"
-        >
-          Play ZeroX
-        </Link>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">ZeroX Game</h1>
+          <p className="text-gray-600">Share your game results!</p>
+        </div>
       </div>
     );
   }
 
-  if (!shareData) {
-    return <LoadingSpinner />;
+  try {
+    const shareData = decodeShareData(data);
+    if (!shareData) throw new Error('Invalid share data');
+
+    const playerName = shareData.playerName || 'Anonymous';
+    const result = shareData.result === 'won' ? 'Victory!' : shareData.result === 'lost' ? 'Good Game!' : 'Draw!';
+
+    return (
+      <div className="min-h-screen py-8">
+        <div className="max-w-md mx-auto px-4">
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold text-black mb-2">
+              {result}
+            </h1>
+            <p className="text-gray-600">
+              {playerName} played as {shareData.playerSymbol}
+            </p>
+          </div>
+
+          <GameResultCard {...shareData} />
+
+          <div className="mt-6 text-center">
+            <Link
+              href="/"
+              className="w-full h-[68px] rounded-[39px] border border-black text-black font-normal text-[24px] leading-[33px] sm:leading-[37px] px-4 py-2"
+              style={{
+                backgroundColor: "#70FF5A",
+                boxShadow: "0px 4px 0px 0px rgba(0, 0, 0, 1)",
+              }}
+            >
+              Play ZeroX
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  } catch {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Invalid Share Link</h1>
+          <p className="text-gray-600 mb-8">This share link appears to be invalid.</p>
+          <Link
+            href="/"
+            className="px-6 py-3 bg-[#70FF5A] text-black font-bold rounded-full hover:bg-[#00DD17] transition-colors"
+          >
+            Play ZeroX
+          </Link>
+        </div>
+      </div>
+    );
   }
-
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 gap-8">
-      <div className="w-full max-w-md">
-        <GameResultCard {...shareData} />
-      </div>
-
-      <div className="flex flex-col items-center gap-4">
-        <h2 className="text-xl font-bold text-black text-center">
-          Want to play ZeroX?
-        </h2>
-        <Link
-          href="/"
-          className="px-6 py-3 bg-[#00FF1A] text-black font-bold rounded-full hover:bg-[#00DD17] transition-colors"
-        >
-          Play Now
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-export default function SharePage() {
-  return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <ShareContent />
-    </Suspense>
-  );
 }
