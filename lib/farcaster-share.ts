@@ -6,7 +6,7 @@ export interface GameShareData {
   playerPfp?: string;
   opponentName?: string;
   opponentPfp?: string;
-  playerSymbol: string;
+  playerSymbol: 'X' | 'O';  // Changed from string to literal type
   result: 'won' | 'lost' | 'draw';
   roomCode: string;
   timestamp: number;
@@ -14,7 +14,12 @@ export interface GameShareData {
 
 export function decodeShareData(encoded: string): GameShareData {
   try {
-    return JSON.parse(atob(encoded));
+    const data = JSON.parse(atob(encoded));
+    // Validate playerSymbol is correct type
+    if (data.playerSymbol !== 'X' && data.playerSymbol !== 'O') {
+      throw new Error('Invalid player symbol');
+    }
+    return data;
   } catch (e) {
     throw new Error('Invalid share data');
   }

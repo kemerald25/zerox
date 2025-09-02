@@ -4,7 +4,7 @@ import { useScoreboard } from '@/lib/useScoreboard';
 import React, { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { sdk } from '@farcaster/miniapp-sdk';
-import { shareToFarcaster } from '@/lib/farcaster-share';
+import { shareToFarcaster, GameShareData } from '@/lib/farcaster-share';
 import GameBoard from './components/game/GameBoard';
 import BottomNav from './components/BottomNav';
 import GameControls from './components/game/GameControls';
@@ -731,15 +731,15 @@ export default function Home() {
       const pfpUrl = context?.user?.pfpUrl;
       
       // Prepare share data
-      if (!playerSymbol) return; // Safety check
+      if (!playerSymbol || (playerSymbol !== 'X' && playerSymbol !== 'O')) return; // Safety check
       
-      const shareData = {
+      const shareData: GameShareData = {
         playerName: username,
         playerPfp: pfpUrl,
         opponentName: 'AI',
         opponentPfp: '/default-avatar.png',
-        playerSymbol: playerSymbol, // Now we know it's not null
-        result: 'won' as const,
+        playerSymbol, // TypeScript now knows this is 'X' | 'O'
+        result: 'won',
         roomCode: difficulty || 'AI',
         timestamp: Date.now()
       };
