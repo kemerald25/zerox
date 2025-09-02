@@ -163,6 +163,10 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
     }
   };
 
+    function showToast(arg0: string) {
+        throw new Error('Function not implemented.');
+    }
+
   return (
     <div className="w-full max-w-md mx-auto">
       {/* Header with room info */}
@@ -246,7 +250,27 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
 
           <div className="relative max-w-md mx-auto px-4 pt-2 pb-24 min-h-[100svh] flex flex-col">
             <div className="flex items-center justify-between mb-10">
-              <div className="text-sm font-semibold text-black">Play with Friends</div>
+              <div className="flex items-center gap-3">
+                <div className="text-sm font-semibold text-black">Play with Friends</div>
+                {roomCode && (
+                  <div className="flex items-center gap-1">
+                    <div className="text-sm text-black/60">Room:</div>
+                    <div className="text-sm font-mono font-bold text-black">{roomCode}</div>
+                    <button
+                      className="p-1.5 rounded-md hover:bg-black/5 transition-colors"
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(roomCode);
+                        showToast('Room code copied! 📋');
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
               <button 
                 className="px-3 py-1.5 rounded-lg bg-[#70FF5A] text-black text-xs"
                 onClick={() => {
@@ -429,14 +453,32 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
       {/* Create Room Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
-            <h3 className="text-2xl font-bold mb-4 text-[#066c00]" style={{ fontFamily: 'var(--font-game)' }}>
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm">
+            <h3 className="text-xl font-bold mb-4" style={{ color: '#00A71C' }}>
               Create Room
             </h3>
             <div className="mb-6">
-              <div className="text-lg mb-2 text-[#066c00]">Room Code:</div>
-              <div className="text-3xl font-bold text-[#066c00] p-4 bg-[#b6f569]/20 rounded-lg text-center">
-                {generateRoomCode()}
+              <div className="text-sm mb-2" style={{ color: '#00A71C' }}>Room Code:</div>
+              <div className="bg-[#F1FFE8] p-4 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-mono font-bold tracking-wider" style={{ color: '#00A71C' }}>
+                    {generateRoomCode()}
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const code = generateRoomCode();
+                      await navigator.clipboard.writeText(code);
+                      showToast('Room code copied! 📋');
+                    }}
+                    className="p-2 rounded-lg hover:bg-[#00A71C]/10 transition-colors"
+                    style={{ color: '#00A71C' }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
             <div className="flex gap-3">
@@ -446,13 +488,15 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
                   createRoom();
                   setShowCreateModal(false);
                 }}
-                className="flex-1 py-3 px-6 rounded-full bg-[#70FF5A] text-[#066c00] font-bold hover:bg-[#b6f569] transition-colors"
+                className="flex-1 py-3 rounded-full text-white font-medium"
+                style={{ backgroundColor: '#00A71C' }}
               >
                 Create
               </button>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="flex-1 py-3 px-6 rounded-full bg-white text-[#066c00] font-bold border-2 border-[#70FF5A] hover:bg-[#b6f569]/10 transition-colors"
+                className="flex-1 py-3 rounded-full bg-white font-medium border"
+                style={{ color: '#00A71C', borderColor: '#00A71C' }}
               >
                 Cancel
               </button>
