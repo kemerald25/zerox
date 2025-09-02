@@ -4,6 +4,7 @@ import { useScoreboard } from '@/lib/useScoreboard';
 import React, { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { sdk } from '@farcaster/miniapp-sdk';
+import { shareToFarcaster } from '@/lib/farcaster-share';
 import GameBoard from './components/game/GameBoard';
 import BottomNav from './components/BottomNav';
 import GameControls from './components/game/GameControls';
@@ -730,48 +731,31 @@ export default function Home() {
       const pfpUrl = context?.user?.pfpUrl;
       
       // Prepare share data
+      if (!playerSymbol) return; // Safety check
+      
       const shareData = {
         playerName: username,
         playerPfp: pfpUrl,
         opponentName: 'AI',
         opponentPfp: '/default-avatar.png',
-        playerSymbol,
+        playerSymbol: playerSymbol, // Now we know it's not null
         result: 'won' as const,
         roomCode: difficulty || 'AI',
         timestamp: Date.now()
       };
 
-      // Generate share URL with encoded data
-      const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
-      const shareUrl = `${appUrl}/share?data=${encodeURIComponent(btoa(JSON.stringify(shareData)))}`;
-      
-      // Share text with embedded card
-      const shareText = `🎮 ZeroX Party Mode!\n\n🏆 Victory!\n🆚 vs AI (${difficulty})\n⚡ Played as: ${playerSymbol}\n\n🎯 Join the fun: ${shareUrl}`;
-      
-      // Share after transaction is recorded
-      try {
-        sdk.actions.composeCast({ 
-          text: shareText,
-          embeds: [shareUrl] as [string],
-          close: false
-        }).then(result => {
-          if (result?.cast) {
-            showToast('Game result shared! 🚀');
-          }
-        }).catch(e => {
-          console.error('Failed to share on Farcaster:', e);
-          try {
-            navigator.clipboard.writeText(shareText);
+      // Share using the shared function
+      shareToFarcaster(shareData)
+        .then(() => {
+          showToast('Game result shared! 🚀');
+        })
+        .catch((e: Error) => {
+          if (e.message.includes('Copied to clipboard')) {
             showToast('Copied to clipboard! 📋');
-          } catch {}
+          } else {
+            console.error('Failed to share:', e);
+          }
         });
-      } catch (e) {
-        console.error('Failed to share on Farcaster:', e);
-        try {
-          navigator.clipboard.writeText(shareText);
-          showToast('Copied to clipboard! 📋');
-        } catch {}
-      }
     }
   }, [gameStatus, address, difficulty, playerSymbol, context?.user, showToast, resultRecorded]);
 
