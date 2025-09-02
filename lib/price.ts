@@ -1,10 +1,10 @@
-let cachedPrice: number | null = null;
+let cachedPrice = 3500; // Initialize with fallback value
 let lastFetch = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export async function getEthPrice(): Promise<number> {
-  // Use cached price if available and not expired
-  if (cachedPrice && Date.now() - lastFetch < CACHE_DURATION) {
+  // Use cached price if not expired
+  if (Date.now() - lastFetch < CACHE_DURATION) {
     return cachedPrice;
   }
 
@@ -16,7 +16,6 @@ export async function getEthPrice(): Promise<number> {
     return cachedPrice;
   } catch (error) {
     console.error('Failed to fetch ETH price:', error);
-    // Return last known price if available, otherwise fallback to recent average
-    return cachedPrice || 3500;
+    return cachedPrice; // Return last known price
   }
 }
