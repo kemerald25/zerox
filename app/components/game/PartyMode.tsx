@@ -81,6 +81,10 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
         } else if (data.winner === playerAddress) {
           setGameResult('won');
           recordResult('win');
+          // Auto-prompt share on win
+          setTimeout(() => {
+            handleShare().catch(console.error);
+          }, 1000);
         } else {
           setGameResult('lost');
           recordResult('loss');
@@ -167,9 +171,11 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
         opponentName: opponent?.name,
         opponentPfp: opponent?.pfp,
         playerSymbol: 'X', // You are always X as host
-        result: 'won', // TODO: Update based on actual game result
+        result: gameResult || 'won',
         roomCode: roomCode || '',
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        moves: board.filter(cell => cell !== null).length,
+        timeElapsed: timer || 0
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'Copied to clipboard - no Farcaster SDK available') {
@@ -181,12 +187,21 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
     }
   };
 
-    function showToast(arg0: string) {
-        throw new Error('Function not implemented.');
-    }
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+    const showToast = (message: string) => {
+      setToastMessage(message);
+      setTimeout(() => setToastMessage(null), 3000);
+    };
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full max-w-md mx-auto relative">
+      {/* Toast Message */}
+      {toastMessage && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-black text-white px-4 py-2 rounded-full text-sm animate-fade-in">
+          {toastMessage}
+        </div>
+      )}
       {/* Header with room info */}
       {roomCode && (
         <div className="flex items-center justify-between mb-4 p-3 rounded-lg bg-white/90 border border-[#70FF5A]">

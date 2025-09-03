@@ -9,6 +9,10 @@ interface GameResultCardProps {
   playerSymbol: 'X' | 'O';
   result: 'won' | 'lost' | 'draw';
   roomCode: string;
+  moves?: number;
+  timeElapsed?: number;
+  onShare?: () => void;
+  showShareButton?: boolean;
 }
 
 export const GameResultCard = ({
@@ -18,7 +22,11 @@ export const GameResultCard = ({
   opponentPfp,
   playerSymbol,
   result,
-  roomCode
+  roomCode,
+  moves,
+  timeElapsed,
+  onShare,
+  showShareButton = false
 }: GameResultCardProps) => {
   return (
     <div
@@ -89,6 +97,38 @@ export const GameResultCard = ({
           </div>
         </div>
       </div>
+
+      {/* Game Stats */}
+      {(moves !== undefined || timeElapsed !== undefined) && (
+        <div className="flex items-center justify-center gap-6 mt-6 text-lg font-mono">
+          {moves !== undefined && (
+            <div className="flex items-center gap-2">
+              <span>🎯</span>
+              <span>{moves} moves</span>
+            </div>
+          )}
+          {timeElapsed !== undefined && (
+            <div className="flex items-center gap-2">
+              <span>⏱️</span>
+              <span>{timeElapsed}s</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Share Button */}
+      {showShareButton && onShare && (
+        <button
+          onClick={onShare}
+          className="mt-6 w-full h-[48px] rounded-[24px] border border-black text-black font-normal text-[18px] leading-[24px] px-4 py-2 transition-colors hover:bg-[#00FF1A]"
+          style={{
+            backgroundColor: "#70FF5A",
+            boxShadow: "0px 4px 0px 0px rgba(0, 0, 0, 1)",
+          }}
+        >
+          Share on Farcaster
+        </button>
+      )}
 
       {/* Decorative Border */}
       <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-black via-[#00FF1A] to-black" />

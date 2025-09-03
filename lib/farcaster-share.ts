@@ -10,6 +10,10 @@ export interface GameShareData {
   result: 'won' | 'lost' | 'draw';
   roomCode: string;
   timestamp: number;
+  moves: number;
+  timeElapsed: number;
+  playerAddress?: string;
+  opponentAddress?: string;
 }
 
 export function decodeShareData(encoded: string): GameShareData {
@@ -37,7 +41,7 @@ export async function shareToFarcaster(data: GameShareData) {
                     data.result === 'lost' ? '😔 Good Game!' : 
                     '🤝 Draw!';
 
-  const shareText = `🎮 ZeroX Party Mode!\n\n${resultText}\n${data.opponentName ? `🆚 vs @${data.opponentName}` : '🆚 vs Anonymous'}\n⚡ Played as: ${data.playerSymbol}`;
+  const shareText = `🎮 ZeroX TicTacToe!\n\n${resultText}\n${data.opponentName ? `🆚 vs @${data.opponentName}` : '🆚 vs Anonymous'}\n⚡ Played as: ${data.playerSymbol}\n🎯 Moves: ${data.moves}\n⏱️ Time: ${data.timeElapsed}s`;
 
   try {
     // Use SDK directly like minicolours

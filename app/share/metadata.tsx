@@ -46,10 +46,10 @@ export async function generateMetadata({
 
     return {
       title: `${playerName} ${result} ${opponent} in ZeroX!`,
-      description: `${playerName} played as ${shareData.playerSymbol} and ${result} ${opponent}. Play ZeroX now!`,
+      description: `${playerName} played as ${shareData.playerSymbol} and ${result} ${opponent} in ${shareData.moves} moves (${shareData.timeElapsed}s). Play ZeroX now!`,
       openGraph: {
         title: `${playerName} ${result} ${opponent} in ZeroX!`,
-        description: `${playerName} played as ${shareData.playerSymbol} and ${result} ${opponent}. Play ZeroX now!`,
+        description: `${playerName} played as ${shareData.playerSymbol} and ${result} ${opponent} in ${shareData.moves} moves (${shareData.timeElapsed}s). Play ZeroX now!`,
         images: [
           {
             url: ogImageUrl,
@@ -62,7 +62,7 @@ export async function generateMetadata({
       twitter: {
         card: "summary_large_image",
         title: `${playerName} ${result} ${opponent} in ZeroX!`,
-        description: `${playerName} played as ${shareData.playerSymbol} and ${result} ${opponent}. Play ZeroX now!`,
+        description: `${playerName} played as ${shareData.playerSymbol} and ${result} ${opponent} in ${shareData.moves} moves (${shareData.timeElapsed}s). Play ZeroX now!`,
         images: [ogImageUrl],
       },
       other: {
