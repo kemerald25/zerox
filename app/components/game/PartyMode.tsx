@@ -10,6 +10,8 @@ import { GameResultCard } from './GameResultCard';
 import { shareToFarcaster } from '@/lib/farcaster-share';
 import { JoinRoomForm } from './JoinRoomForm';
 import { useScoreboard } from '@/lib/useScoreboard';
+import { useGameSubAccount } from '@/lib/useGameSubAccount';
+import { ResultStatusTracker } from './ResultStatusTracker';
 
 interface PartyModeProps {
   playerAddress: string;
@@ -20,7 +22,7 @@ interface PartyModeProps {
 export default function PartyMode({ playerAddress, playerName, playerPfp }: PartyModeProps) {
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [gameState, setGameState] = useState<'lobby' | 'playing' | 'result'>('lobby');
-  const [opponent, setOpponent] = useState<{name?: string; pfp?: string; address?: string} | null>(null);
+  const [opponent, setOpponent] = useState<{name?: string; pfp?: string; address?: `0x${string}`} | null>(null);
   const [timer, setTimer] = useState<number | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -28,6 +30,14 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
   const [gameResult, setGameResult] = useState<'won' | 'lost' | 'draw' | null>(null);
   
   const { recordResult, isRecording } = useScoreboard();
+  const { 
+    isInitialized,
+    isLoading: isSubAccountLoading,
+    error: subAccountError,
+    subAccount,
+    queueResult,
+    initializeSubAccount
+  } = useGameSubAccount();
   // Brand colors
   const BLACK = '#000000';
   const GREEN = '#00FF1A';
@@ -65,7 +75,7 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
       setGameState('playing');
     });
 
-    channel.bind('move-made', (data: {
+    channel.bind('move-made', async (data: {
       gameState: Array<string | null>;
       winner: string | null;
       isDraw: boolean;
@@ -78,16 +88,36 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
         if (data.isDraw) {
           setGameResult('draw');
           recordResult('draw');
+          // Queue draw result
+          await queueResult({
+            result: 'draw',
+            opponent: opponent?.address || '0x0000000000000000000000000000000000000000',
+            timestamp: Date.now(),
+            roomCode: roomCode || ''
+          });
         } else if (data.winner === playerAddress) {
           setGameResult('won');
           recordResult('win');
-          // Auto-prompt share on win
+          // Queue win result and auto-prompt share
+          await queueResult({
+            result: 'win',
+            opponent: opponent?.address || '0x0000000000000000000000000000000000000000',
+            timestamp: Date.now(),
+            roomCode: roomCode || ''
+          });
           setTimeout(() => {
             handleShare().catch(console.error);
           }, 1000);
         } else {
           setGameResult('lost');
           recordResult('loss');
+          // Queue loss result
+          await queueResult({
+            result: 'loss',
+            opponent: opponent?.address || '0x0000000000000000000000000000000000000000',
+            timestamp: Date.now(),
+            roomCode: roomCode || ''
+          });
         }
       }
     });
@@ -109,6 +139,11 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
 
   const createRoom = async () => {
     try {
+      // Initialize Sub Account if not already done
+      if (!subAccount && isInitialized) {
+        await initializeSubAccount();
+      }
+
       const code = generateRoomCode();
       const res = await fetch('/api/party', {
         method: 'POST',
@@ -403,6 +438,9 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
             <div className="mb-2 text-center text-xs text-black/60">
               {opponent ? 'Your turn' : 'Share the invite to start'}
             </div>
+
+            {/* Result Status Tracker */}
+            <ResultStatusTracker className="mb-4" />
 
             <div className="flex-1 flex items-center justify-center">
               {gameState === 'playing' ? (

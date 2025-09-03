@@ -1,171 +1,98 @@
-# TicTacToe Sub Account Implementation
+# TicTacToe Game Result Recording with Sub Accounts
 
 ## Background and Motivation
-Implementing Sub Accounts to handle game result recording and loss charges without disrupting current auth system.
+Using Sub Accounts to handle game result recording on-chain without disrupting the user experience with constant transaction signing.
 
 ## Key Challenges and Analysis
 
-### 1. Current Auth System Integration
-- Keep existing auth flow intact
-- Add Sub Account layer on top
-- Maintain compatibility with current wallet connections
-- Preserve user session management
+### 1. Current Pain Points
+- Each game result requires a separate transaction
+- Users must sign every transaction
+- Multiple gas fees for frequent players
+- Poor UX with constant signing prompts
+- High friction for recording results
 
-### 2. Sub Account Implementation
-Core Features:
-- Sub Account creation/management
-- Transaction batching
-- Balance handling
-- Spend permissions
+### 2. Sub Account Solution
+- Create game-specific Sub Account per player
+- Batch multiple results into single transaction
+- Handle gas fees through Sub Account
+- Pre-approve spending limits
+- Transparent transaction handling
 
-Technical Requirements:
-1. RPC Methods to Implement:
+### 3. Implementation Strategy
+1. Sub Account Setup:
    ```typescript
-   // Core methods
-   wallet_getSubAccounts
-   wallet_addSubAccount
-   wallet_sendCalls  // For batched transactions
-   
-   // Transaction methods
-   eth_sendTransaction
-   personal_sign
-   eth_signTypedData_v4
-   ```
-
-2. Storage Structure:
-   ```typescript
-   interface SubAccountData {
+   interface GameSubAccount {
      address: string;
-     parentAccount: string;
-     balance: BigNumber;
-     pendingTransactions: Transaction[];
      spendLimit: BigNumber;
-     nonce: number;
+     resultQueue: GameResult[];
+     batchThreshold: number;
    }
-   ```
 
-3. Transaction Queue:
-   ```typescript
-   interface QueuedTransaction {
-     type: 'result' | 'charge';
-     data: any;
+   interface GameResult {
+     result: 'win' | 'loss' | 'draw';
+     opponent: string;
      timestamp: number;
-     priority: number;
+     roomCode: string;
    }
    ```
 
-### 3. Implementation Phases
+2. Result Batching:
+   ```typescript
+   class ResultBatcher {
+     // Queue up results until threshold
+     async queueResult(result: GameResult) {
+       queue.push(result);
+       if (queue.length >= batchThreshold) {
+         await this.processBatch();
+       }
+     }
 
-1. Base Integration:
-   - Sub Account contract deployment
-   - RPC method handlers
-   - Basic storage structure
-
-2. Transaction Management:
-   - Queue system
-   - Batch processing
-   - Gas optimization
-
-3. Balance Handling:
-   - Deposit management
-   - Spend limits
-   - Auto-replenishment
-
-4. UI Integration:
-   - Balance display
-   - Transaction status
-   - Settings interface
+     // Process batch through Sub Account
+     async processBatch() {
+       const batch = queue.splice(0, batchThreshold);
+       await subAccount.recordResults(batch);
+     }
+   }
+   ```
 
 ## High-level Task Breakdown
 
-1. Core Sub Account Setup
-   ```typescript
-   // Example implementation
-   class SubAccountManager {
-     async getOrCreateSubAccount(parentAddress: string): Promise<string> {
-       const existing = await this.getSubAccount(parentAddress);
-       if (existing) return existing;
-       
-       return this.createSubAccount(parentAddress);
-     }
+1. Sub Account Integration
+   - Success Criteria:
+     - Sub Account creation on first game
+     - Proper permissions setup
+     - Gas handling configured
+     - Result batching working
 
-     async batchTransactions(transactions: QueuedTransaction[]) {
-       // Group by type and priority
-       // Submit in optimal batches
-     }
-   }
-   ```
+2. Result Recording Flow
+   - Success Criteria:
+     - Queue system working
+     - Batch processing implemented
+     - Gas optimization working
+     - Clear transaction feedback
 
-2. Transaction Queue System
-   ```typescript
-   class TransactionQueue {
-     async queueTransaction(tx: QueuedTransaction) {
-       // Add to queue
-       // Trigger batch processing if conditions met
-     }
-
-     async processBatch() {
-       // Get optimal batch size
-       // Submit through Sub Account
-     }
-   }
-   ```
-
-3. Balance Management
-   ```typescript
-   class BalanceManager {
-     async checkAndReplenish(subAccountAddress: string) {
-       const balance = await this.getBalance(subAccountAddress);
-       if (balance.lt(minimumBalance)) {
-         await this.replenish(subAccountAddress);
-       }
-     }
-   }
-   ```
+3. User Experience
+   - Success Criteria:
+     - No signing prompts for each result
+     - Clear status updates
+     - Batch progress visible
+     - Gas savings shown
 
 ## Project Status Board
-- [ ] Deploy Sub Account contracts
-- [ ] Implement core RPC methods
-- [ ] Create transaction queue system
-- [ ] Add balance management
-- [ ] Integrate with existing auth
-- [ ] Add UI components
+- [ ] Implement Sub Account creation flow
+- [ ] Add result queueing system
+- [ ] Create batch processing
+- [ ] Add gas optimization
+- [ ] Implement status tracking
+- [ ] Add user feedback UI
 
-## Implementation Notes
-1. Keep auth flow unchanged:
-   ```typescript
-   // Current auth remains the same
-   const connectWallet = async () => {
-     // Existing connection logic
-     // Then setup Sub Account
-     await subAccountManager.getOrCreateSubAccount(address);
-   };
-   ```
-
-2. Add Sub Account layer:
-   ```typescript
-   // After successful auth
-   const setupSubAccount = async () => {
-     const subAccount = await subAccountManager.getOrCreateSubAccount(userAddress);
-     await balanceManager.checkAndReplenish(subAccount);
-   };
-   ```
-
-3. Handle transactions:
-   ```typescript
-   const recordGameResult = async (result: GameResult) => {
-     await transactionQueue.queueTransaction({
-       type: 'result',
-       data: result,
-       timestamp: Date.now(),
-       priority: 1
-     });
-   };
-   ```
+## Executor's Feedback or Assistance Requests
+(To be filled during execution)
 
 ## Lessons
-- Keep auth system independent
-- Batch similar transactions
-- Maintain clear balance tracking
-- Handle failures gracefully
-- Optimize for gas efficiency
+- Batch operations for gas efficiency
+- Use Sub Accounts for better UX
+- Queue results before processing
+- Show clear transaction status
+- Provide gas savings feedback
