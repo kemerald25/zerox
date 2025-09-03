@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useComposeCast } from '@coinbase/onchainkit/minikit';
 import Image from 'next/image';
 import PusherClient from 'pusher-js';
@@ -10,8 +10,6 @@ import { GameResultCard } from './GameResultCard';
 import { shareToFarcaster } from '@/lib/farcaster-share';
 import { JoinRoomForm } from './JoinRoomForm';
 import { useScoreboard } from '@/lib/useScoreboard';
-import { useGameSubAccount } from '@/lib/useGameSubAccount';
-import { ResultStatusTracker } from './ResultStatusTracker';
 
 interface PartyModeProps {
   playerAddress: string;
@@ -22,7 +20,7 @@ interface PartyModeProps {
 export default function PartyMode({ playerAddress, playerName, playerPfp }: PartyModeProps) {
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [gameState, setGameState] = useState<'lobby' | 'playing' | 'result'>('lobby');
-  const [opponent, setOpponent] = useState<{name?: string; pfp?: string; address?: `0x${string}`} | null>(null);
+  const [opponent, setOpponent] = useState<{name?: string; pfp?: string; address?: string} | null>(null);
   const [timer, setTimer] = useState<number | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -30,14 +28,6 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
   const [gameResult, setGameResult] = useState<'won' | 'lost' | 'draw' | null>(null);
   
   const { recordResult, isRecording } = useScoreboard();
-  const { 
-    isInitialized,
-    isLoading: isSubAccountLoading,
-    error: subAccountError,
-    subAccount,
-    queueResult,
-    initializeSubAccount
-  } = useGameSubAccount();
   // Brand colors
   const BLACK = '#000000';
   const GREEN = '#00FF1A';
@@ -55,30 +45,6 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
       }
     );
   }, []);
-
-  const handleShare = useCallback(async () => {
-    try {
-      await shareToFarcaster({
-        playerName,
-        playerPfp,
-        opponentName: opponent?.name,
-        opponentPfp: opponent?.pfp,
-        playerSymbol: 'X', // You are always X as host
-        result: gameResult || 'won',
-        roomCode: roomCode || '',
-        timestamp: Date.now(),
-        moves: board.filter(cell => cell !== null).length,
-        timeElapsed: timer || 0
-      });
-    } catch (error) {
-      if (error instanceof Error && error.message === 'Copied to clipboard - no Farcaster SDK available') {
-        showToast('Copied to clipboard! 📋');
-      } else {
-        console.error('Failed to share:', error);
-        showToast('Failed to share 😔');
-      }
-    }
-  }, [playerName, playerPfp, opponent, gameResult, roomCode, board, timer]);
 
   // Subscribe to room events
   useEffect(() => {
@@ -99,7 +65,7 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
       setGameState('playing');
     });
 
-    channel.bind('move-made', async (data: {
+    channel.bind('move-made', (data: {
       gameState: Array<string | null>;
       winner: string | null;
       isDraw: boolean;
@@ -112,36 +78,12 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
         if (data.isDraw) {
           setGameResult('draw');
           recordResult('draw');
-          // Queue draw result
-          await queueResult({
-            result: 'draw',
-            opponent: opponent?.address || '0x0000000000000000000000000000000000000000',
-            timestamp: Date.now(),
-            roomCode: roomCode || ''
-          });
         } else if (data.winner === playerAddress) {
           setGameResult('won');
           recordResult('win');
-          // Queue win result and auto-prompt share
-          await queueResult({
-            result: 'win',
-            opponent: opponent?.address || '0x0000000000000000000000000000000000000000',
-            timestamp: Date.now(),
-            roomCode: roomCode || ''
-          });
-          setTimeout(() => {
-            handleShare().catch(console.error);
-          }, 1000);
         } else {
           setGameResult('lost');
           recordResult('loss');
-          // Queue loss result
-          await queueResult({
-            result: 'loss',
-            opponent: opponent?.address || '0x0000000000000000000000000000000000000000',
-            timestamp: Date.now(),
-            roomCode: roomCode || ''
-          });
         }
       }
     });
@@ -149,7 +91,7 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
     return () => {
       pusher.unsubscribe(`room-${roomCode}`);
     };
-  }, [roomCode, pusher, playerAddress, recordResult, handleShare, opponent?.address, queueResult]);
+  }, [roomCode, pusher, playerAddress, recordResult]);
 
   // Generate a random 4-letter room code
   const generateRoomCode = () => {
@@ -163,11 +105,6 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
 
   const createRoom = async () => {
     try {
-      // Initialize Sub Account if not already done
-      if (!subAccount && isInitialized) {
-        await initializeSubAccount();
-      }
-
       const code = generateRoomCode();
       const res = await fetch('/api/party', {
         method: 'POST',
@@ -222,21 +159,36 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
     }
   };
 
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    setTimeout(() => setToastMessage(null), 3000);
+  const handleShare = async () => {
+    try {
+      await shareToFarcaster({
+        playerName,
+        playerPfp,
+        opponentName: opponent?.name,
+        opponentPfp: opponent?.pfp,
+        playerSymbol: 'X', // You are always X as host
+        result: gameResult || 'won',
+        roomCode: roomCode || '',
+        timestamp: Date.now(),
+        moves: board.filter(cell => cell !== null).length,
+        timeElapsed: timer || 0
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Copied to clipboard - no Farcaster SDK available') {
+        showToast('Copied to clipboard! 📋');
+      } else {
+        console.error('Failed to share:', error);
+        showToast('Failed to share 😔');
+      }
+    }
   };
 
+    function showToast(arg0: string) {
+        throw new Error('Function not implemented.');
+    }
+
   return (
-    <div className="w-full max-w-md mx-auto relative">
-      {/* Toast Message */}
-      {toastMessage && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-black text-white px-4 py-2 rounded-full text-sm animate-fade-in">
-          {toastMessage}
-        </div>
-      )}
+    <div className="w-full max-w-md mx-auto">
       {/* Header with room info */}
       {roomCode && (
         <div className="flex items-center justify-between mb-4 p-3 rounded-lg bg-white/90 border border-[#70FF5A]">
@@ -438,9 +390,6 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
             <div className="mb-2 text-center text-xs text-black/60">
               {opponent ? 'Your turn' : 'Share the invite to start'}
             </div>
-
-            {/* Result Status Tracker */}
-            <ResultStatusTracker className="mb-4" />
 
             <div className="flex-1 flex items-center justify-center">
               {gameState === 'playing' ? (

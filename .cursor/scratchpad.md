@@ -1,98 +1,57 @@
-# TicTacToe Game Result Recording with Sub Accounts
+# TicTacToe Farcaster Share Implementation
 
 ## Background and Motivation
-Using Sub Accounts to handle game result recording on-chain without disrupting the user experience with constant transaction signing.
+We need to implement a complete Farcaster sharing functionality for the TicTacToe game, based on the minicolours implementation. The goal is to allow users to share their game results on Farcaster with a beautiful preview card and proper metadata.
 
 ## Key Challenges and Analysis
+1. Current Implementation Status:
+   - ✅ Basic `farcaster-share.ts` with core functionality
+   - ✅ Share page implementation
+   - ✅ GameResultCard component for display
+   - ✅ GameResultEmbed component for preview
+   - ❌ Missing proper integration in game flow
+   - ❌ Missing metadata for share preview
+   - ❌ Missing proper share button placement
 
-### 1. Current Pain Points
-- Each game result requires a separate transaction
-- Users must sign every transaction
-- Multiple gas fees for frequent players
-- Poor UX with constant signing prompts
-- High friction for recording results
-
-### 2. Sub Account Solution
-- Create game-specific Sub Account per player
-- Batch multiple results into single transaction
-- Handle gas fees through Sub Account
-- Pre-approve spending limits
-- Transparent transaction handling
-
-### 3. Implementation Strategy
-1. Sub Account Setup:
-   ```typescript
-   interface GameSubAccount {
-     address: string;
-     spendLimit: BigNumber;
-     resultQueue: GameResult[];
-     batchThreshold: number;
-   }
-
-   interface GameResult {
-     result: 'win' | 'loss' | 'draw';
-     opponent: string;
-     timestamp: number;
-     roomCode: string;
-   }
-   ```
-
-2. Result Batching:
-   ```typescript
-   class ResultBatcher {
-     // Queue up results until threshold
-     async queueResult(result: GameResult) {
-       queue.push(result);
-       if (queue.length >= batchThreshold) {
-         await this.processBatch();
-       }
-     }
-
-     // Process batch through Sub Account
-     async processBatch() {
-       const batch = queue.splice(0, batchThreshold);
-       await subAccount.recordResults(batch);
-     }
-   }
-   ```
+2. Key Differences from Minicolours:
+   - Different game data structure (TicTacToe vs Color game)
+   - Different visual style requirements
+   - Need to adapt share text format
+   - Need to integrate with game flow
 
 ## High-level Task Breakdown
 
-1. Sub Account Integration
-   - Success Criteria:
-     - Sub Account creation on first game
-     - Proper permissions setup
-     - Gas handling configured
-     - Result batching working
+1. Update Share Data Structure
+   - Success Criteria: GameShareData interface properly reflects TicTacToe game results
+   - Verify all necessary game data is captured
 
-2. Result Recording Flow
-   - Success Criteria:
-     - Queue system working
-     - Batch processing implemented
-     - Gas optimization working
-     - Clear transaction feedback
+2. Enhance Share Preview Metadata
+   - Success Criteria: Share preview shows proper title, description, and image
+   - Implement OpenGraph metadata for share links
 
-3. User Experience
-   - Success Criteria:
-     - No signing prompts for each result
-     - Clear status updates
-     - Batch progress visible
-     - Gas savings shown
+3. Integrate Share Button in Game Flow
+   - Success Criteria: Share button appears at appropriate time in game
+   - Proper handling of share action
+
+4. Update Share Page Layout
+   - Success Criteria: Share page matches game's visual style
+   - Proper display of game results
+
+5. Test Share Functionality
+   - Success Criteria: Complete end-to-end test of share flow
+   - Verify preview works in Farcaster
 
 ## Project Status Board
-- [ ] Implement Sub Account creation flow
-- [ ] Add result queueing system
-- [ ] Create batch processing
-- [ ] Add gas optimization
-- [ ] Implement status tracking
-- [ ] Add user feedback UI
+- [ ] Update GameShareData interface in farcaster-share.ts
+- [ ] Create metadata.tsx for share preview
+- [ ] Add share button to GameResultCard
+- [ ] Update share page styling
+- [ ] Test share functionality
 
 ## Executor's Feedback or Assistance Requests
 (To be filled during execution)
 
 ## Lessons
-- Batch operations for gas efficiency
-- Use Sub Accounts for better UX
-- Queue results before processing
-- Show clear transaction status
-- Provide gas savings feedback
+- Keep consistent visual style with the game theme
+- Ensure proper error handling for share data
+- Maintain clear separation between share data and display components
