@@ -80,7 +80,7 @@ export function ResultStatusTracker({ className = '' }: ResultStatusTrackerProps
         <div className="text-xs text-black/40 text-center">
           Results will be processed automatically when batch is full
         </div>
-      </div>}
+      </div>
     </div>
   );
 }
