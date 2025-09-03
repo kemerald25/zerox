@@ -109,21 +109,6 @@ export function useGameSubAccount() {
     }
   }, [provider]);
 
-  // Queue a game result
-  const queueResult = useCallback(async (result: GameResult) => {
-    if (!subAccount) {
-      setError('Sub Account not initialized');
-      return;
-    }
-
-    setResultQueue(prev => [...prev, result]);
-
-    // Process batch if threshold reached (e.g., 5 results)
-    if (resultQueue.length >= 5) {
-      await processBatch();
-    }
-  }, [subAccount, resultQueue]);
-
   // Process batch of results
   const processBatch = useCallback(async () => {
     if (!provider || !subAccount || resultQueue.length === 0) return;
@@ -181,6 +166,21 @@ export function useGameSubAccount() {
       setIsLoading(false);
     }
   }, [provider, subAccount, resultQueue]);
+
+  // Queue a game result
+  const queueResult = useCallback(async (result: GameResult) => {
+    if (!subAccount) {
+      setError('Sub Account not initialized');
+      return;
+    }
+
+    setResultQueue(prev => [...prev, result]);
+
+    // Process batch if threshold reached (e.g., 5 results)
+    if (resultQueue.length >= 5) {
+      await processBatch();
+    }
+  }, [subAccount, resultQueue, processBatch]);
 
   return {
     isInitialized,

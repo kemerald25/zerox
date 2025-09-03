@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useComposeCast } from '@coinbase/onchainkit/minikit';
 import Image from 'next/image';
 import PusherClient from 'pusher-js';
@@ -55,6 +55,30 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
       }
     );
   }, []);
+
+  const handleShare = useCallback(async () => {
+    try {
+      await shareToFarcaster({
+        playerName,
+        playerPfp,
+        opponentName: opponent?.name,
+        opponentPfp: opponent?.pfp,
+        playerSymbol: 'X', // You are always X as host
+        result: gameResult || 'won',
+        roomCode: roomCode || '',
+        timestamp: Date.now(),
+        moves: board.filter(cell => cell !== null).length,
+        timeElapsed: timer || 0
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Copied to clipboard - no Farcaster SDK available') {
+        showToast('Copied to clipboard! 📋');
+      } else {
+        console.error('Failed to share:', error);
+        showToast('Failed to share 😔');
+      }
+    }
+  }, [playerName, playerPfp, opponent, gameResult, roomCode, board, timer]);
 
   // Subscribe to room events
   useEffect(() => {
@@ -125,7 +149,7 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
     return () => {
       pusher.unsubscribe(`room-${roomCode}`);
     };
-  }, [roomCode, pusher, playerAddress, recordResult]);
+  }, [roomCode, pusher, playerAddress, recordResult, handleShare, opponent?.address, queueResult]);
 
   // Generate a random 4-letter room code
   const generateRoomCode = () => {
@@ -198,36 +222,12 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
     }
   };
 
-  const handleShare = async () => {
-    try {
-      await shareToFarcaster({
-        playerName,
-        playerPfp,
-        opponentName: opponent?.name,
-        opponentPfp: opponent?.pfp,
-        playerSymbol: 'X', // You are always X as host
-        result: gameResult || 'won',
-        roomCode: roomCode || '',
-        timestamp: Date.now(),
-        moves: board.filter(cell => cell !== null).length,
-        timeElapsed: timer || 0
-      });
-    } catch (error) {
-      if (error instanceof Error && error.message === 'Copied to clipboard - no Farcaster SDK available') {
-        showToast('Copied to clipboard! 📋');
-      } else {
-        console.error('Failed to share:', error);
-        showToast('Failed to share 😔');
-      }
-    }
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(null), 3000);
   };
-
-    const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-    const showToast = (message: string) => {
-      setToastMessage(message);
-      setTimeout(() => setToastMessage(null), 3000);
-    };
 
   return (
     <div className="w-full max-w-md mx-auto relative">

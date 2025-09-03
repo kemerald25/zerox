@@ -3,10 +3,6 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import { decodeShareData } from '@/lib/farcaster-share';
 
-// Load fonts
-const interMediumArrayBuffer = readFileSync(path.join(process.cwd(), 'public/fonts/Inter-Medium.ttf'));
-const interSemiBoldArrayBuffer = readFileSync(path.join(process.cwd(), 'public/fonts/Inter-SemiBold.ttf'));
-
 // Load game logo
 const logoBuffer = readFileSync(path.join(process.cwd(), 'public/logo.png'));
 const logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`;
@@ -31,7 +27,8 @@ const STYLES = {
   title: {
     color: '#70FF5A',
     fontSize: '40px',
-    fontWeight: 600,
+    fontFamily: 'Arial Black, Impact, sans-serif',
+    fontWeight: 400,
   },
   gameBoard: {
     display: 'grid',
@@ -83,7 +80,8 @@ const STYLES = {
   result: {
     marginTop: '32px',
     fontSize: '48px',
-    fontWeight: 600,
+    fontFamily: 'Arial Black, Impact, sans-serif',
+    fontWeight: 400,
     color: '#70FF5A',
   },
   stats: {
@@ -114,7 +112,16 @@ export async function GET(request: Request) {
         <div style={STYLES.container}>
           {/* Header */}
           <div style={STYLES.header}>
-            <img src={logoBase64} width="48" height="48" />
+            {/* Using data URL directly for OG image generation */}
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                backgroundImage: `url(${logoBase64})`,
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat'
+              }}
+            />
             <div style={STYLES.title}>ZeroX TicTacToe</div>
           </div>
 
@@ -167,25 +174,13 @@ export async function GET(request: Request) {
         headers: {
           'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate',
         },
-        fonts: [
-          {
-            name: 'Inter',
-            data: interMediumArrayBuffer,
-            weight: 500,
-            style: 'normal',
-          },
-          {
-            name: 'Inter',
-            data: interSemiBoldArrayBuffer,
-            weight: 600,
-            style: 'normal',
-          },
-        ],
+        // Using system fonts
       }
     );
-  } catch (e: any) {
+  } catch (e: Error | unknown) {
+    const error = e instanceof Error ? e : new Error('Unknown error');
     console.error('Failed to generate image:', e);
-    return new Response(`Failed to generate the image: ${e.message}`, {
+    return new Response(`Failed to generate the image: ${error.message}`, {
       status: 500,
     });
   }

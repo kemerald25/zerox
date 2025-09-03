@@ -1,4 +1,4 @@
-import { createPublicClient, http, encodeFunctionData } from 'viem';
+import { createPublicClient, http } from 'viem';
 import { base } from 'viem/chains';
 
 // Initialize public client for gas estimation

@@ -10,13 +10,7 @@ interface ResultStatusTrackerProps {
 export function ResultStatusTracker({ className = '' }: ResultStatusTrackerProps) {
   const { resultQueue, gasEstimate, isLoading } = useGameSubAccount();
 
-  // Format currency with 2 decimal places
-  const formatUSD = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
-  };
+
 
   // Format result for display
   const formatResult = (result: 'win' | 'loss' | 'draw') => {
@@ -45,7 +39,7 @@ export function ResultStatusTracker({ className = '' }: ResultStatusTrackerProps
 
       {/* Results List */}
       <div className="space-y-2 mb-4">
-        {resultQueue.map((result, index) => (
+        {resultQueue.map(result => (
           <div
             key={`${result.roomCode}-${result.timestamp}`}
             className="flex items-center justify-between p-2 rounded-lg bg-black/5"
