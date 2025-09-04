@@ -78,10 +78,41 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
         if (data.isDraw) {
           setGameResult('draw');
           recordResult('draw');
-        } else if (data.winner === playerAddress) {
-          setGameResult('won');
-          recordResult('win');
-        } else {
+                  } else if (data.winner === playerAddress) {
+            setGameResult('won');
+            recordResult('win');
+            // Auto-prompt share on win with dynamic OG image
+            setTimeout(async () => {
+              try {
+                const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
+                const shareData = {
+                  playerName,
+                  playerPfp,
+                  opponentName: opponent?.name,
+                  opponentPfp: opponent?.pfp,
+                  playerSymbol: 'X',
+                  result: 'won',
+                  roomCode: roomCode || '',
+                  timestamp: Date.now(),
+                  moves: board.filter(cell => cell !== null).length,
+                  timeElapsed: timer || 0
+                };
+                
+                // Generate OG image URL
+                const encodedData = btoa(JSON.stringify(shareData));
+                const ogImageUrl = `${appUrl}/api/og?data=${encodeURIComponent(encodedData)}`;
+                
+                // Create cast with OG image
+                await composeCast({
+                  text: `🎮 Victory in ZeroX!\n\n🎯 Won in ${shareData.moves} moves\n⏱️ ${shareData.timeElapsed}s\n\nCan you beat my score? Play now!`,
+                  embeds: [ogImageUrl] as [string]
+                });
+              } catch (error) {
+                console.error('Failed to share:', error);
+                showToast('Failed to share 😔');
+              }
+            }, 1000);
+          } else {
           setGameResult('lost');
           recordResult('loss');
         }
@@ -161,17 +192,31 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
 
   const handleShare = async () => {
     try {
-      await shareToFarcaster({
+      const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
+      const newRoomCode = generateRoomCode();
+      const playUrl = `${appUrl}/party?room=${newRoomCode}`;
+      
+      const shareData = {
         playerName,
         playerPfp,
         opponentName: opponent?.name,
         opponentPfp: opponent?.pfp,
-        playerSymbol: 'X', // You are always X as host
+        playerSymbol: 'X',
         result: gameResult || 'won',
         roomCode: roomCode || '',
         timestamp: Date.now(),
         moves: board.filter(cell => cell !== null).length,
         timeElapsed: timer || 0
+      };
+
+      // Generate OG image URL
+      const encodedData = btoa(JSON.stringify(shareData));
+      const ogImageUrl = `${appUrl}/api/og?data=${encodeURIComponent(encodedData)}`;
+
+      // Create cast with OG image and challenge link
+      await composeCast({
+        text: `🎮 I just ${gameResult === 'won' ? 'won' : gameResult === 'lost' ? 'lost' : 'drew'} a game of ZeroX TicTacToe!\n\n🎯 ${shareData.moves} moves\n⏱️ ${shareData.timeElapsed}s\n\n👉 Challenge me: ${playUrl}`,
+        embeds: [ogImageUrl, playUrl] as [string, string]
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'Copied to clipboard - no Farcaster SDK available') {
@@ -183,12 +228,22 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
     }
   };
 
-    function showToast(arg0: string) {
-        throw new Error('Function not implemented.');
-    }
+         const [toastMessage, setToastMessage] = useState<string | null>(null);
+     
+     const showToast = (message: string) => {
+       setToastMessage(message);
+       setTimeout(() => setToastMessage(null), 3000);
+     };
 
-  return (
-    <div className="w-full max-w-md mx-auto">
+    return (
+      <>
+        {/* Toast Message */}
+        {toastMessage && (
+          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-black text-white px-4 py-2 rounded-full text-sm animate-fade-in">
+            {toastMessage}
+          </div>
+        )}
+        <div className="w-full max-w-md mx-auto">
       {/* Header with room info */}
       {roomCode && (
         <div className="flex items-center justify-between mb-4 p-3 rounded-lg bg-white/90 border border-[#70FF5A]">
@@ -562,5 +617,6 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
         />
       )}
     </div>
+    </>
   );
 }

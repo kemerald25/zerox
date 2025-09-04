@@ -108,21 +108,45 @@ export default function Home() {
   const handleShareResult = useCallback(async () => {
     const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
     
-    // Create viral game result text with urgency and FOMO
-    const resultText = gameStatus === 'won' ? '🎉 I JUST WON!' : 
-                      gameStatus === 'lost' ? '😔 I lost but learned!' : 
-                      "🎮 It's a draw - rematch time!";
+    // Get user info from context
+    const username = context?.user?.username;
+    const pfpUrl = context?.user?.pfpUrl;
     
-    const viralText = `${resultText}\n\n🎮 ZeroX on Base\n🤖 Difficulty: ${difficulty}\n👤 My Symbol: ${playerSymbol}\n\n💎 Win ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH per game\n\n🎯 Play here: ${appUrl}`;
+    // Calculate game stats
+    const moveCount = board.filter(cell => cell !== null).length;
+    
+    // Prepare share data for OG image
+    const shareData: GameShareData = {
+      playerName: username,
+      playerPfp: typeof pfpUrl === 'string' ? pfpUrl : undefined,
+      opponentName: 'AI',
+      opponentPfp: undefined,
+      playerSymbol: playerSymbol || 'X',
+      result: gameStatus === 'playing' ? 'draw' : gameStatus,
+      roomCode: difficulty || 'AI',
+      timestamp: Date.now(),
+      moves: moveCount,
+      timeElapsed: secondsLeft ? computeTurnLimit() - secondsLeft : computeTurnLimit()
+    };
+
+    // Generate OG image URL
+    const encodedData = btoa(JSON.stringify(shareData));
+    const ogImageUrl = `${appUrl}/api/og?data=${encodeURIComponent(encodedData)}`;
+    
+    // Create viral game result text
+    const resultText = gameStatus === 'won' ? '🎉 Victory!' : 
+                      gameStatus === 'lost' ? '😔 Good Game!' : 
+                      "🤝 It's a draw!";
+    
+    const viralText = `${resultText}\n\n🎮 ZeroX on Base\n🤖 Difficulty: ${difficulty}\n🎯 ${moveCount} moves\n⏱️ ${computeTurnLimit() - (secondsLeft || 0)}s\n\n💎 Win ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH per game\n\nCan you beat my score? Play now!`;
     
     try {
       const result = await sdk.actions.composeCast({ 
         text: viralText,
-        embeds: [appUrl] as [string],
+        embeds: [ogImageUrl] as [string],
         close: false
       });
       
-      // Check if user actually posted the cast
       if (result?.cast) {
         showToast('Game result shared! 🚀');
         return;
@@ -134,7 +158,7 @@ export default function Home() {
         showToast('Copied to clipboard! 📋');
       } catch {}
     }
-  }, [gameStatus, difficulty, playerSymbol, showToast]);
+  }, [gameStatus, difficulty, playerSymbol, showToast, board, context?.user, secondsLeft, computeTurnLimit]);
 
   // handleShareChallenge removed (unused)
 
