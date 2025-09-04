@@ -81,37 +81,7 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
                   } else if (data.winner === playerAddress) {
             setGameResult('won');
             recordResult('win');
-            // Auto-prompt share on win with dynamic OG image
-            setTimeout(async () => {
-              try {
-                const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
-                const shareData = {
-                  playerName,
-                  playerPfp,
-                  opponentName: opponent?.name,
-                  opponentPfp: opponent?.pfp,
-                  playerSymbol: 'X',
-                  result: 'won',
-                  roomCode: roomCode || '',
-                  timestamp: Date.now(),
-                  moves: board.filter(cell => cell !== null).length,
-                  timeElapsed: timer || 0
-                };
-                
-                // Generate OG image URL
-                const encodedData = btoa(JSON.stringify(shareData));
-                const ogImageUrl = `${appUrl}/api/og?data=${encodeURIComponent(encodedData)}`;
-                
-                // Create cast with OG image
-                await composeCast({
-                  text: `🎮 Victory in ZeroX!\n\n🎯 Won in ${shareData.moves} moves\n⏱️ ${shareData.timeElapsed}s\n\nCan you beat my score? Play now!`,
-                  embeds: [ogImageUrl] as [string]
-                });
-              } catch (error) {
-                console.error('Failed to share:', error);
-                showToast('Failed to share 😔');
-              }
-            }, 1000);
+            // Share functionality temporarily removed
           } else {
           setGameResult('lost');
           recordResult('loss');
@@ -190,43 +160,7 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
     }
   };
 
-  const handleShare = async () => {
-    try {
-      const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
-      const newRoomCode = generateRoomCode();
-      const playUrl = `${appUrl}/party?room=${newRoomCode}`;
-      
-      const shareData = {
-        playerName,
-        playerPfp,
-        opponentName: opponent?.name,
-        opponentPfp: opponent?.pfp,
-        playerSymbol: 'X',
-        result: gameResult || 'won',
-        roomCode: roomCode || '',
-        timestamp: Date.now(),
-        moves: board.filter(cell => cell !== null).length,
-        timeElapsed: timer || 0
-      };
-
-      // Generate OG image URL
-      const encodedData = btoa(JSON.stringify(shareData));
-      const ogImageUrl = `${appUrl}/api/og?data=${encodeURIComponent(encodedData)}`;
-
-      // Create cast with OG image and challenge link
-      await composeCast({
-        text: `🎮 I just ${gameResult === 'won' ? 'won' : gameResult === 'lost' ? 'lost' : 'drew'} a game of ZeroX TicTacToe!\n\n🎯 ${shareData.moves} moves\n⏱️ ${shareData.timeElapsed}s\n\n👉 Challenge me: ${playUrl}`,
-        embeds: [ogImageUrl, playUrl] as [string, string]
-      });
-    } catch (error) {
-      if (error instanceof Error && error.message === 'Copied to clipboard - no Farcaster SDK available') {
-        showToast('Copied to clipboard! 📋');
-      } else {
-        console.error('Failed to share:', error);
-        showToast('Failed to share 😔');
-      }
-    }
-  };
+  // Share functionality temporarily removed
 
          const [toastMessage, setToastMessage] = useState<string | null>(null);
      
@@ -515,20 +449,10 @@ export default function PartyMode({ playerAddress, playerName, playerPfp }: Part
             />
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 w-full">
+          {/* Action Button */}
+          <div className="w-full">
             <button
-              className="grow h-[51px] bg-[#00FF1A] border border-black rounded-[39px] flex items-center justify-center text-[30px] font-bold text-black hover:bg-[#00DD17] transition-colors"
-              style={{
-                boxShadow: "0px 4px 0px 0px rgba(0, 0, 0, 1)",
-                letterSpacing: "7.5%",
-              }}
-              onClick={handleShare}
-            >
-              SHARE
-            </button>
-            <button
-              className="grow h-[51px] bg-white hover:bg-gray-50 border border-black rounded-[39px] flex items-center justify-center text-[30px] font-bold text-black transition-colors"
+              className="w-full h-[51px] bg-white hover:bg-gray-50 border border-black rounded-[39px] flex items-center justify-center text-[30px] font-bold text-black transition-colors"
               style={{
                 boxShadow: "0px 4px 0px 0px rgba(0, 0, 0, 1)",
                 letterSpacing: "7.5%",

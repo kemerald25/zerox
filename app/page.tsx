@@ -104,61 +104,7 @@ export default function Home() {
     return () => { if (timer) clearTimeout(timer); };
   }, [isInMiniApp, context]);
 
-  // Share handlers reused in main UI and modal
-  const handleShareResult = useCallback(async () => {
-    const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
-    
-    // Get user info from context
-    const username = context?.user?.username;
-    const pfpUrl = context?.user?.pfpUrl;
-    
-    // Calculate game stats
-    const moveCount = board.filter(cell => cell !== null).length;
-    
-    // Prepare share data for OG image
-    const shareData: GameShareData = {
-      playerName: username,
-      playerPfp: typeof pfpUrl === 'string' ? pfpUrl : undefined,
-      opponentName: 'AI',
-      opponentPfp: undefined,
-      playerSymbol: playerSymbol || 'X',
-      result: gameStatus === 'playing' ? 'draw' : gameStatus,
-      roomCode: difficulty || 'AI',
-      timestamp: Date.now(),
-      moves: moveCount,
-      timeElapsed: secondsLeft ? computeTurnLimit() - secondsLeft : computeTurnLimit()
-    };
-
-    // Generate OG image URL
-    const encodedData = btoa(JSON.stringify(shareData));
-    const ogImageUrl = `${appUrl}/api/og?data=${encodeURIComponent(encodedData)}`;
-    
-    // Create viral game result text
-    const resultText = gameStatus === 'won' ? '🎉 Victory!' : 
-                      gameStatus === 'lost' ? '😔 Good Game!' : 
-                      "🤝 It's a draw!";
-    
-    const viralText = `${resultText}\n\n🎮 ZeroX on Base\n🤖 Difficulty: ${difficulty}\n🎯 ${moveCount} moves\n⏱️ ${computeTurnLimit() - (secondsLeft || 0)}s\n\n💎 Win ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH per game\n\nCan you beat my score? Play now!`;
-    
-    try {
-      const result = await sdk.actions.composeCast({ 
-        text: viralText,
-        embeds: [ogImageUrl] as [string],
-        close: false
-      });
-      
-      if (result?.cast) {
-        showToast('Game result shared! 🚀');
-        return;
-      }
-    } catch (e) {
-      console.error('Failed to share on Farcaster:', e);
-      try {
-        await navigator.clipboard.writeText(viralText);
-        showToast('Copied to clipboard! 📋');
-      } catch {}
-    }
-  }, [gameStatus, difficulty, playerSymbol, showToast, board, context?.user, secondsLeft, computeTurnLimit]);
+  // Share functionality temporarily removed
 
   // handleShareChallenge removed (unused)
 
@@ -488,14 +434,6 @@ export default function Home() {
         recordResult(result);
         setResultRecorded(true);
         
-        // Auto-prompt share for wins
-        if (gameStatus === 'won') {
-          // Wait a short moment for the win animation
-          setTimeout(() => {
-            handleShareResult().catch(console.error);
-          }, 1500);
-        }
-        
         // Then handle payout/charge
         if (address) {
           if (gameStatus === 'won') {
@@ -563,7 +501,7 @@ export default function Home() {
       }, 1200);
       return () => clearTimeout(id);
     }
-  }, [gameStatus, startNewGameRound, recordResult, resultRecorded, showToast, address, sendTransactionAsync, handleShareResult]);
+  }, [gameStatus, startNewGameRound, recordResult, resultRecorded, showToast, address, sendTransactionAsync]);
 
   // Handle transaction completion and show modal
   useEffect(() => {
@@ -1047,26 +985,15 @@ export default function Home() {
                   </div>
                 )}
                 
-                <div className="flex gap-3">
+                <div className="flex justify-center">
                   <button
                     onClick={() => {
                       setShowTransactionModal(false);
                       setTransactionResult(null);
                     }}
-                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
                   >
                     Close
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      handleShareResult();
-                      setShowTransactionModal(false);
-                      setTransactionResult(null);
-                    }}
-                    className="flex-1 px-4 py-2 bg-[#70FF5A] text-white rounded-lg hover:bg-[#60E54A] transition-colors"
-                  >
-                    📤 Share Game Results
                   </button>
                 </div>
               </div>
@@ -1076,12 +1003,6 @@ export default function Home() {
           {/* Social actions */}
           {(gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') && (
             <div className="mt-4 flex flex-col sm:flex-row gap-3 items-center">
-              <button
-                className="px-4 py-2 rounded-lg bg-[#066c00] text-[#70FF5A] font-bold hover:bg-[#0a8500] transition-colors"
-                onClick={handleShareResult}
-              >
-                Share Result
-              </button>
               <button
                 className="px-4 py-2 rounded-lg bg-[#70FF5A] text-[#066c00] font-bold hover:bg-[#b6f569] transition-colors"
                 onClick={() => handleChallenge()}
