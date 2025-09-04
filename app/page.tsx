@@ -488,6 +488,14 @@ export default function Home() {
         recordResult(result);
         setResultRecorded(true);
         
+        // Auto-prompt share for wins
+        if (gameStatus === 'won') {
+          // Wait a short moment for the win animation
+          setTimeout(() => {
+            handleShareResult().catch(console.error);
+          }, 1500);
+        }
+        
         // Then handle payout/charge
         if (address) {
           if (gameStatus === 'won') {
@@ -555,7 +563,7 @@ export default function Home() {
       }, 1200);
       return () => clearTimeout(id);
     }
-  }, [gameStatus, startNewGameRound, recordResult, resultRecorded, showToast, address, sendTransactionAsync]);
+  }, [gameStatus, startNewGameRound, recordResult, resultRecorded, showToast, address, sendTransactionAsync, handleShareResult]);
 
   // Handle transaction completion and show modal
   useEffect(() => {

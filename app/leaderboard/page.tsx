@@ -157,9 +157,9 @@ function LeaderboardTab() {
                     </div>
                     <div className="text-sm text-[#70FF5A] font-semibold">
                       ${usdEarned || '0.00'} earned
-                      <span className="text-xs text-[#9CA3AF] ml-1">
+                      {/* <span className="text-xs text-[#9CA3AF] ml-1">
                         ({ethEarned.toFixed(5)} ETH)
-                      </span>
+                      </span> */}
                     </div>
                   </div>
                 </div>
@@ -167,9 +167,9 @@ function LeaderboardTab() {
                   <div className="text-xl font-black text-black">
                     {r.points}
                   </div>
-                  <div className="text-sm text-[#9CA3AF]">
+                  {/* <div className="text-sm text-[#9CA3AF]">
                     {r.wins}W {r.draws}D {r.losses}L
-                  </div>
+                  </div> */}
                 </div>
               </div>
             );
