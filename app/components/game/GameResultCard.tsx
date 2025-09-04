@@ -120,13 +120,14 @@ export const GameResultCard = ({
       {showShareButton && onShare && (
         <button
           onClick={onShare}
-          className="mt-6 w-full h-[48px] rounded-[24px] border border-black text-black font-normal text-[18px] leading-[24px] px-4 py-2 transition-colors hover:bg-[#00FF1A]"
+          className="mt-6 w-full h-[48px] rounded-[24px] border border-black text-black font-bold text-[18px] leading-[24px] px-4 py-2 transition-all hover:bg-[#00FF1A] hover:scale-105 active:scale-95"
           style={{
             backgroundColor: "#70FF5A",
             boxShadow: "0px 4px 0px 0px rgba(0, 0, 0, 1)",
+            fontFamily: 'var(--font-game)',
           }}
         >
-          Share on Farcaster
+          🎮 Share Result
         </button>
       )}
 

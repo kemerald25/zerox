@@ -21,32 +21,54 @@ We need to implement a complete Farcaster sharing functionality for the TicTacTo
 
 ## High-level Task Breakdown
 
-1. Update Share Data Structure
-   - Success Criteria: GameShareData interface properly reflects TicTacToe game results
-   - Verify all necessary game data is captured
+1. Update Farcaster Frame Metadata Format
+   - Success Criteria: Implement new fc:miniapp and fc:frame meta tags
+   - Ensure proper JSON structure with version, imageUrl, and button properties
+   - Maintain backward compatibility with both tags
 
-2. Enhance Share Preview Metadata
-   - Success Criteria: Share preview shows proper title, description, and image
-   - Implement OpenGraph metadata for share links
+2. Update OpenGraph Image Generation
+   - Success Criteria: Image meets Farcaster Frame requirements
+   - Aspect ratio: 3:2
+   - Dimensions: At least 600x400px
+   - Format: PNG for best compatibility
+   - File size < 10MB
 
-3. Integrate Share Button in Game Flow
+3. Implement Dynamic Image Caching
+   - Success Criteria: Proper Cache-Control headers
+   - Set appropriate max-age for dynamic content
+   - Handle fallback images correctly
+
+4. Update Share Button Integration
    - Success Criteria: Share button appears at appropriate time in game
+   - Clear call-to-action text
    - Proper handling of share action
-
-4. Update Share Page Layout
-   - Success Criteria: Share page matches game's visual style
-   - Proper display of game results
 
 5. Test Share Functionality
    - Success Criteria: Complete end-to-end test of share flow
    - Verify preview works in Farcaster
+   - Test both miniapp and frame meta tags
+   - Verify image caching behavior
 
 ## Project Status Board
-- [ ] Update GameShareData interface in farcaster-share.ts
-- [ ] Create metadata.tsx for share preview
-- [ ] Add share button to GameResultCard
-- [ ] Update share page styling
-- [ ] Test share functionality
+- [ ] Update metadata.tsx with new Farcaster Frame format
+  - [ ] Add fc:miniapp meta tag
+  - [ ] Add fc:frame meta tag for backward compatibility
+  - [ ] Update JSON structure with version, imageUrl, and button properties
+- [ ] Update opengraph-image.tsx for Frame requirements
+  - [ ] Adjust image dimensions to 3:2 aspect ratio (1200x800)
+  - [ ] Ensure PNG format output
+  - [ ] Optimize image size
+- [ ] Implement caching headers in API routes
+  - [ ] Add Cache-Control headers for dynamic images
+  - [ ] Configure appropriate max-age values
+  - [ ] Handle fallback image caching
+- [ ] Update share button and integration
+  - [ ] Update button text and styling
+  - [ ] Verify share flow
+- [ ] Test and verify
+  - [ ] Test frame preview in Farcaster
+  - [ ] Verify image caching
+  - [ ] Test backward compatibility
 
 ## Executor's Feedback or Assistance Requests
 (To be filled during execution)

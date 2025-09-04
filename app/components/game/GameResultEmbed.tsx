@@ -71,10 +71,14 @@ export default function GameResultEmbed({
       <div className="flex gap-4">
         <button
           onClick={onShare}
-          className="flex-1 py-3 px-6 rounded-full bg-[#70FF5A] text-[#066c00] font-bold hover:bg-[#b6f569] transition-colors"
-          style={{ fontFamily: 'var(--font-game)' }}
+          className="flex-1 py-3 px-6 rounded-[24px] border border-black text-black font-bold hover:bg-[#00FF1A] hover:scale-105 active:scale-95 transition-all"
+          style={{ 
+            fontFamily: 'var(--font-game)',
+            backgroundColor: "#70FF5A",
+            boxShadow: "0px 4px 0px 0px rgba(0, 0, 0, 1)",
+          }}
         >
-          SHARE
+          🎮 Share Result
         </button>
         <button
           className="flex-1 py-3 px-6 rounded-full bg-[#066c00] text-[#70FF5A] font-bold hover:bg-[#0a8500] transition-colors"

@@ -14,6 +14,35 @@ export async function generateMetadata({
   const data = resolvedSearchParams.data;
   
   const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+  
+  // Default miniapp/frame configuration
+  const defaultMiniAppConfig = {
+    version: "1",
+    imageUrl: `${baseUrl}/splash.png`,
+    button: {
+      title: "🎮 Play ZeroX",
+      action: {
+        type: "launch_miniapp",
+        url: baseUrl,
+        name: "ZeroX",
+        splashImageUrl: `${baseUrl}/splash.png`,
+        splashBackgroundColor: "#000000"
+      }
+    }
+  };
+
+  // Default frame config for backward compatibility
+  const defaultFrameConfig = {
+    ...defaultMiniAppConfig,
+    button: {
+      ...defaultMiniAppConfig.button,
+      action: {
+        ...defaultMiniAppConfig.button.action,
+        type: "launch_frame"
+      }
+    }
+  };
+
   const defaultMetadata = {
     title: "ZeroX Game",
     description: "Play ZeroX and share your results!",
@@ -23,11 +52,8 @@ export async function generateMetadata({
       images: [`${baseUrl}/splash.png`],
     },
     other: {
-      "fc:frame": "vNext",
-      "fc:frame:image": `${baseUrl}/splash.png`,
-      "fc:frame:button:1": "Launch ZeroX",
-      "fc:frame:button:1:action": "post_redirect",
-      "fc:frame:post_url": `${baseUrl}/api/frame`,
+      "fc:miniapp": JSON.stringify(defaultMiniAppConfig),
+      "fc:frame": JSON.stringify(defaultFrameConfig),
     },
   };
 
@@ -44,6 +70,34 @@ export async function generateMetadata({
     // Create OG image URL with the same encoded parameter
     const ogImageUrl = `${baseUrl}/api/og?data=${encodeURIComponent(data)}`;
 
+    // Create dynamic miniapp/frame configuration
+    const miniAppConfig = {
+      version: "1",
+      imageUrl: ogImageUrl,
+      button: {
+        title: "🎮 Play ZeroX",
+        action: {
+          type: "launch_miniapp",
+          url: `${baseUrl}/play`,
+          name: "ZeroX",
+          splashImageUrl: `${baseUrl}/splash.png`,
+          splashBackgroundColor: "#000000"
+        }
+      }
+    };
+
+    // Frame config for backward compatibility
+    const frameConfig = {
+      ...miniAppConfig,
+      button: {
+        ...miniAppConfig.button,
+        action: {
+          ...miniAppConfig.button.action,
+          type: "launch_frame"
+        }
+      }
+    };
+
     return {
       title: `${playerName} ${result} ${opponent} in ZeroX!`,
       description: `${playerName} played as ${shareData.playerSymbol} and ${result} ${opponent} in ${shareData.moves} moves (${shareData.timeElapsed}s). Play ZeroX now!`,
@@ -54,7 +108,7 @@ export async function generateMetadata({
           {
             url: ogImageUrl,
             width: 1200,
-            height: 630,
+            height: 800, // Updated to 3:2 aspect ratio
             alt: `Game result: ${playerName} ${result} ${opponent}`,
           }
         ],
@@ -66,11 +120,8 @@ export async function generateMetadata({
         images: [ogImageUrl],
       },
       other: {
-        "fc:frame": "vNext",
-        "fc:frame:image": ogImageUrl,
-        "fc:frame:button:1": "Launch ZeroX",
-        "fc:frame:button:1:action": "post_redirect",
-        "fc:frame:post_url": `${baseUrl}/api/frame`,
+        "fc:miniapp": JSON.stringify(miniAppConfig),
+        "fc:frame": JSON.stringify(frameConfig),
       },
     };
   } catch (error) {

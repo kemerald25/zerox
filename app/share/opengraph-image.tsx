@@ -5,7 +5,7 @@ export const runtime = 'edge';
 export const alt = 'ZeroX Game Results';
 export const size = {
   width: 1200,
-  height: 630,
+  height: 800, // Updated to 3:2 aspect ratio for Farcaster Frame
 };
  
 export default async function Image({ searchParams }: { searchParams: { data?: string } }) {
@@ -41,7 +41,7 @@ export default async function Image({ searchParams }: { searchParams: { data?: s
     const opponentName = decoded.opponentName || 'Anonymous';
     const result = decoded.result === 'won' ? 'Victory!' : decoded.result === 'lost' ? 'Good Game!' : 'Draw!';
 
-    return new ImageResponse(
+    const response = new ImageResponse(
       (
         <div
           style={{
@@ -139,12 +139,22 @@ export default async function Image({ searchParams }: { searchParams: { data?: s
       ),
       {
         ...size,
+        headers: {
+          'Content-Type': 'image/png',
+          'Cache-Control': 'public, immutable, no-transform, max-age=300', // Cache for 5 minutes
+        },
       },
     );
+
+    return response;
   } catch (e) {
     console.error(e);
+    // Return error response with no caching for fallback image
     return new Response(`Failed to generate image`, {
       status: 500,
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+      },
     });
   }
 }
