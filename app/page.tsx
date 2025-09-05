@@ -819,14 +819,14 @@ export default function Home() {
         
         {showAddPrompt && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl w-80 text-center">
-              <div className="text-lg font-bold mb-2" style={{ color: '#70FF5A' }}>Add this Mini App?</div>
-              <div className="text-sm mb-4" style={{ color: '#000000' }}>
+            <div className="bg-white p-6 rounded-xl shadow-xl w-80 text-center">
+              <div className="text-lg font-bold mb-2 text-[#70FF5A]">Add this Mini App?</div>
+              <div className="text-sm mb-4 text-black">
                 Quickly access ZeroX from your apps screen.
               </div>
               <div className="flex gap-3 justify-center">
                 <button
-                  className="px-4 py-2 rounded-lg bg-[#70FF5A] text-white"
+                  className="px-4 py-2 rounded-lg bg-[#70FF5A] text-black font-bold hover:bg-[#60E54A] transition-colors"
                   onClick={async () => {
                     try { await sdk.actions.addMiniApp(); } catch {}
                     setShowAddPrompt(false);
@@ -835,7 +835,7 @@ export default function Home() {
                   Add Mini App
                 </button>
                 <button
-                  className="px-4 py-2 rounded-lg bg-[#b6f569] text-[#70FF5A] border border-[#70FF5A]"
+                  className="px-4 py-2 rounded-lg bg-white text-[#70FF5A] font-bold border border-[#70FF5A] hover:bg-[#70FF5A]/5 transition-colors"
                   onClick={() => setShowAddPrompt(false)}
                 >
                   Not now
