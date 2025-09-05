@@ -37,6 +37,9 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+// Suppress hydration warnings from browser extensions
+const suppressHydrationWarning = process.env.NODE_ENV === 'development';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -44,7 +47,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="mini-app-theme bg-white">
+      <body suppressHydrationWarning={suppressHydrationWarning} className="mini-app-theme bg-white">
         <Providers>
           <Navbar />
           <main className="pt-16">
