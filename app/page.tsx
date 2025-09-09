@@ -8,7 +8,6 @@ import { sdk } from '@farcaster/miniapp-sdk';
 import { shareToFarcaster, GameShareData } from '@/lib/farcaster-share';
 import GameBoard from './components/game/GameBoard';
 import BottomNav from './components/BottomNav';
-import GameControls from './components/game/GameControls';
 import GameStatus from './components/game/GameStatus';
 import { WalletCheck } from './components/WalletCheck';
 import { playMove, playAIMove, playWin, playLoss, playDraw, resumeAudio, playWarning } from '@/lib/sound';
@@ -23,8 +22,8 @@ export default function Home() {
   }, []);
   const [boardSize, setBoardSize] = useState<3 | 4 | 5>(3);
   const [board, setBoard] = useState<Array<string | null>>(Array(3 * 3).fill(null));
-  const [playerSymbol, setPlayerSymbol] = useState<'X' | 'O' | null>(null);
-  const [difficulty, setDifficulty] = useState<'easy' | 'hard' | null>(null);
+  const [playerSymbol, setPlayerSymbol] = useState<'X' | 'O' | null>('X');
+  const [difficulty] = useState<'easy' | 'hard' | null>('easy');
   const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost' | 'draw'>('playing');
   const [isPlayerTurn, setIsPlayerTurn] = useState(true);
   const [outcomeHandled, setOutcomeHandled] = useState(false);
@@ -84,6 +83,26 @@ export default function Home() {
   // Simple toast
   const [toast, setToast] = useState<string | null>(null);
   const showToast = useCallback((msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2000); }, []);
+  // Config text from /api/config
+  const [configText, setConfigText] = useState<string>('');
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const r = await fetch('/api/config');
+        const j = await r.json();
+        if (j && typeof j.payoutEthStr === 'string' && typeof j.chargeEthStr === 'string') {
+          setConfigText(`Win to receive ~${j.payoutEthStr} ETH. Lose and you pay ~${j.chargeEthStr}.`);
+        } else {
+          const p = process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || process.env.PAYOUT_AMOUNT_ETH || '0.00002';
+          setConfigText(`Win to receive ~${p} ETH. Lose and you pay ~${p}.`);
+        }
+      } catch {
+        const p = process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || process.env.PAYOUT_AMOUNT_ETH || '0.00002';
+        setConfigText(`Win to receive ~${p} ETH. Lose and you pay ~${p}.`);
+      }
+    };
+    load();
+  }, []);
 
 
   useEffect(() => {
@@ -145,7 +164,7 @@ export default function Home() {
     const check = async () => {
       if (!address) { setMustSettle(false); return; }
       try {
-        const res = await fetch(`/api/settlement?address=${address}`);
+        const res = await fetch(`/api/gamesession?address=${address}`);
         const data = await res.json();
         setMustSettle(Boolean(data?.required));
       } catch { setMustSettle(false); }
@@ -163,11 +182,9 @@ export default function Home() {
     try {
       const url = new URL(window.location.href);
       const symbolParam = url.searchParams.get('symbol');
-      const difficultyParam = url.searchParams.get('difficulty');
       if ((symbolParam === 'X' || symbolParam === 'O') && !playerSymbol) setPlayerSymbol(symbolParam);
-      if ((difficultyParam === 'easy' || difficultyParam === 'hard') && !difficulty) setDifficulty(difficultyParam);
     } catch {}
-  }, [playerSymbol, difficulty]);
+  }, [playerSymbol]);
 
   const checkWinner = useCallback((squares: Array<string | null>): string | null => {
     const n = boardSize;
@@ -210,49 +227,15 @@ export default function Home() {
       cell === null ? [...moves, index] : moves, []);
   }, []);
 
-  const minimax = useCallback((squares: Array<string | null>, isMax: boolean): number => {
-    const winner = checkWinner(squares);
-    if (winner === playerSymbol) return misere ? 1 : -1;
-    if (winner === (playerSymbol === 'X' ? 'O' : 'X')) return misere ? -1 : 1;
-    if (getAvailableMoves(squares).length === 0) return 0;
-
-    const moves = getAvailableMoves(squares);
-    const scores = moves.map(move => {
-      const newSquares = [...squares];
-      newSquares[move] = isMax ? (playerSymbol === 'X' ? 'O' : 'X') : playerSymbol;
-      return minimax(newSquares, !isMax);
-    });
-
-    return isMax ? Math.max(...scores) : Math.min(...scores);
-  }, [playerSymbol, checkWinner, getAvailableMoves, misere]);
-
   const getAIMove = useCallback((squares: Array<string | null>): number => {
     let availableMoves = getAvailableMoves(squares);
     if (blockedCellIndex !== null) {
       availableMoves = availableMoves.filter((i) => i !== blockedCellIndex);
     }
     if (availableMoves.length === 0) return -1;
-
-    if (difficulty === 'easy') {
-      return availableMoves[Math.floor(Math.random() * availableMoves.length)];
-    }
-
-    // Hard mode uses minimax
-    let bestScore = -Infinity;
-    let bestMove = availableMoves[0];
-
-    for (const move of availableMoves) {
-      const newSquares = [...squares];
-      newSquares[move] = playerSymbol === 'X' ? 'O' : 'X';
-      const score = minimax(newSquares, false);
-      if (score > bestScore) {
-        bestScore = score;
-        bestMove = move;
-      }
-    }
-
-    return bestMove;
-  }, [difficulty, playerSymbol, minimax, getAvailableMoves, blockedCellIndex]);
+    // Randomized AI move for simplicity
+    return availableMoves[Math.floor(Math.random() * availableMoves.length)];
+  }, [getAvailableMoves, blockedCellIndex]);
 
   // getBestPlayerMove no longer used (quick actions removed)
 
@@ -280,6 +263,7 @@ export default function Home() {
     if (!sessionId && address) {
       try {
         const res = await fetch('/api/gamesession', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address }) });
+        if (res.status === 409) { setMustSettle(true); return; }
         const data = await res.json();
         if (data?.id) setSessionId(data.id as string);
       } catch {}
@@ -459,11 +443,6 @@ export default function Home() {
                   value: BigInt(data.value) 
                 }).then(() => {
                   showToast('Loss settlement sent');
-                  fetch('/api/settlement', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ address, required: false })
-                  });
                 });
               }
             }).catch(() => {});
@@ -585,7 +564,7 @@ export default function Home() {
         const r = await fetch('/api/payout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address: playerAddress }),
+          body: JSON.stringify({ address: playerAddress, sessionId }),
         });
         if (r.ok) { try { showToast('Winner payout sent'); } catch {} } else {
           try { const j = await r.json(); showToast(j?.error || 'Payout failed'); } catch { showToast('Payout failed'); }
@@ -598,7 +577,7 @@ export default function Home() {
         const res = await fetch('/api/charge', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address: playerAddress }),
+          body: JSON.stringify({ address: playerAddress, sessionId }),
         });
         const data = await res.json();
         if (data?.to && data?.value) {
@@ -677,19 +656,14 @@ export default function Home() {
   // Handle incoming challenges from Farcaster
   useEffect(() => {
     if (!context?.location) return;
-    
     const loc = context.location as unknown;
     type CastObj = { hash: string; text: string; author: { username?: string; fid: number } };
     type CastEmbedLoc = { type: 'cast_embed'; cast: CastObj };
-    
-    // Check if this is a challenge from another player
     if (loc && typeof (loc as CastEmbedLoc).type === 'string' && (loc as CastEmbedLoc).type === 'cast_embed') {
       const cast = (loc as CastEmbedLoc).cast;
       if (cast.text.includes('🎮') || cast.text.toLowerCase().includes('challenge')) {
         showToast(`${cast.author.username || cast.author.fid} challenged you!`);
-        // Auto-select X and set difficulty
         setPlayerSymbol('X');
-        setDifficulty('hard');
       }
     }
   }, [context?.location, showToast]);
@@ -801,7 +775,7 @@ export default function Home() {
           </div>
         )}
         {/* Results summary pill row (top-right) - only show when board is visible */}
-        {playerSymbol && difficulty && (
+        {playerSymbol && (
           <div className="w-full max-w-md mb-2 flex justify-end">
             <div className="flex items-center gap-2">
               <div className="px-2 py-1 rounded-md text-[10px] bg-[#70FF5A] text-black font-semibold">W {score?.wins ?? 0}</div>
@@ -858,18 +832,25 @@ export default function Home() {
                   if (!address) { try { showToast('Connect your wallet first'); } catch {} return; }
                   setSettlingLoss(true);
                   try {
-                    const res = await fetch('/api/charge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address }) });
-                    const data = await res.json();
-                    if (data?.to && data?.value) {
-                      const txHash = await sendTransactionAsync({ to: data.to as `0x${string}`, value: BigInt(data.value) });
-                      try { showToast('Loss settlement sent'); } catch {}
-                      try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address, required: false }) }); } catch {}
+                    const res = await fetch(`/api/settlement/outstanding?address=${address}`);
+                    const out = await res.json();
+                    if (!out?.to || !out?.totalWei || !Array.isArray(out?.sessionIds) || out.sessionIds.length === 0) {
+                      try { showToast('Nothing to settle'); } catch {}
                       setMustSettle(false);
-                      // Optionally record tx on latest session
-                      if (sessionId) { try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, settled: true, tx_hash: txHash as string }) }); } catch {} }
-                    } else {
-                      try { showToast('Settlement quote unavailable'); } catch {}
+                      setSettlingLoss(false);
+                      return;
                     }
+                    const txHash = await sendTransactionAsync({ to: out.to as `0x${string}`, value: BigInt(out.totalWei as string) });
+                    try { showToast('All losses settled'); } catch {}
+                    try {
+                      await fetch('/api/settlement/complete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ address, sessionIds: out.sessionIds as string[], txHash })
+                      });
+                    } catch {}
+                    setMustSettle(false);
+                    if (sessionId) { try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, settled: true, tx_hash: txHash as string }) }); } catch {} }
                   } catch {
                     try { showToast('Transaction failed'); } catch {}
                   } finally {
@@ -882,22 +863,11 @@ export default function Home() {
             </div>
           </div>
         )}
-        <GameControls
-        onSymbolSelect={setPlayerSymbol}
-        onDifficultySelect={setDifficulty}
-        selectedSymbol={playerSymbol}
-        selectedDifficulty={difficulty}
-      />
-      {playerSymbol && difficulty && (
+      {playerSymbol && (
         <>
           <div className="mb-3 flex items-center justify-center gap-3 flex-wrap" style={{ color: '#000000' }}>
             <div className="w-full text-center text-sm opacity-80">
-              {(() => {
-                const payout = process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || process.env.PAYOUT_AMOUNT_ETH;
-                const charge = process.env.NEXT_PUBLIC_CHARGE_AMOUNT_ETH || process.env.CHARGE_AMOUNT_ETH;
-                const p = payout || charge || '0.00002';
-                return `Win to receive ~${p} ETH. Lose and you pay ~${p}.`;
-              })()}
+              {configText}
             </div>
             <div className="w-full flex justify-center">
               <button

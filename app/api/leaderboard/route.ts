@@ -22,7 +22,7 @@ function seasonEndISO(): string {
 
 export async function GET() {
   const season = seasonStartISO();
-  if (!supabase) return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top: [] });
+  if (!supabase) return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top: [], totals: { totalPayoutEth: 0, totalChargeEth: 0, totalUsers: 0 } });
   // Get unique entries by address, taking the latest alias/pfp
   const { data, error } = await supabase
     .from('leaderboard_entries')
@@ -32,9 +32,23 @@ export async function GET() {
     .order('wins', { ascending: false })
     .order('updated_at', { ascending: false })
     .limit(10);
-  if (error) return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top: [] });
+  if (error) return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top: [], totals: { totalPayoutEth: 0, totalChargeEth: 0, totalUsers: 0 } });
   const top = (data || []).map((r: { address: string; alias?: string | null; pfp_url?: string | null; wins: number; draws: number; losses: number; points: number; }, i: number) => ({ rank: i + 1, address: r.address, alias: r.alias ?? undefined, pfpUrl: r.pfp_url ?? undefined, wins: r.wins, draws: r.draws, losses: r.losses, points: r.points }));
-  return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top });
+  // Totals: sum payouts, charges, and total unique users this season
+  let totalPayoutEth = 0;
+  let totalChargeEth = 0;
+  let totalUsers = 0;
+  try {
+    const [{ data: payoutRows }, { data: chargeRows }, { count: userCount }] = await Promise.all([
+      supabase.from('payout_logs').select('total_amount'),
+      supabase.from('charge_logs').select('total_amount'),
+      supabase.from('leaderboard_entries').select('address', { count: 'exact', head: true }).eq('season', season)
+    ]);
+    totalPayoutEth = Array.isArray(payoutRows) ? payoutRows.reduce((s: number, r: any) => s + Number(r.total_amount || 0), 0) : 0;
+    totalChargeEth = Array.isArray(chargeRows) ? chargeRows.reduce((s: number, r: any) => s + Number(r.total_amount || 0), 0) : 0;
+    totalUsers = typeof userCount === 'number' ? userCount : 0;
+  } catch {}
+  return NextResponse.json({ season: { start: season, end: seasonEndISO() }, top, totals: { totalPayoutEth, totalChargeEth, totalUsers } });
 }
 
 export async function POST(req: NextRequest) {

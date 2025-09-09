@@ -60,6 +60,8 @@ create table if not exists public.game_sessions (
   constraint game_sessions_pkey primary key (id)
 );
 create index if not exists game_sessions_address_idx on public.game_sessions (address, created_at desc);
+-- Index to quickly query unpaid losses for gating
+create index if not exists game_sessions_unpaid_idx on public.game_sessions (address, requires_settlement, settled, created_at desc);
 
 -- 5) Daily Check-ins (30-day streak tracking)
 create table if not exists public.daily_checkins (
@@ -87,6 +89,18 @@ create table if not exists public.payout_logs (
   constraint payout_logs_pkey primary key (address, day)
 );
 create index if not exists payout_logs_day_idx on public.payout_logs (day);
+
+-- 6b) Charge logs for auditing
+create table if not exists public.charge_logs (
+  address text not null,
+  day date not null,
+  count integer not null default 0,
+  total_amount numeric not null default 0,
+  updated_at timestamptz not null default now(),
+  inserted_at timestamptz not null default now(),
+  constraint charge_logs_pkey primary key (address, day)
+);
+create index if not exists charge_logs_day_idx on public.charge_logs (day);
 
 -- 7) User Notification Tokens (for Farcaster Mini App notifications)
 create table if not exists public.user_notifications (

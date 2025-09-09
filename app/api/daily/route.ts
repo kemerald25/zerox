@@ -150,8 +150,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Verify eligibility: must be today's seed, hard, X, and result win
-    const isEligible = completed && seed === dailySeedString() && symbol === 'X' && difficulty === 'hard' && result === 'win';
+    // Verify eligibility (Option B): must be today's seed and result win; drop difficulty and symbol requirements
+    const isEligible = completed && seed === dailySeedString() && result === 'win';
     if (!isEligible) {
       const streak = await getCurrentStreak(addr);
       return NextResponse.json({ 
