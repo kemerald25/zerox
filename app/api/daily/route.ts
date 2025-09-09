@@ -122,8 +122,9 @@ export async function POST(req: NextRequest) {
     const address: string | undefined = body?.address;
     const completed: boolean | undefined = body?.completed;
     const seed: string | undefined = body?.seed;
-    const symbol: 'X' | 'O' | undefined = body?.symbol;
-    const difficulty: 'easy' | 'hard' | undefined = body?.difficulty;
+    // symbol/difficulty are no longer used for eligibility
+    // const symbol: 'X' | 'O' | undefined = body?.symbol;
+    // const difficulty: 'easy' | 'hard' | undefined = body?.difficulty;
     const result: 'win' | 'loss' | 'draw' | undefined = body?.result;
     
     if (!address || !completed) {

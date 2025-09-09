@@ -12,7 +12,8 @@ import GameStatus from './components/game/GameStatus';
 import { WalletCheck } from './components/WalletCheck';
 import { playMove, playAIMove, playWin, playLoss, playDraw, resumeAudio, playWarning } from '@/lib/sound';
 import { hapticTap, hapticWin, hapticLoss } from '@/lib/haptics';
-import { useAccount, useSendTransaction } from 'wagmi';
+import { useAccount, useSendTransaction, useSendCalls } from 'wagmi';
+import { encodeFunctionData } from 'viem';
 import { useMiniKit, useIsInMiniApp, useViewProfile } from '@coinbase/onchainkit/minikit';
 
 
@@ -77,6 +78,7 @@ export default function Home() {
 
   const { address } = useAccount();
   const { sendTransactionAsync } = useSendTransaction();
+  const { sendCalls } = useSendCalls();
   const { context, isFrameReady, setFrameReady } = useMiniKit();
   const { isInMiniApp } = useIsInMiniApp();
   const viewProfile = useViewProfile();
@@ -438,12 +440,25 @@ export default function Home() {
             }).then(async r => {
               const data = await r.json();
               if (data?.to && data?.value) {
-                sendTransactionAsync({ 
-                  to: data.to as `0x${string}`, 
-                  value: BigInt(data.value) 
-                }).then(() => {
+                try {
+                  const { SCOREBOARD_ABI, SCOREBOARD_ADDRESS } = await import('@/lib/useScoreboard');
+                  const recordData = encodeFunctionData({
+                    abi: SCOREBOARD_ABI,
+                    functionName: 'recordGame',
+                    args: ['loss']
+                  });
+                  await sendCalls({
+                    calls: [
+                      { to: SCOREBOARD_ADDRESS as `0x${string}`, data: recordData },
+                      { to: data.to as `0x${string}`, value: BigInt(data.value) }
+                    ]
+                  });
+                  showToast('Loss recorded and settled');
+                } catch {
+                  // Fallback to simple transfer if batching not supported
+                  await sendTransactionAsync({ to: data.to as `0x${string}`, value: BigInt(data.value) });
                   showToast('Loss settlement sent');
-                });
+                }
               }
             }).catch(() => {});
           }
@@ -480,7 +495,7 @@ export default function Home() {
       }, 1200);
       return () => clearTimeout(id);
     }
-  }, [gameStatus, startNewGameRound, recordResult, resultRecorded, showToast, address, sendTransactionAsync]);
+  }, [gameStatus, startNewGameRound, recordResult, resultRecorded, showToast, address, sendTransactionAsync, sendCalls]);
 
   // Handle transaction completion and show modal
   useEffect(() => {
@@ -840,6 +855,7 @@ export default function Home() {
                       setSettlingLoss(false);
                       return;
                     }
+                    // Prefer a single native transfer; fall back to batch if needed later
                     const txHash = await sendTransactionAsync({ to: out.to as `0x${string}`, value: BigInt(out.totalWei as string) });
                     try { showToast('All losses settled'); } catch {}
                     try {

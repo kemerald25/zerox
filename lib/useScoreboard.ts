@@ -2,9 +2,9 @@ import { useCallback, useEffect } from 'react';
 import { useAccount, useContractRead, useContractWrite, useTransaction } from 'wagmi';
 
 // You'll need to replace this with your deployed contract address
-const CONTRACT_ADDRESS = '0x6303d8208FA29C20607BDD7DA3e5dD8f68E5146C';
+export const SCOREBOARD_ADDRESS = '0x6303d8208FA29C20607BDD7DA3e5dD8f68E5146C';
 
-const ABI = [
+export const SCOREBOARD_ABI = [
   {
     "inputs": [
       {
@@ -60,8 +60,8 @@ export function useScoreboard() {
   const { address } = useAccount();
 
   const { data: score, refetch: refetchScore } = useContractRead({
-    address: CONTRACT_ADDRESS,
-    abi: ABI,
+    address: SCOREBOARD_ADDRESS,
+    abi: SCOREBOARD_ABI,
     functionName: 'getScore',
     args: address ? [address] : undefined,
   });
@@ -80,8 +80,8 @@ export function useScoreboard() {
 
   const recordResult = useCallback((result: 'win' | 'loss' | 'draw') => {
     recordGame({ 
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
+      address: SCOREBOARD_ADDRESS,
+      abi: SCOREBOARD_ABI,
       functionName: 'recordGame',
       args: [result]
     });

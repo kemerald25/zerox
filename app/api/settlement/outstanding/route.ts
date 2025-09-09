@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
     if (!address) return NextResponse.json({ error: 'address required' }, { status: 400 });
     if (!supabase) return NextResponse.json({ count: 0, sessionIds: [], totalWei: '0' });
 
+    type SessionRow = { id: string };
     const { data: rows } = await supabase
       .from('game_sessions')
       .select('id')
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
       .eq('settled', false)
       .order('created_at', { ascending: true });
 
-    const sessionIds = Array.isArray(rows) ? rows.map((r: any) => r.id as string) : [];
+    const sessionIds: string[] = Array.isArray(rows) ? (rows as SessionRow[]).map((r) => r.id) : [];
     const count = sessionIds.length;
 
     const econ = await getEconomics();
