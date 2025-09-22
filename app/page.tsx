@@ -1,1103 +1,335 @@
 'use client';
 
-import { useScoreboard } from '@/lib/useScoreboard';
-import React, { useState, useCallback, useEffect } from 'react';
-import Image from 'next/image';
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { sdk } from '@farcaster/miniapp-sdk';
-import { shareToFarcaster, GameShareData } from '@/lib/farcaster-share';
-import GameBoard from './components/game/GameBoard';
-import BottomNav from './components/BottomNav';
-import GameStatus from './components/game/GameStatus';
+import React, { useState, useEffect } from 'react';
+import { useAccount } from 'wagmi';
+import { useMiniKit } from '@coinbase/onchainkit/minikit';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { WalletCheck } from './components/WalletCheck';
-import { playMove, playAIMove, playWin, playLoss, playDraw, resumeAudio, playWarning } from '@/lib/sound';
-import { hapticTap, hapticWin, hapticLoss } from '@/lib/haptics';
-import { useAccount, useSendTransaction, useSendCalls } from 'wagmi';
-import { encodeFunctionData } from 'viem';
-import { useMiniKit, useIsInMiniApp, useViewProfile } from '@coinbase/onchainkit/minikit';
-
+import BottomNav from './components/BottomNav';
 
 export default function Home() {
-  useEffect(() => {
-    sdk.actions.ready();
-  }, []);
-  const [boardSize, setBoardSize] = useState<3 | 4 | 5>(3);
-  const [board, setBoard] = useState<Array<string | null>>(Array(3 * 3).fill(null));
-  const [playerSymbol, setPlayerSymbol] = useState<'X' | 'O' | null>('X');
-  const [difficulty] = useState<'easy' | 'hard' | null>('easy');
-  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost' | 'draw'>('playing');
-  const [isPlayerTurn, setIsPlayerTurn] = useState(true);
-  const [outcomeHandled, setOutcomeHandled] = useState(false);
-  const [winningLine, setWinningLine] = useState<number[] | null>(null);
-  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
-  const [misere] = useState(false);
-  const [nextStarter, setNextStarter] = useState<'player' | 'ai'>('player');
-  const computeTurnLimit = useCallback(() => 15, []);
-  // series state removed
-  const [xp, setXp] = useState(0);
-  const [level, setLevel] = useState(1);
-  const [streak, setStreak] = useState(0);
-  const [showSettings, setShowSettings] = useState(false);
-  // Power-ups state (removed quick actions; keep minimal hints/block support for board UI)
-  const [hintIndex, setHintIndex] = useState<number | null>(null);
-  const [blockedCellIndex, setBlockedCellIndex] = useState<number | null>(null);
-  const [selectingBlock, setSelectingBlock] = useState(false);
-  const [doubleActive, setDoubleActive] = useState(false);
-  const [doublePendingSecond, setDoublePendingSecond] = useState(false);
-  // Play page only (tabs split into routes)
-
-  const startNewGameRound = useCallback(() => {
-    const n = boardSize;
-    setBoard(Array(n * n).fill(null));
-    setWinningLine(null);
-    setGameStatus('playing');
-    setIsPlayerTurn(nextStarter === 'player');
-    setSecondsLeft(computeTurnLimit());
-    setOutcomeHandled(false);
-    setResultRecorded(false);
-    setSessionId(null);
-    // reset power-ups
-    setHintIndex(null);
-    setBlockedCellIndex(null);
-    setSelectingBlock(false);
-    setDoubleActive(false);
-    setDoublePendingSecond(false);
-    // alternate who starts next round
-    setNextStarter((s) => (s === 'player' ? 'ai' : 'player'));
-  }, [boardSize, computeTurnLimit, nextStarter]);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [resultRecorded, setResultRecorded] = useState(false);
-
-  // Transaction completion modal
-  const [showTransactionModal, setShowTransactionModal] = useState(false);
-  const [transactionResult, setTransactionResult] = useState<{
-    gameStatus: 'won' | 'lost' | 'draw';
-    payout?: string;
-    transactionHash?: string;
-  } | null>(null);
-
   const { address } = useAccount();
-  const { sendTransactionAsync } = useSendTransaction();
-  const { sendCalls } = useSendCalls();
-  const { context, isFrameReady, setFrameReady } = useMiniKit();
-  const { isInMiniApp } = useIsInMiniApp();
-  const viewProfile = useViewProfile();
-  // Simple toast
-  const [toast, setToast] = useState<string | null>(null);
-  const showToast = useCallback((msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2000); }, []);
-  // Config text from /api/config
-  const [configText, setConfigText] = useState<string>('');
+  const { context } = useMiniKit();
+  const [userStats, setUserStats] = useState(null);
+  const [dailyChallenge, setDailyChallenge] = useState(null);
+
+  // Get user info from context
+  const userName = context?.user?.username || 'Player';
+  const userPfp = context?.user?.pfpUrl;
+
+  // Fetch user stats
   useEffect(() => {
-    const load = async () => {
-      try {
-        const r = await fetch('/api/config');
-        const j = await r.json();
-        if (j && typeof j.payoutEthStr === 'string' && typeof j.chargeEthStr === 'string') {
-          setConfigText(`Win to receive ~${j.payoutEthStr} ETH. Lose and you pay ~${j.chargeEthStr}.`);
-        } else {
-          const p = process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || process.env.PAYOUT_AMOUNT_ETH || '0.00002';
-          setConfigText(`Win to receive ~${p} ETH. Lose and you pay ~${p}.`);
-        }
-      } catch {
-        const p = process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || process.env.PAYOUT_AMOUNT_ETH || '0.00002';
-        setConfigText(`Win to receive ~${p} ETH. Lose and you pay ~${p}.`);
-      }
-    };
-    load();
-  }, []);
-
-
-  useEffect(() => {
-    if (!isFrameReady) setFrameReady();
-  }, [isFrameReady, setFrameReady]);
-
-  // PVP feature removed - no more match_id handling
-
-  // PVP feature removed - no more match link recovery from cast text
-
-  // Prompt to add Mini App after ~5s if not already added
-  const [showAddPrompt, setShowAddPrompt] = useState(false);
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    if (isInMiniApp && context?.client && context.client.added === false) {
-      timer = setTimeout(() => setShowAddPrompt(true), 5000);
+    if (address) {
+      fetchUserStats();
     }
-    return () => { if (timer) clearTimeout(timer); };
-  }, [isInMiniApp, context]);
+  }, [address]);
 
-  // Share functionality temporarily removed
-
-  // handleShareChallenge removed (unused)
-
-  // Post results to leaderboard
-  useEffect(() => {
-    const post = async () => {
-      if (!address) return;
-      if (!(gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw')) return;
-      try {
-        const alias = context?.user && typeof context.user.username === 'string' ? context.user.username : undefined;
-        // Derive pfpUrl from context like in Navbar
-        let pfpUrl: string | undefined;
-        const u = context?.user as unknown as { pfpUrl?: unknown; pfp?: unknown; profile?: { pfp?: unknown; picture?: unknown } } | undefined;
-        const maybePfp = u?.pfpUrl ?? u?.pfp ?? u?.profile?.pfp ?? u?.profile?.picture;
-        if (typeof maybePfp === 'string') pfpUrl = maybePfp;
-        else if (maybePfp && typeof maybePfp === 'object') {
-          const cand = (['url','src','original','default','small','medium','large'] as const)
-            .map((k) => (maybePfp as Record<string, unknown>)[k])
-            .find((v) => typeof v === 'string');
-          if (typeof cand === 'string') pfpUrl = cand;
-        }
-        await fetch('/api/leaderboard', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address, result: gameStatus === 'won' ? 'win' : gameStatus === 'lost' ? 'loss' : 'draw', alias, pfpUrl })
-        });
-      } catch {}
-    };
-    post();
-  }, [address, gameStatus, context]);
-
-
-
-  // Gate gameplay if an unpaid loss settlement exists
-  const [mustSettle, setMustSettle] = useState(false);
-  const [settlingLoss, setSettlingLoss] = useState(false);
-  useEffect(() => {
-    const check = async () => {
-      if (!address) { setMustSettle(false); return; }
-      try {
-        const res = await fetch(`/api/gamesession?address=${address}`);
-        const data = await res.json();
-        setMustSettle(Boolean(data?.required));
-      } catch { setMustSettle(false); }
-    };
-    check();
-  }, [address, gameStatus]);
-
-  // Hide add-mini-app prompt if payment is required so it doesn't block clicks
-  useEffect(() => {
-    if (mustSettle) setShowAddPrompt(false);
-  }, [mustSettle]);
-
-  // Read challenge params from URL to prefill
-  useEffect(() => {
+  const fetchUserStats = async () => {
     try {
-      const url = new URL(window.location.href);
-      const symbolParam = url.searchParams.get('symbol');
-      if ((symbolParam === 'X' || symbolParam === 'O') && !playerSymbol) setPlayerSymbol(symbolParam);
-    } catch {}
-  }, [playerSymbol]);
-
-  const checkWinner = useCallback((squares: Array<string | null>): string | null => {
-    const n = boardSize;
-    const inRow = n === 3 ? 3 : 4; // 4-in-a-row for 4x4/5x5
-    const dirs = [
-      [1, 0], // right
-      [0, 1], // down
-      [1, 1], // diag down-right
-      [1, -1] // diag up-right
-    ];
-    const index = (x: number, y: number) => y * n + x;
-    for (let y = 0; y < n; y++) {
-      for (let x = 0; x < n; x++) {
-        const start = squares[index(x, y)];
-        if (!start) continue;
-        for (const [dx, dy] of dirs) {
-          const cells: number[] = [index(x, y)];
-          let k = 1;
-          while (k < inRow) {
-            const nx = x + dx * k;
-            const ny = y + dy * k;
-            if (nx < 0 || ny < 0 || nx >= n || ny >= n) break;
-            const ii = index(nx, ny);
-            if (squares[ii] !== start) break;
-            cells.push(ii);
-            k++;
-          }
-          if (cells.length === inRow) {
-            setWinningLine(cells);
-            return start;
-          }
-        }
+      const response = await fetch(`/api/user/stats?address=${address}`);
+      if (response.ok) {
+        const data = await response.json();
+        setUserStats(data);
       }
-    }
-    return null;
-  }, [boardSize]);
-
-  const getAvailableMoves = useCallback((squares: Array<string | null>): number[] => {
-    return squares.reduce<number[]>((moves, cell, index) => 
-      cell === null ? [...moves, index] : moves, []);
-  }, []);
-
-  const getAIMove = useCallback((squares: Array<string | null>): number => {
-    let availableMoves = getAvailableMoves(squares);
-    if (blockedCellIndex !== null) {
-      availableMoves = availableMoves.filter((i) => i !== blockedCellIndex);
-    }
-    if (availableMoves.length === 0) return -1;
-    // Randomized AI move for simplicity
-    return availableMoves[Math.floor(Math.random() * availableMoves.length)];
-  }, [getAvailableMoves, blockedCellIndex]);
-
-  // getBestPlayerMove no longer used (quick actions removed)
-
-  const { recordResult, score } = useScoreboard();
-
-  const handleCellClick = async (index: number) => {
-    if (mustSettle) return;
-    if (gameStatus !== 'playing') return;
-
-    // If selecting a block target before ending turn
-    if (selectingBlock && isPlayerTurn && !board[index] && blockedCellIndex === null) {
-      setBlockedCellIndex(index);
-      setSelectingBlock(false);
-      playWarning();
-      return;
-    }
-
-    if (!isPlayerTurn || board[index]) return;
-
-    // Ensure audio is unlocked on user gesture
-    resumeAudio();
-    hapticTap();
-
-    // Ensure a game session exists
-    if (!sessionId && address) {
-      try {
-        const res = await fetch('/api/gamesession', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address }) });
-        if (res.status === 409) { setMustSettle(true); return; }
-        const data = await res.json();
-        if (data?.id) setSessionId(data.id as string);
-      } catch {}
-    }
-
-    // Double move logic
-    if (doubleActive && !doublePendingSecond) {
-      const newBoard = [...board];
-      newBoard[index] = playerSymbol;
-      setBoard(newBoard);
-      playMove();
-      // If this immediately ends the game, finish now
-      const winner = checkWinner(newBoard);
-      if (winner) {
-        const isWin = winner === playerSymbol;
-        setGameStatus(isWin ? 'won' : 'lost');
-        // recordResult will be called in useEffect - don't call here
-        if (sessionId) {
-          try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: isWin ? 'win' : 'loss', settled: isWin }) }); } catch {}
-        }
-        setDoubleActive(false);
-        setDoublePendingSecond(false);
-        return;
-      }
-      if (getAvailableMoves(newBoard).length === 0) {
-        setGameStatus('draw');
-        // recordResult will be called in useEffect - don't call here
-        if (sessionId) {
-          try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: 'draw', settled: true }) }); } catch {}
-        }
-        setDoubleActive(false);
-        setDoublePendingSecond(false);
-        return;
-      }
-      // Stay on player's turn for second move
-      setDoublePendingSecond(true);
-      return;
-    }
-
-    if (doubleActive && doublePendingSecond) {
-      if (board[index]) return;
-      const temp = [...board];
-      temp[index] = playerSymbol;
-      // Cannot win on 2nd move
-      if (checkWinner(temp) === playerSymbol) {
-        playWarning();
-        return;
-      }
-      setBoard(temp);
-      setIsPlayerTurn(false);
-      setDoubleActive(false);
-      setDoublePendingSecond(false);
-      playMove();
-
-      const winner2 = checkWinner(temp);
-      if (winner2) {
-        const isWin = winner2 === playerSymbol;
-        setGameStatus(isWin ? 'won' : 'lost');
-        // recordResult will be called in useEffect - don't call here
-        if (sessionId) {
-          try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: isWin ? 'win' : 'loss', settled: isWin }) }); } catch {}
-        }
-        return;
-      }
-      if (getAvailableMoves(temp).length === 0) {
-        setGameStatus('draw');
-        // recordResult will be called in useEffect - don't call here
-        if (sessionId) {
-          try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: 'draw', settled: true }) }); } catch {}
-        }
-        return;
-      }
-      return;
-    }
-
-    // Normal single-move flow
-    const newBoard = [...board];
-    newBoard[index] = playerSymbol;
-    setBoard(newBoard);
-    setIsPlayerTurn(false);
-
-    // Player move sound
-    playMove();
-
-    const winner = checkWinner(newBoard);
-    if (winner) {
-      const isWin = winner === playerSymbol;
-      setGameStatus(isWin ? 'won' : 'lost');
-      // Update session on immediate result
-      if (sessionId) {
-        try {
-          await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: isWin ? 'win' : 'loss', settled: isWin }) });
-        } catch {}
-      }
-      return;
-    }
-    if (getAvailableMoves(newBoard).length === 0) {
-      setGameStatus('draw');
-      if (sessionId) {
-        try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: 'draw', settled: true }) }); } catch {}
-      }
-      return;
+    } catch (error) {
+      console.error('Failed to fetch user stats:', error);
     }
   };
 
+  // Fetch daily challenge
   useEffect(() => {
-    if (!isPlayerTurn && gameStatus === 'playing') {
-      if (mustSettle) return;
-      const timer = setTimeout(async () => {
-        const aiMove = getAIMove(board);
-        if (aiMove !== -1) {
-          const newBoard = [...board];
-          newBoard[aiMove] = playerSymbol === 'X' ? 'O' : 'X';
-          setBoard(newBoard);
-          // Clear one-turn block after AI moves
-          if (blockedCellIndex !== null) setBlockedCellIndex(null);
+    fetchDailyChallenge();
+  }, []);
 
-          // AI move sound
-          playAIMove();
-
-          const winner = checkWinner(newBoard);
-          if (winner) {
-            const didPlayerWin = winner === playerSymbol;
-            setGameStatus(didPlayerWin ? 'won' : 'lost');
-            // recordResult will be called in useEffect - don't call here
-            if (sessionId) {
-              (async () => { try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: didPlayerWin ? 'win' : 'loss', settled: didPlayerWin }) }); } catch {} })();
-            }
-          } else if (getAvailableMoves(newBoard).length === 0) {
-            setGameStatus('draw');
-            // recordResult will be called in useEffect - don't call here
-            if (sessionId) {
-              (async () => { try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, result: 'draw', settled: true }) }); } catch {} })();
-            }
-          }
-        }
-        setIsPlayerTurn(true);
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [board, isPlayerTurn, playerSymbol, getAIMove, gameStatus, checkWinner, getAvailableMoves, mustSettle, sessionId, blockedCellIndex]);
-
-  // Outcome sounds and onchain recording
-  useEffect(() => {
-    // Record result immediately when game ends
-    if ((gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') && !resultRecorded) {
-      const result = gameStatus === 'won' ? 'win' : gameStatus === 'lost' ? 'loss' : 'draw';
-      
-      // Record result onchain first
-      try { 
-        recordResult(result);
-        setResultRecorded(true);
-        
-        // Then handle payout/charge
-        if (address) {
-          if (gameStatus === 'won') {
-            // Handle win payout
-            fetch('/api/payout', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ address })
-            }).then(r => {
-              if (r.ok) showToast('Winner payout sent');
-            }).catch(() => {});
-          } else if (gameStatus === 'lost') {
-            // Handle loss charge
-            fetch('/api/charge', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ address })
-            }).then(async r => {
-              const data = await r.json();
-              if (data?.to && data?.value) {
-                try {
-                  const { SCOREBOARD_ABI, SCOREBOARD_ADDRESS } = await import('@/lib/useScoreboard');
-                  const recordData = encodeFunctionData({
-                    abi: SCOREBOARD_ABI,
-                    functionName: 'recordGame',
-                    args: ['loss']
-                  });
-                  await sendCalls({
-                    calls: [
-                      { to: SCOREBOARD_ADDRESS as `0x${string}`, data: recordData },
-                      { to: data.to as `0x${string}`, value: BigInt(data.value) }
-                    ]
-                  });
-                  showToast('Loss recorded and settled');
-                } catch {
-                  // Fallback to simple transfer if batching not supported
-                  await sendTransactionAsync({ to: data.to as `0x${string}`, value: BigInt(data.value) });
-                  showToast('Loss settlement sent');
-                }
-              }
-            }).catch(() => {});
-          }
-        }
-      } catch (error) {
-        console.error('Failed to record result:', error);
+  const fetchDailyChallenge = async () => {
+    try {
+      const response = await fetch('/api/daily-challenge');
+      if (response.ok) {
+        const data = await response.json();
+        setDailyChallenge(data);
       }
+    } catch (error) {
+      console.error('Failed to fetch daily challenge:', error);
     }
-
-    if (gameStatus === 'won') {
-      playWin();
-      hapticWin();
-      try { showToast('You won!'); } catch {}
-      // Auto-start a new round shortly after a win
-      const id = setTimeout(() => {
-        startNewGameRound();
-      }, 1200);
-      return () => clearTimeout(id);
-    } else if (gameStatus === 'lost') {
-      playLoss();
-      hapticLoss();
-      try { showToast('You lost'); } catch {}
-      // Auto-start a new round shortly after a loss
-      const id = setTimeout(() => {
-        startNewGameRound();
-      }, 1200);
-      return () => clearTimeout(id);
-    } else if (gameStatus === 'draw') {
-      playDraw();
-      try { showToast("It's a draw"); } catch {}
-      // Auto-start a new round shortly after a draw
-      const id = setTimeout(() => {
-        startNewGameRound();
-      }, 1200);
-      return () => clearTimeout(id);
-    }
-  }, [gameStatus, startNewGameRound, recordResult, resultRecorded, showToast, address, sendTransactionAsync, sendCalls]);
-
-  // Handle transaction completion and show modal
-  useEffect(() => {
-    // Simulate transaction completion after a delay
-    if (resultRecorded && (gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw')) {
-      const timer = setTimeout(() => {
-        const payout = gameStatus === 'won' ? '0.00002' : undefined;
-        const transactionHash = '0x1234...5678'; // You can get this from the actual transaction
-        
-        setTransactionResult({
-          gameStatus,
-          payout,
-          transactionHash
-        });
-        setShowTransactionModal(true);
-      }, 2000); // Show modal after 2 seconds to simulate transaction completion
-      
-      return () => clearTimeout(timer);
-    }
-  }, [resultRecorded, gameStatus]);
-
-  // Series removed
-
-  // Update progress XP/streak/achievements
-  useEffect(() => {
-    const run = async () => {
-      if (!address) return;
-      if (gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') {
-        try {
-          const res = await fetch('/api/progress', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ address, result: gameStatus === 'won' ? 'win' : gameStatus === 'lost' ? 'loss' : 'draw' })
-          });
-          const data = await res.json();
-          if (data?.xp != null) {
-            setXp(Number(data.xp));
-            setLevel(Number(data.level));
-            setStreak(Number(data.streak));
-          }
-          // If daily eligible and this was a win on hard with today's seed, try bonus claim
-          if (gameStatus === 'won') {
-            const url = new URL(window.location.href);
-            const seed = url.searchParams.get('seed') ?? undefined;
-            const symbolParam = url.searchParams.get('symbol');
-            const diffParam = url.searchParams.get('difficulty');
-            const symbol = symbolParam === 'X' || symbolParam === 'O' ? symbolParam : undefined;
-            const difficultySel = diffParam === 'easy' || diffParam === 'hard' ? diffParam : undefined;
-            if (seed && symbol === 'X' && difficultySel === 'hard') {
-              try {
-                await fetch('/api/daily', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ address, completed: true, seed, symbol, difficulty: difficultySel, result: 'win' })
-                });
-              } catch {}
-            }
-          }
-        } catch {}
-      } else if (address) {
-        try {
-          const res = await fetch(`/api/progress?address=${address}`);
-          const data = await res.json();
-          if (data?.xp != null) {
-            setXp(Number(data.xp));
-            setLevel(Number(data.level));
-            setStreak(Number(data.streak));
-          }
-        } catch {}
-      }
-    };
-    run();
-  }, [address, gameStatus]);
-
-  // daily seed fetch removed (unused)
-
-  // Payout/charge handling on game end
-  useEffect(() => {
-    const handleWinPayout = async (playerAddress: string) => {
-      try {
-        const r = await fetch('/api/payout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address: playerAddress, sessionId }),
-        });
-        if (r.ok) { try { showToast('Winner payout sent'); } catch {} } else {
-          try { const j = await r.json(); showToast(j?.error || 'Payout failed'); } catch { showToast('Payout failed'); }
-        }
-      } catch {}
-    };
-
-    const handleLossCharge = async (playerAddress: string) => {
-      try {
-        const res = await fetch('/api/charge', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address: playerAddress, sessionId }),
-        });
-        const data = await res.json();
-        if (data?.to && data?.value) {
-          await sendTransactionAsync({ to: data.to as `0x${string}`, value: BigInt(data.value) });
-          try { showToast('Loss settlement sent'); } catch {}
-          try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: playerAddress, required: false }) }); } catch {}
-          if (sessionId) {
-            try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, settled: true, tx_hash: (data.hash ?? undefined) }) }); } catch {}
-          }
-          // Auto-start a new round after successful settlement
-          startNewGameRound();
-        } else {
-          try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: playerAddress, required: true }) }); } catch {}
-          setMustSettle(true);
-          try { showToast('Payment required to continue'); } catch {}
-          if (sessionId) {
-            try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, requires_settlement: true }) }); } catch {}
-          }
-        }
-      } catch {
-        try { await fetch('/api/settlement', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: playerAddress, required: true }) }); } catch {}
-        setMustSettle(true);
-        try { showToast('Transaction failed'); } catch {}
-        if (sessionId) {
-          try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, requires_settlement: true }) }); } catch {}
-        }
-      }
-    };
-
-    if ((gameStatus === 'won' || gameStatus === 'lost') && !outcomeHandled && address) {
-      setOutcomeHandled(true);
-      if (gameStatus === 'won') {
-        handleWinPayout(address);
-      } else if (gameStatus === 'lost') {
-        handleLossCharge(address);
-      }
-    }
-  }, [gameStatus, address, outcomeHandled, sendTransactionAsync, sessionId, startNewGameRound, showToast]);
-
-  // handleReset no longer used after series removal
-
-  // Start a new round automatically after game ends, preserving symbol and difficulty
-  // startNextRound removed
-
-  // Turn timer logic
-  useEffect(() => {
-    if (gameStatus !== 'playing') {
-      setSecondsLeft(null);
-      return;
-    }
-    // Initialize when player's turn starts
-    if (isPlayerTurn) {
-      setSecondsLeft((prev) => (typeof prev === 'number' ? prev : computeTurnLimit()));
-    }
-  }, [gameStatus, isPlayerTurn, computeTurnLimit]);
-
-  useEffect(() => {
-    if (gameStatus !== 'playing' || !isPlayerTurn || typeof secondsLeft !== 'number') return;
-    if (secondsLeft <= 0) return;
-    const id = setTimeout(() => {
-      const next = secondsLeft - 1;
-      setSecondsLeft(next);
-      if (next === 3 || next === 1) {
-        playWarning();
-      }
-      if (next <= 0) {
-        // Auto-skip: AI moves if player times out
-        setIsPlayerTurn(false);
-      }
-    }, 1000);
-    return () => clearTimeout(id);
-  }, [secondsLeft, gameStatus, isPlayerTurn]);
-
-
-
-  // Handle incoming challenges from Farcaster
-  useEffect(() => {
-    if (!context?.location) return;
-    const loc = context.location as unknown;
-    type CastObj = { hash: string; text: string; author: { username?: string; fid: number } };
-    type CastEmbedLoc = { type: 'cast_embed'; cast: CastObj };
-    if (loc && typeof (loc as CastEmbedLoc).type === 'string' && (loc as CastEmbedLoc).type === 'cast_embed') {
-      const cast = (loc as CastEmbedLoc).cast;
-      if (cast.text.includes('🎮') || cast.text.toLowerCase().includes('challenge')) {
-        showToast(`${cast.author.username || cast.author.fid} challenged you!`);
-        setPlayerSymbol('X');
-      }
-    }
-  }, [context?.location, showToast]);
-
-  // Share game results after transaction is recorded
-  // TODO: Re-enable auto-cast feature once sharing is perfected
-  /*useEffect(() => {
-    if (gameStatus === 'won' && address && resultRecorded) {
-      // Get user info from context
-      const username = context?.user?.username;
-      const pfpUrl = context?.user?.pfpUrl;
-      
-      // Prepare share data
-      if (!playerSymbol || (playerSymbol !== 'X' && playerSymbol !== 'O')) return; // Safety check
-      
-      const shareData: GameShareData = {
-        playerName: username,
-        playerPfp: pfpUrl,
-        opponentName: 'AI',
-        opponentPfp: '/default-avatar.png',
-        playerSymbol, // TypeScript now knows this is 'X' | 'O'
-        result: 'won',
-        roomCode: difficulty || 'AI',
-        timestamp: Date.now()
-      };
-
-      // Share using the shared function
-      shareToFarcaster(shareData)
-        .then(() => {
-          showToast('Game result shared! 🚀');
-        })
-        .catch((e: Error) => {
-          if (e.message.includes('Copied to clipboard')) {
-            showToast('Copied to clipboard! 📋');
-          } else {
-            console.error('Failed to share:', e);
-          }
-        });
-    }
-  }, [gameStatus, address, difficulty, playerSymbol, context?.user, showToast, resultRecorded]);*/
-
-  // Handle direct challenges to other players
-  const handleChallenge = useCallback(async (username?: string) => {
-    const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
-    
-    // If username provided, send direct challenge
-    if (username) {
-      // Clean up username - remove @ if present and trim
-      const cleanUsername = username.trim().replace(/^@/, '');
-      
-      // Create challenge text with @username
-      const challengeText = `🎮 Hey @${cleanUsername}, I challenge you to ZeroX!\n\n💎 Winner gets ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH\n🎯 Accept here: ${appUrl}`;
-      
-      try {
-        const result = await sdk.actions.composeCast({
-          text: challengeText,
-          embeds: [appUrl] as [string],
-          close: false
-        });
-        
-        if (result?.cast) {
-          showToast('Challenge sent! 🎮');
-        }
-      } catch (e) {
-        console.error('Failed to send challenge:', e);
-        showToast('Failed to send challenge 😔');
-      }
-    } else {
-      // Open challenge to everyone
-      const challengeText = `🎮 Who wants to play ZeroX?\n\n💎 Winner gets ${process.env.NEXT_PUBLIC_PAYOUT_AMOUNT_ETH || '0.00002'} ETH\n🎯 Accept here: ${appUrl}`;
-      
-      try {
-        const result = await sdk.actions.composeCast({
-          text: challengeText,
-          embeds: [appUrl] as [string],
-          close: false
-        });
-        
-        if (result?.cast) {
-          showToast('Challenge posted! 🎮');
-        }
-      } catch (e) {
-        console.error('Failed to post challenge:', e);
-        showToast('Failed to post challenge 😔');
-      }
-    }
-  }, [showToast]);
-
-  // remove auto-advance; handled via rematch modal
-
-  // Account for bottom nav height + safe area
-  const bottomInset = (context?.client?.safeAreaInsets?.bottom ?? 0);
-  const bottomNavHeight = 64 + bottomInset;
+  };
 
   return (
     <>
-    <main className="min-h-screen p-4 flex flex-col items-center" style={{ paddingBottom: bottomNavHeight }}>
-      <WalletCheck>
-        {toast && (
-          <div
-            className="fixed top-3 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded shadow-lg border"
-            style={{
-              backgroundColor: gameStatus === 'won' ? '#70FF5A' : gameStatus === 'lost' ? '#000000' : '#ffffff',
-              color: gameStatus === 'lost' ? '#ffffff' : '#000000',
-              borderColor: '#e5e7eb',
-            }}
-          >
-            {toast}
-          </div>
-        )}
-        {/* Results summary pill row (top-right) - only show when board is visible */}
-        {playerSymbol && (
-          <div className="w-full max-w-md mb-2 flex justify-end">
-            <div className="flex items-center gap-2">
-              <div className="px-2 py-1 rounded-md text-[10px] bg-[#70FF5A] text-black font-semibold">W {score?.wins ?? 0}</div>
-              <div className="px-2 py-1 rounded-md text-[10px] bg-white text-black border border-[#e5e7eb] font-semibold">D {score?.draws ?? 0}</div>
-              <div className="px-2 py-1 rounded-md text-[10px] bg-black text-white font-semibold">L {score?.losses ?? 0}</div>
-            </div>
-          </div>
-        )}
-
-        <h1 className="text-4xl font-bold mb-3" style={{ color: '#000000' }}>
-          ZeroX
-        </h1>
-        
-
-        
-        {showAddPrompt && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white p-6 rounded-xl shadow-xl w-80 text-center">
-              <div className="text-lg font-bold mb-2 text-[#70FF5A]">Add this Mini App?</div>
-              <div className="text-sm mb-4 text-black">
-                Quickly access ZeroX from your apps screen.
-              </div>
-              <div className="flex gap-3 justify-center">
-                <button
-                  className="px-4 py-2 rounded-lg bg-[#70FF5A] text-black font-bold hover:bg-[#60E54A] transition-colors"
-                  onClick={async () => {
-                    try { await sdk.actions.addMiniApp(); } catch {}
-                    setShowAddPrompt(false);
-                  }}
-                >
-                  Add Mini App
-                </button>
-                <button
-                  className="px-4 py-2 rounded-lg bg-white text-[#70FF5A] font-bold border border-[#70FF5A] hover:bg-[#70FF5A]/5 transition-colors"
-                  onClick={() => setShowAddPrompt(false)}
-                >
-                  Not now
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        
-      {/* Play page content */}
-      <div className="w-full flex flex-col items-center" style={{ minHeight: `calc(100vh - ${bottomNavHeight}px - 80px)` }}>
-        {mustSettle && (
-          <div className="mb-3 w-full max-w-md p-3 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm">
-            Payment required to continue. Please complete the previous loss transaction.
-            <div className="mt-2 flex justify-center">
-              <button
-                className={`px-4 py-2 rounded bg-red-600 text-white ${settlingLoss ? 'opacity-60 cursor-wait' : ''}`}
-                disabled={settlingLoss}
-                onClick={async () => {
-                  if (!address) { try { showToast('Connect your wallet first'); } catch {} return; }
-                  setSettlingLoss(true);
-                  try {
-                    const res = await fetch(`/api/settlement/outstanding?address=${address}`);
-                    const out = await res.json();
-                    if (!out?.to || !out?.totalWei || !Array.isArray(out?.sessionIds) || out.sessionIds.length === 0) {
-                      try { showToast('Nothing to settle'); } catch {}
-                      setMustSettle(false);
-                      setSettlingLoss(false);
-                      return;
-                    }
-                    // Prefer a single native transfer; fall back to batch if needed later
-                    const txHash = await sendTransactionAsync({ to: out.to as `0x${string}`, value: BigInt(out.totalWei as string) });
-                    try { showToast('All losses settled'); } catch {}
-                    try {
-                      await fetch('/api/settlement/complete', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ address, sessionIds: out.sessionIds as string[], txHash })
-                      });
-                    } catch {}
-                    setMustSettle(false);
-                    if (sessionId) { try { await fetch('/api/gamesession', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, settled: true, tx_hash: txHash as string }) }); } catch {} }
-                  } catch {
-                    try { showToast('Transaction failed'); } catch {}
-                  } finally {
-                    setSettlingLoss(false);
-                  }
-                }}
+      <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+        <WalletCheck>
+          <div className="max-w-4xl mx-auto px-4 py-8">
+            {/* Header */}
+            <div className="text-center mb-12">
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
               >
-                {settlingLoss ? 'Processing…' : 'Complete previous transaction'}
-              </button>
+                <h1 className="text-6xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                  WordWave
+                </h1>
+                <p className="text-xl text-gray-600 mb-2">
+                  Chain Reaction Word Battles
+                </p>
+                <p className="text-gray-500">
+                  Build word chains where each word starts with the last letter of the previous word
+                </p>
+              </motion.div>
             </div>
-          </div>
-        )}
-      {playerSymbol && (
-        <>
-          <div className="mb-3 flex items-center justify-center gap-3 flex-wrap" style={{ color: '#000000' }}>
-            <div className="w-full text-center text-sm opacity-80">
-              {configText}
-            </div>
-            <div className="w-full flex justify-center">
-              <button
-                className="px-4 py-1.5 rounded-full text-sm border bg-white text-[#000000] border-[#70FF5A]"
-                onClick={() => setShowSettings((v) => !v)}
+
+            {/* User Welcome */}
+            {address && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="bg-white rounded-2xl shadow-lg p-6 mb-8"
               >
-                {showSettings ? 'Close Settings' : 'Settings'}
-              </button>
-            </div>
-            {showSettings && (
-              <div className="w-full max-w-md mx-auto p-3 rounded-xl bg-white/90 border border-[#70FF5A]/30 text-[#066c00]">
-                <div className="text-xs font-semibold mb-2" style={{ color: '#066c00' }}>Variants</div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs opacity-80">Size</span>
-                  {([3,4,5] as const).map((n) => (
-                    <button
-                      key={n}
-                      className={`px-3 py-1 rounded-full text-sm border ${boardSize===n?'bg-[#70FF5A] text-white border-[#70FF5A]':'bg-white text-[#70FF5A] border-[#70FF5A]'}`}
-                      onClick={() => {
-                        setBoardSize(n as 3|4|5);
-                        setBoard(Array((n as 3|4|5) * (n as 3|4|5)).fill(null));
-                        setWinningLine(null);
-                        setGameStatus('playing');
-                      }}
-                    >
-                      {n}x{n}
-                    </button>
-                  ))}
+                <div className="flex items-center gap-4">
+                  {userPfp && (
+                    <img
+                      src={userPfp}
+                      alt={userName}
+                      className="w-16 h-16 rounded-full border-4 border-indigo-200"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-bold text-gray-800">
+                      Welcome back, {userName}!
+                    </h2>
+                    {userStats && (
+                      <div className="flex items-center gap-6 mt-2 text-sm text-gray-600">
+                        <span>Level {userStats.level}</span>
+                        <span>{userStats.totalXp} XP</span>
+                        <span>{userStats.gamesWon}/{userStats.gamesPlayed} Wins</span>
+                        <span>{userStats.dailyStreak} Day Streak 🔥</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-indigo-600">
+                      {userStats?.coins || 100}
+                    </div>
+                    <div className="text-sm text-gray-500">Coins</div>
+                  </div>
                 </div>
-                {/* <div className="flex items-center gap-2 mb-2">
-                  <button
-                    className={`px-3 py-1 rounded-full text-sm border ${misere?'bg-[#70FF5A] text-white border-[#70FF5A]':'bg-white text-[#70FF5A] border-[#70FF5A]'}`}
-                    onClick={() => { const next = !misere; setMisere(next); setGameStatus('playing'); setWinningLine(null); setBoard((b)=>b.map(()=>null)); }}
-                  >
-                    Misère
-                  </button>
-                </div> */}
-
-                
-              </div>
+              </motion.div>
             )}
-          </div>
-          <GameStatus status={gameStatus} isPlayerTurn={isPlayerTurn} secondsLeft={secondsLeft ?? null} />
-          {/* Compact level/XP/streak summary above the board */}
-          <div className="m-2 w-full max-w-md px-3 py-2 rounded-lg flex items-center justify-between text-xs" style={{ backgroundColor: '#b6f569', color: '#066c00' }}>
-            <span>Level {level}</span>
-            <span>XP {xp}</span>
-            <span>Streak {streak}🔥</span>
-          </div>
-          <GameBoard
-            board={board}
-            onCellClick={handleCellClick}
-            isPlayerTurn={isPlayerTurn}
-            winningLine={winningLine}
-            size={boardSize}
-            hintIndex={hintIndex}
-            disabledCells={!isPlayerTurn && blockedCellIndex !== null ? [blockedCellIndex] : []}
-          />
 
-          {/* Transaction Completion Modal */}
-          {showTransactionModal && transactionResult && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-2xl p-6 max-w-md w-full text-center">
-                <div className="text-4xl mb-4">
-                  {transactionResult.gameStatus === 'won' ? '🎉' : 
-                   transactionResult.gameStatus === 'lost' ? '😔' : '🎮'}
-                </div>
-                
-                <h2 className="text-2xl font-bold mb-2">
-                  {transactionResult.gameStatus === 'won' ? 'You Won!' : 
-                   transactionResult.gameStatus === 'lost' ? 'You Lost' : "It's a Draw!"}
-                </h2>
-                
-                {transactionResult.gameStatus === 'won' && transactionResult.payout && (
-                  <div className="mb-4 p-3 bg-green-100 rounded-lg">
-                    <p className="text-green-800 font-semibold">
-                      You have received a payout of {transactionResult.payout} ETH
+            {/* Game Modes Grid */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {/* Party Mode */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <Link href="/party">
+                  <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
+                    <div className="text-4xl mb-4">👥</div>
+                    <h3 className="text-2xl font-bold mb-2">Party Mode</h3>
+                    <p className="text-indigo-100 mb-4">
+                      Battle friends in real-time word chain duels
                     </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
+                        2-6 Players
+                      </span>
+                      <span className="text-2xl">→</span>
+                    </div>
                   </div>
-                )}
-                
-                {transactionResult.transactionHash && (
-                  <div className="mb-4 p-2 bg-gray-100 rounded text-xs text-gray-600">
-                    <p>Transaction: {transactionResult.transactionHash.slice(0, 6)}...{transactionResult.transactionHash.slice(-4)}</p>
-                  </div>
-                )}
-                
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => {
-                      setShowTransactionModal(false);
-                      setTransactionResult(null);
-                    }}
-                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+                </Link>
+              </motion.div>
 
-          {/* Social actions */}
-          {(gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'draw') && (
-            <div className="mt-4 flex flex-col sm:flex-row gap-3 items-center">
-              <button
-                className="px-4 py-2 rounded-lg bg-[#70FF5A] text-[#066c00] font-bold hover:bg-[#b6f569] transition-colors"
-                onClick={() => handleChallenge()}
+              {/* Daily Challenge */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
               >
-                Challenge Anyone
-              </button>
-            </div>
-          )}
-          
-          {/* Direct Challenge UI */}
-          <div className="mt-4 w-full max-w-md p-4 rounded-xl bg-gradient-to-r from-[#066c00] to-[#0a8500] border-2 border-[#70FF5A]">
-            <div className="text-lg font-bold mb-2 text-center text-[#70FF5A]">🎮 Challenge Friends</div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="@username"
-                className="flex-1 px-3 py-2 rounded-lg border-2 border-[#70FF5A] bg-white/90 text-[#066c00] font-medium placeholder:text-[#066c00]/60 focus:outline-none focus:border-[#b6f569] focus:bg-white"
-                onChange={(e) => {
-                  const username = e.target.value.trim().replace('@', '');
-                  if (username) {
-                    showToast(`Challenge @${username}?`);
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    const username = e.currentTarget.value.trim().replace('@', '');
-                    if (username) {
-                      handleChallenge(username);
-                      e.currentTarget.value = '';
-                    }
-                  }
-                }}
-              />
-              <button
-                className="px-4 py-2 rounded-lg bg-[#70FF5A] text-[#066c00] font-bold whitespace-nowrap hover:bg-[#b6f569] transition-colors"
-                onClick={() => {
-                  const input = document.querySelector('input[placeholder="@username"]') as HTMLInputElement;
-                  const username = input?.value.trim().replace('@', '');
-                  if (username) {
-                    handleChallenge(username);
-                    input.value = '';
-                  }
-                }}
+                <Link href="/daily">
+                  <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-6 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
+                    <div className="text-4xl mb-4">🏆</div>
+                    <h3 className="text-2xl font-bold mb-2">Daily Challenge</h3>
+                    <p className="text-orange-100 mb-4">
+                      Complete today's special word challenge
+                    </p>
+                    <div className="flex items-center justify-between">
+                      {dailyChallenge ? (
+                        <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
+                          {dailyChallenge.type}
+                        </span>
+                      ) : (
+                        <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
+                          Loading...
+                        </span>
+                      )}
+                      <span className="text-2xl">→</span>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+
+              {/* Practice Mode */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
               >
-                Send Challenge
-              </button>
+                <Link href="/practice">
+                  <div className="bg-gradient-to-br from-green-500 to-teal-500 rounded-2xl p-6 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
+                    <div className="text-4xl mb-4">🤖</div>
+                    <h3 className="text-2xl font-bold mb-2">Practice Mode</h3>
+                    <p className="text-green-100 mb-4">
+                      Sharpen your skills against AI opponents
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
+                        4 Difficulties
+                      </span>
+                      <span className="text-2xl">→</span>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+
+              {/* Tournament Mode */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+              >
+                <Link href="/tournament">
+                  <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-6 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
+                    <div className="text-4xl mb-4">🏅</div>
+                    <h3 className="text-2xl font-bold mb-2">Tournament</h3>
+                    <p className="text-purple-100 mb-4">
+                      Compete in organized brackets for prizes
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
+                        100 Coins Entry
+                      </span>
+                      <span className="text-2xl">→</span>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+
+              {/* Leaderboard */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.7 }}
+              >
+                <Link href="/leaderboard">
+                  <div className="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl p-6 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
+                    <div className="text-4xl mb-4">📊</div>
+                    <h3 className="text-2xl font-bold mb-2">Leaderboard</h3>
+                    <p className="text-yellow-100 mb-4">
+                      See how you rank against other players
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
+                        Global Rankings
+                      </span>
+                      <span className="text-2xl">→</span>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+
+              {/* Profile */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+              >
+                <Link href="/profile">
+                  <div className="bg-gradient-to-br from-gray-600 to-gray-800 rounded-2xl p-6 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
+                    <div className="text-4xl mb-4">👤</div>
+                    <h3 className="text-2xl font-bold mb-2">Profile</h3>
+                    <p className="text-gray-300 mb-4">
+                      View your stats, achievements, and vocabulary
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
+                        Your Stats
+                      </span>
+                      <span className="text-2xl">→</span>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
             </div>
-            <div className="text-xs text-center mt-2 text-[#b6f569] font-medium">
-              Type a username and press Enter or click Send Challenge
-            </div>
-          </div>
-          {/* Attribution for cast embed entry */}
-          {(() => {
-            const loc = context?.location as unknown;
-            type CastAuthor = { fid: number; username?: string; pfpUrl?: unknown };
-            type CastObj = { author: CastAuthor; hash: string };
-            type CastEmbedLoc = { type: 'cast_embed'; cast: CastObj };
-            const isCastEmbed = !!(loc && typeof (loc as CastEmbedLoc).type === 'string' && (loc as CastEmbedLoc).type === 'cast_embed' && (loc as CastEmbedLoc).cast);
-            if (!isInMiniApp || !isCastEmbed) return null;
-            const cast = (loc as CastEmbedLoc).cast;
-            const author = cast.author;
-            const pfp = typeof author.pfpUrl === 'string' ? author.pfpUrl : undefined;
-            return (
-              <div className="mt-4 p-3 rounded-lg bg-[#b6f569]/30 text-[#70FF5A] text-sm flex items-center gap-3">
-                {pfp ? (
-                  <Image src={pfp} alt={author.username || 'pfp'} width={24} height={24} className="rounded-full" />
-                ) : null}
-                <span>Shared by @{author.username || author.fid}</span>
-                <div className="ml-auto flex gap-2">
-                  <button
-                    className="px-3 py-1 rounded bg-[#70FF5A] text-white"
-                    onClick={async () => {
-                      try {
-                        const result = await sdk.actions.composeCast({ 
-                          text: `Thanks @${author.username || author.fid} for sharing! 🙏`, 
-                          parent: { type: 'cast', hash: cast.hash },
-                          close: false
-                        });
-                        if (result?.cast) {
-                          showToast('Thanks sent! 🙏');
-                        }
-                      } catch (e) {
-                        console.error('Failed to send thanks:', e);
-                      }
-                    }}
-                  >
-                    Thank them
-                  </button>
-                  <button
-                    className="px-3 py-1 rounded bg-[#70FF5A]/10 text-[#70FF5A] border border-[#70FF5A]"
-                    onClick={() => {
-                      try { viewProfile(author.fid); } catch {}
-                    }}
-                  >
-                    View profile
-                  </button>
+
+            {/* How to Play */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.9 }}
+              className="bg-white rounded-2xl shadow-lg p-8"
+            >
+              <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+                How to Play WordWave
+              </h2>
+              
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">🔗</span>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                    Build Chains
+                  </h3>
+                  <p className="text-gray-600">
+                    Each word must start with the last letter of the previous word
+                  </p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">⚡</span>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                    Think Fast
+                  </h3>
+                  <p className="text-gray-600">
+                    You have 30 seconds per turn to submit your word
+                  </p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">🏆</span>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                    Score Points
+                  </h3>
+                  <p className="text-gray-600">
+                    Longer words and faster submissions earn more points
+                  </p>
                 </div>
               </div>
-            );
-          })()}
-          {/* Rematch series removed */}
-          <div className="mt-4" />
-        </>
-      )}
-      </div>
-      </WalletCheck>
-    </main>
-    <BottomNav />
+
+              <div className="mt-8 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl">
+                <h4 className="font-semibold text-gray-800 mb-2">Example Chain:</h4>
+                <div className="flex items-center gap-2 text-lg font-mono">
+                  <span className="bg-indigo-200 px-3 py-1 rounded-full">APPLE</span>
+                  <span className="text-gray-400">→</span>
+                  <span className="bg-purple-200 px-3 py-1 rounded-full">ELEPHANT</span>
+                  <span className="text-gray-400">→</span>
+                  <span className="bg-green-200 px-3 py-1 rounded-full">TABLE</span>
+                  <span className="text-gray-400">→</span>
+                  <span className="bg-yellow-200 px-3 py-1 rounded-full">ENERGY</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </WalletCheck>
+      </main>
+      <BottomNav />
     </>
   );
 }
- 
