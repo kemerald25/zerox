@@ -1,168 +1,190 @@
-# ZeroX - Social Game on Base & Farcaster
+# WordWave - Chain Reaction Word Battles
 
-ZeroX is a social-first game built for Base and Farcaster, focusing on competitive play and social sharing.
+WordWave is a social word game built for Base and Farcaster, where players build word chains by connecting words where each word starts with the last letter of the previous word.
 
 ## 🎮 Game Modes
 
 ### 1. Party Mode
 - Create or join rooms with 4-letter codes
-- Play against friends in real-time
+- Play against friends in real-time (2-6 players)
+- Build word chains collaboratively or competitively
 - Share results directly to Farcaster
-- Beautiful shareable result cards
 
 ### 2. Daily Challenge
-- New challenge every day
+- New themed challenge every day
+- Special rules like letter restrictions or speed challenges
 - Compete on the daily leaderboard
-- Earn rewards for completing challenges
-- Track your daily streak
+- Earn bonus coins and XP
 
 ### 3. Practice Mode
-- Play against AI
-- Multiple difficulty levels
-- Perfect your strategy
-- No stakes, just practice
+- Play against AI opponents
+- Multiple difficulty levels (Beginner to Expert)
+- Different AI personalities (Friendly, Competitive, Educational)
+- Perfect your word chain building skills
 
-## 🏆 Competitive Features
+### 4. Tournament Mode
+- Weekly organized tournaments
+- Entry fee: 100 coins
+- Single/Double elimination brackets
+- Win prizes and climb rankings
 
-### Leaderboard System
-- Weekly rankings
-- All-time stats
-- Win/loss tracking
-- Player profiles
+## 🔗 How to Play
 
-### Rewards
-- Win ETH for victories
-- Daily bonus rewards
-- Special achievements
-- Seasonal rewards
+### Basic Rules
+1. **Chain Building**: Each word must start with the last letter of the previous word
+2. **Time Limit**: 30 seconds per turn
+3. **Word Length**: 3-15 characters
+4. **No Repeats**: Can't reuse words in the same game
+5. **Dictionary Check**: All words validated against English dictionary
 
-## 🔄 Real-time Gameplay
+### Scoring System
+- **Base Points**: Word length
+- **Speed Bonus**: +20% for words under 10 seconds
+- **Long Word Bonus**: +30% for 8+ letter words
+- **Rare Word Bonus**: +50% for difficult/uncommon words
+- **Special Bonuses**: 
+  - Palindromes: +5 points
+  - Compound words: +3 points
+  - Technical terms: +2 points
 
-### Party Mode Flow
-1. **Create Room**
-   - Click "CREATE ROOM"
-   - Get a unique 4-letter code
-   - Share with friends
+### Example Chain
+```
+APPLE → ELEPHANT → TABLE → ENERGY → YELLOW → WONDERFUL
+```
 
-2. **Join Room**
-   - Enter room code
-   - Connect with opponent
-   - Start playing instantly
+## 🏆 Progression System
 
-3. **Gameplay**
-   - Real-time moves
-   - Live opponent status
-   - Turn timer
-   - Game state sync
+### Player Levels
+- **Max Level**: 100
+- **XP Sources**:
+  - Game completion: 25 XP
+  - Each word played: 2 XP
+  - Winning games: 50 XP
+  - Daily challenges: 100 XP
+  - Achievements: Variable XP
 
-4. **Results**
-   - Beautiful result cards
-   - Share on Farcaster
-   - Instant rewards
-   - Play again option
+### Achievements
+- **Word Warrior**: Win 10 games
+- **Speed Demon**: Submit 10 words under 5 seconds
+- **Vocabulary Master**: Use 100 unique words
+- **Chain Reaction**: Create a 15+ word chain
+- **Comeback King**: Win after being 50+ points behind
+- **Daily Devotee**: Complete 30 daily challenges
+
+## 💰 Economy & Rewards
+
+### Coins System
+- **Starting Coins**: 100
+- **Earning Methods**:
+  - Daily login bonus
+  - Game completion
+  - Achievement unlocks
+  - Tournament prizes
+
+### Premium Features
+- **Cosmetics**: Word animations, themes, profile frames
+- **Gameplay**: Hints, time extensions, skip protection
+- **Social**: Custom room themes, private tournaments
 
 ## 🌐 Social Features
 
 ### Farcaster Integration
-- One-click sharing
-- Challenge friends
-- Share victories
-- Embedded game results
+- Share epic words and win streaks
+- Challenge friends directly
+- Auto-generated highlight reels
+- Community voting on weekly themes
 
-### Challenge System
-- Direct challenges
-- Room code sharing
-- Cast-to-play functionality
-- Auto-join from casts
+### Spectator Mode
+- Watch live games
+- Chat with other spectators
+- Reaction emojis
+- Prediction betting (coins only)
 
-## 💻 Technical Stack
+## 🔧 Technical Features
 
-### Frontend
-- Next.js 13 App Router
-- React 18
-- Tailwind CSS
-- Framer Motion
-
-### Backend
-- Supabase Database
-- Pusher WebSockets
-- Redis Caching
-- Base Smart Contracts
-
-### Integrations
-- Farcaster SDK
-- Base MiniKit
-- OnchainKit
-- Wagmi
-
-## 🔧 Development
-
-1. Install dependencies:
-\`\`\`bash
-npm install
-# or
-yarn install
-\`\`\`
-
-2. Set up environment variables:
-\`\`\`bash
-cp .env.example .env.local
-\`\`\`
-
-Required variables:
-- \`NEXT_PUBLIC_URL\`: Your app URL
-- \`NEXT_PUBLIC_PUSHER_KEY\`: Pusher key for real-time
-- \`NEXT_PUBLIC_SUPABASE_URL\`: Supabase URL
-- \`NEXT_PUBLIC_SUPABASE_ANON_KEY\`: Supabase anon key
-
-3. Run development server:
-\`\`\`bash
-npm run dev
-\`\`\`
-
-## 📱 Features in Detail
-
-### Real-time Game State
+### Real-time Multiplayer
 - WebSocket connections via Pusher
-- Instant move updates
+- Instant word validation
+- Live score updates
 - Player presence tracking
-- Game state synchronization
 
-### Social Sharing
-- Shareable result cards
-- Direct Farcaster integration
-- Challenge links
-- Embedded results
+### Dictionary Integration
+- Primary: Merriam-Webster API
+- Fallback: Wordnik API
+- Local caching for performance
+- Profanity filtering
 
-### User Profiles
-- Farcaster integration
-- Win/loss statistics
-- Achievement tracking
-- Player rankings
+### Blockchain Integration
+- Built on Base network
+- Farcaster Mini App
+- Secure wallet connections
+- On-chain achievements (optional)
 
-### Smart Contract Integration
-- Automated payouts
-- Secure transactions
-- Verifiable results
-- On-chain statistics
+## 📱 Getting Started
 
-## 🔐 Security
+### For Players
+1. Connect your Farcaster wallet
+2. Choose a game mode
+3. Start building word chains!
+4. Earn XP, coins, and achievements
 
-- Rate limiting on game actions
-- Move validation
-- Anti-cheat measures
-- Secure WebSocket connections
-- Protected API endpoints
+### For Developers
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables
+4. Run development server: `npm run dev`
 
-## 📈 Future Plans
+## 🎯 Game Strategy Tips
 
-- Tournament mode
-- Team battles
-- Custom board sizes
-- More social features
-- Enhanced rewards
-- Mobile app
+### Winning Strategies
+1. **Learn Common Endings**: Words ending in 'E', 'S', 'T' give more options
+2. **Speed vs. Length**: Balance quick submissions with longer words
+3. **Vocabulary Building**: Study word lists to expand options
+4. **Pattern Recognition**: Remember successful chains for future games
+5. **Opponent Analysis**: Watch for their preferred word types
+
+### Advanced Techniques
+- **Chain Planning**: Think 2-3 words ahead
+- **Letter Management**: Avoid difficult letters when possible
+- **Time Management**: Use full 30 seconds for complex words
+- **Bluffing**: Sometimes skip to break opponent's rhythm
+
+## 🏅 Competitive Scene
+
+### Rankings
+- **Global Leaderboard**: All-time top players
+- **Weekly Seasons**: Fresh competition every week
+- **Daily Challenges**: Special themed competitions
+- **Tournament Brackets**: Organized competitive play
+
+### Statistics Tracking
+- Win/loss ratios
+- Average word length
+- Speed metrics
+- Vocabulary diversity
+- Streak records
+
+## 🔮 Future Features
+
+### Planned Updates
+- **Team Battles**: 3v3 word chain battles
+- **Custom Dictionaries**: Themed word sets
+- **Voice Mode**: Speak your words instead of typing
+- **AR Mode**: Visualize word chains in 3D space
+- **Educational Partnerships**: School-friendly versions
+
+### Community Requests
+- **Word Definitions**: Hover to see meanings
+- **Etymology Mode**: Learn word origins
+- **Multiple Languages**: Support for other languages
+- **Accessibility**: Screen reader support, colorblind-friendly
 
 ## 📄 License
 
-MIT License - see LICENSE file for details
+MIT License - Build amazing word games and share the joy of language!
+
+---
+
+**Ready to start your word chain adventure?** 🚀
+
+Connect your wallet and dive into the world of WordWave - where every letter counts and every word matters!
