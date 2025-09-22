@@ -48,7 +48,7 @@ export async function shareToFarcaster(data: GameShareData) {
     await sdk.actions.composeCast({
       text: shareText,
       embeds: [shareUrl] as [string],
-      channelKey: "zerox",
+      channelKey: "wordwave",
       close: false
     });
   } catch (e) {

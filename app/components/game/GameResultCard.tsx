@@ -30,7 +30,7 @@ export const GameResultCard = ({
 }: GameResultCardProps) => {
   return (
     <div
-      id="zerox-result"
+      id="wordwave-result"
       className="w-full bg-white border-[3px] border-black rounded-[12px] mx-auto flex flex-col items-center relative overflow-hidden p-8"
       style={{ boxShadow: "0px 4px 0px 0px rgba(0, 0, 0, 1)" }}
     >
