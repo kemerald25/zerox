@@ -153,7 +153,7 @@ export default function Home() {
                     <div className="text-4xl mb-4">🏆</div>
                     <h3 className="text-2xl font-bold mb-2">Daily Challenge</h3>
                     <p className="text-orange-100 mb-4">
-                      Complete today's special word challenge
+                      Complete today&apos;s special word challenge
                     </p>
                     <div className="flex items-center justify-between">
                       {dailyChallenge ? (

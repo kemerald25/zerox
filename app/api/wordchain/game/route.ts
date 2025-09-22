@@ -2,13 +2,62 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { WordChainUtils } from '@/lib/wordChainLogic';
 
+// Type definitions
+interface GameParticipant {
+  id: string;
+  user_id: string;
+  player_order: number;
+  score: number;
+  words_played: number;
+  is_winner: boolean;
+  users?: {
+    username?: string;
+    display_name?: string;
+    avatar_url?: string;
+  };
+}
+
+interface GameWord {
+  id: string;
+  word: string;
+  word_order: number;
+  points_earned: number;
+  time_taken: number;
+  user_id: string;
+  created_at: string;
+}
+
+interface Game {
+  id: string;
+  room_code: string;
+  game_mode: string;
+  status: string;
+  theme?: string;
+  current_word?: string;
+  current_player_id?: string;
+  word_chain_data?: unknown[];
+  final_chain_length?: number;
+  words_used?: string[];
+  max_players: number;
+  turn_duration: number;
+  game_duration: number;
+  started_at?: string;
+  ended_at?: string;
+  participants: GameParticipant[];
+  words: GameWord[];
+}
+
+interface SubmitWordData {
+  word: string;
+  timeTaken?: number;
+}
+
 // Create a new game
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { 
       hostId, 
-      hostName, 
       gameMode = 'party', 
       theme = null,
       maxPlayers = 2,
@@ -173,7 +222,7 @@ export async function GET(req: NextRequest) {
       gameDuration: game.game_duration,
       startedAt: game.started_at,
       endedAt: game.ended_at,
-      participants: game.participants.map((p: any) => ({
+      participants: game.participants.map((p: GameParticipant) => ({
         id: p.id,
         userId: p.user_id,
         playerOrder: p.player_order,
@@ -182,7 +231,7 @@ export async function GET(req: NextRequest) {
         isWinner: p.is_winner,
         user: p.users
       })),
-      words: game.words.map((w: any) => ({
+      words: game.words.map((w: GameWord) => ({
         id: w.id,
         word: w.word,
         order: w.word_order,
@@ -229,13 +278,13 @@ export async function PUT(req: NextRequest) {
     
     switch (action) {
       case 'join':
-        return await handleJoinGame(gameId, userId, userName);
+        return await handleJoinGame(gameId, userId);
       
       case 'start':
         return await handleStartGame(gameId);
       
       case 'submit_word':
-        return await handleSubmitWord(gameId, userId, actionData);
+        return await handleSubmitWord(gameId, userId, actionData as SubmitWordData);
       
       case 'skip_turn':
         return await handleSkipTurn(gameId, userId);
@@ -259,7 +308,7 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-async function handleJoinGame(gameId: string, userId: string, userName?: string) {
+async function handleJoinGame(gameId: string, userId: string) {
   if (!supabase) throw new Error('Database not available');
   
   // Check if game exists and has space
@@ -348,7 +397,7 @@ async function handleStartGame(gameId: string) {
   }
   
   // Start the game
-  const firstPlayer = game.participants.find((p: any) => p.player_order === 0);
+  const firstPlayer = game.participants.find((p: GameParticipant) => p.player_order === 0);
   
   const { error: updateError } = await supabase
     .from('games')
@@ -373,7 +422,7 @@ async function handleStartGame(gameId: string) {
   });
 }
 
-async function handleSubmitWord(gameId: string, userId: string, actionData: any) {
+async function handleSubmitWord(gameId: string, userId: string, actionData: SubmitWordData) {
   if (!supabase) throw new Error('Database not available');
   
   const { word, timeTaken = 30 } = actionData;
@@ -456,7 +505,7 @@ async function handleSubmitWord(gameId: string, userId: string, actionData: any)
     .eq('user_id', userId);
   
   // Find next player
-  const currentPlayerIndex = game.participants.findIndex((p: any) => p.user_id === userId);
+  const currentPlayerIndex = game.participants.findIndex((p: GameParticipant) => p.user_id === userId);
   const nextPlayerIndex = (currentPlayerIndex + 1) % game.participants.length;
   const nextPlayer = game.participants[nextPlayerIndex];
   
@@ -508,7 +557,7 @@ async function handleSkipTurn(gameId: string, userId: string) {
     .eq('user_id', userId);
   
   // Find next player
-  const currentPlayerIndex = game.participants.findIndex((p: any) => p.user_id === userId);
+  const currentPlayerIndex = game.participants.findIndex((p: GameParticipant) => p.user_id === userId);
   const nextPlayerIndex = (currentPlayerIndex + 1) % game.participants.length;
   const nextPlayer = game.participants[nextPlayerIndex];
   
@@ -545,7 +594,7 @@ async function handleEndGame(gameId: string) {
   }
   
   // Find winner (highest score)
-  const winner = game.participants.reduce((prev: any, current: any) => 
+  const winner = game.participants.reduce((prev: GameParticipant, current: GameParticipant) => 
     (current.score > prev.score) ? current : prev
   );
   
@@ -583,7 +632,7 @@ async function handleEndGame(gameId: string) {
   return NextResponse.json({
     success: true,
     winner: winner,
-    finalScores: game.participants.map((p: any) => ({
+    finalScores: game.participants.map((p: GameParticipant) => ({
       userId: p.user_id,
       score: p.score,
       wordsPlayed: p.words_played,

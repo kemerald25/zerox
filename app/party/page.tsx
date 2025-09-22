@@ -1,206 +1,239 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
-import { useMiniKit } from '@coinbase/onchainkit/minikit';
-import { motion } from 'framer-motion';
-import WordChainBoard from '../components/WordChainBoard';
-import { WalletCheck } from '../components/WalletCheck';
-import BottomNav from '../components/BottomNav';
+import React, { useState } from "react";
+import { useAccount } from "wagmi";
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
+import { motion } from "framer-motion";
+import WordChainBoard from "../components/WordChainBoard";
+import { WalletCheck } from "../components/WalletCheck";
+import BottomNav from "../components/BottomNav";
 
-export default function PartyPage() {
+// Type definitions
+interface GameParticipant {
+  userId: string;
+  user?: {
+    username?: string;
+    display_name?: string;
+  };
+  score: number;
+}
+
+interface GameData {
+  id: string;
+  roomCode: string;
+  status: "waiting" | "playing" | "completed";
+  participants?: GameParticipant[];
+  words?: string[];
+  currentPlayerId?: string;
+  currentWord?: string;
+}
+
+interface ApiResponse {
+  success: boolean;
+  game?: GameData;
+  error?: string;
+  errors?: string[];
+}
+
+type GameState = "menu" | "creating" | "joining" | "playing" | "completed";
+
+export default function PartyPage(): JSX.Element {
   const { address } = useAccount();
   const { context } = useMiniKit();
-  const [gameState, setGameState] = useState('menu'); // menu, creating, joining, playing, completed
-  const [currentGame, setCurrentGame] = useState(null);
-  const [roomCode, setRoomCode] = useState('');
-  const [joinCode, setJoinCode] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [gameState, setGameState] = useState<GameState>("menu");
+  const [currentGame, setCurrentGame] = useState<GameData | null>(null);
+  const [roomCode, setRoomCode] = useState<string>("");
+  const [joinCode, setJoinCode] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
   // Get user info from context
-  const userName = context?.user?.username || 'Player';
-  const userPfp = context?.user?.pfpUrl;
+  const userName: string = context?.user?.username || "Player";
 
   // Create a new game room
-  const createRoom = async () => {
+  const createRoom = async (): Promise<void> => {
     if (!address) return;
-    
+
     setIsLoading(true);
-    setError('');
-    
+    setError("");
+
     try {
-      const response = await fetch('/api/wordchain/game', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/wordchain/game", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           hostId: address,
           hostName: userName,
-          gameMode: 'party',
-          maxPlayers: 6
-        })
+          gameMode: "party",
+          maxPlayers: 6,
+        }),
       });
-      
-      const data = await response.json();
-      
-      if (data.success) {
+
+      const data: ApiResponse = await response.json();
+
+      if (data.success && data.game) {
         setCurrentGame(data.game);
         setRoomCode(data.game.roomCode);
-        setGameState('creating');
-        
+        setGameState("creating");
+
         // Share room code on Farcaster
         shareRoomCode(data.game.roomCode);
       } else {
-        setError(data.error || 'Failed to create room');
+        setError(data.error || "Failed to create room");
       }
     } catch (err) {
-      setError('Failed to create room');
-      console.error('Create room error:', err);
+      setError("Failed to create room");
+      console.error("Create room error:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
   // Join an existing game room
-  const joinRoom = async () => {
+  const joinRoom = async (): Promise<void> => {
     if (!address || !joinCode.trim()) return;
-    
+
     setIsLoading(true);
-    setError('');
-    
+    setError("");
+
     try {
       // First get the game
-      const gameResponse = await fetch(`/api/wordchain/game?roomCode=${joinCode.toUpperCase()}`);
-      const gameData = await gameResponse.json();
-      
-      if (!gameData.success) {
-        setError('Room not found');
+      const gameResponse = await fetch(
+        `/api/wordchain/game?roomCode=${joinCode.toUpperCase()}`,
+      );
+      const gameData: ApiResponse = await gameResponse.json();
+
+      if (!gameData.success || !gameData.game) {
+        setError("Room not found");
         return;
       }
-      
+
       // Then join it
-      const joinResponse = await fetch('/api/wordchain/game', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const joinResponse = await fetch("/api/wordchain/game", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           gameId: gameData.game.id,
-          action: 'join',
+          action: "join",
           userId: address,
-          userName
-        })
+          userName,
+        }),
       });
-      
-      const joinData = await joinResponse.json();
-      
+
+      const joinData: ApiResponse = await joinResponse.json();
+
       if (joinData.success) {
         setCurrentGame(gameData.game);
-        setGameState('playing');
+        setGameState("playing");
         startGamePolling(gameData.game.id);
       } else {
-        setError(joinData.error || 'Failed to join room');
+        setError(joinData.error || "Failed to join room");
       }
     } catch (err) {
-      setError('Failed to join room');
-      console.error('Join room error:', err);
+      setError("Failed to join room");
+      console.error("Join room error:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
   // Share room code on Farcaster
-  const shareRoomCode = async (code) => {
+  const shareRoomCode = async (code: string): Promise<void> => {
     try {
-      const appUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
+      const appUrl =
+        typeof window !== "undefined"
+          ? window.location.origin
+          : process.env.NEXT_PUBLIC_URL || "";
       const shareText = `🔗 Join my WordWave battle!\n\nRoom Code: ${code}\n\nBuild word chains where each word starts with the last letter of the previous word!\n\n👉 ${appUrl}/party`;
-      
+
       // Use Farcaster SDK to compose cast
       if (context?.composeCast) {
         await context.composeCast({
           text: shareText,
-          embeds: [appUrl]
+          embeds: [appUrl],
         });
       }
     } catch (error) {
-      console.error('Failed to share room code:', error);
+      console.error("Failed to share room code:", error);
     }
   };
 
   // Start the game
-  const startGame = async () => {
+  const startGame = async (): Promise<void> => {
     if (!currentGame) return;
-    
+
     setIsLoading(true);
     try {
-      const response = await fetch('/api/wordchain/game', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/wordchain/game", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           gameId: currentGame.id,
-          action: 'start'
-        })
+          action: "start",
+        }),
       });
-      
-      const data = await response.json();
-      
+
+      const data: ApiResponse = await response.json();
+
       if (data.success) {
-        setGameState('playing');
+        setGameState("playing");
         startGamePolling(currentGame.id);
       } else {
-        setError(data.error || 'Failed to start game');
+        setError(data.error || "Failed to start game");
       }
     } catch (err) {
-      setError('Failed to start game');
-      console.error('Start game error:', err);
+      setError("Failed to start game");
+      console.error("Start game error:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
   // Poll for game updates
-  const startGamePolling = (gameId) => {
+  const startGamePolling = (gameId: string): (() => void) => {
     const interval = setInterval(async () => {
       try {
         const response = await fetch(`/api/wordchain/game?gameId=${gameId}`);
-        const data = await response.json();
-        
-        if (data.success) {
+        const data: ApiResponse = await response.json();
+
+        if (data.success && data.game) {
           setCurrentGame(data.game);
-          
-          if (data.game.status === 'completed') {
-            setGameState('completed');
+
+          if (data.game.status === "completed") {
+            setGameState("completed");
             clearInterval(interval);
           }
         }
       } catch (error) {
-        console.error('Polling error:', error);
+        console.error("Polling error:", error);
       }
     }, 2000);
-    
+
     // Cleanup on unmount
     return () => clearInterval(interval);
   };
 
   // Handle word submission
-  const handleWordSubmit = async (word) => {
+  const handleWordSubmit = async (word: string): Promise<void> => {
     if (!currentGame || !address) return;
-    
+
     try {
-      const response = await fetch('/api/wordchain/game', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/wordchain/game", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           gameId: currentGame.id,
-          action: 'submit_word',
+          action: "submit_word",
           userId: address,
           word,
-          timeTaken: 30 // This would be calculated from actual time
-        })
+          timeTaken: 30, // This would be calculated from actual time
+        }),
       });
-      
-      const data = await response.json();
-      
+
+      const data: ApiResponse = await response.json();
+
       if (!data.success) {
-        throw new Error(data.errors?.[0] || 'Invalid word');
+        throw new Error(data.errors?.[0] || "Invalid word");
       }
     } catch (error) {
       throw error;
@@ -208,31 +241,31 @@ export default function PartyPage() {
   };
 
   // Handle skip turn
-  const handleSkipTurn = async () => {
+  const handleSkipTurn = async (): Promise<void> => {
     if (!currentGame || !address) return;
-    
+
     try {
-      await fetch('/api/wordchain/game', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch("/api/wordchain/game", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           gameId: currentGame.id,
-          action: 'skip_turn',
-          userId: address
-        })
+          action: "skip_turn",
+          userId: address,
+        }),
       });
     } catch (error) {
-      console.error('Skip turn error:', error);
+      console.error("Skip turn error:", error);
     }
   };
 
   // Reset to menu
-  const resetToMenu = () => {
-    setGameState('menu');
+  const resetToMenu = (): void => {
+    setGameState("menu");
     setCurrentGame(null);
-    setRoomCode('');
-    setJoinCode('');
-    setError('');
+    setRoomCode("");
+    setJoinCode("");
+    setError("");
   };
 
   return (
@@ -262,7 +295,7 @@ export default function PartyPage() {
             )}
 
             {/* Menu State */}
-            {gameState === 'menu' && (
+            {gameState === "menu" && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -286,7 +319,7 @@ export default function PartyPage() {
                         disabled={isLoading}
                         className="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50 transition-colors"
                       >
-                        {isLoading ? 'Creating...' : 'Create Room'}
+                        {isLoading ? "Creating..." : "Create Room"}
                       </button>
                     </div>
                   </div>
@@ -307,7 +340,9 @@ export default function PartyPage() {
                         <input
                           type="text"
                           value={joinCode}
-                          onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                          onChange={(e) =>
+                            setJoinCode(e.target.value.toUpperCase())
+                          }
                           placeholder="Enter room code"
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none text-center font-mono text-lg"
                           maxLength={4}
@@ -317,7 +352,7 @@ export default function PartyPage() {
                           disabled={isLoading || !joinCode.trim()}
                           className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 disabled:opacity-50 transition-colors"
                         >
-                          {isLoading ? 'Joining...' : 'Join Room'}
+                          {isLoading ? "Joining..." : "Join Room"}
                         </button>
                       </div>
                     </div>
@@ -327,7 +362,7 @@ export default function PartyPage() {
             )}
 
             {/* Creating/Waiting State */}
-            {gameState === 'creating' && (
+            {gameState === "creating" && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -373,22 +408,30 @@ export default function PartyPage() {
             )}
 
             {/* Playing State */}
-            {gameState === 'playing' && currentGame && (
+            {gameState === "playing" && currentGame && (
               <WordChainBoard
                 gameState={{
                   wordChain: currentGame.words || [],
-                  currentPlayer: currentGame.participants?.find(p => p.userId === currentGame.currentPlayerId),
+                  currentPlayer: currentGame.participants?.find(
+                    (p) => p.userId === currentGame.currentPlayerId,
+                  ),
                   requiredFirstLetter: currentGame.currentWord?.slice(-1),
-                  scores: currentGame.participants?.reduce((acc, p) => {
-                    acc[p.userId] = p.score;
-                    return acc;
-                  }, {}) || {},
-                  players: currentGame.participants?.map(p => ({
-                    id: p.userId,
-                    name: p.user?.username || p.user?.display_name || 'Player'
-                  })) || [],
+                  scores:
+                    currentGame.participants?.reduce(
+                      (acc, p) => {
+                        acc[p.userId] = p.score;
+                        return acc;
+                      },
+                      {} as Record<string, number>,
+                    ) || {},
+                  players:
+                    currentGame.participants?.map((p) => ({
+                      id: p.userId,
+                      name:
+                        p.user?.username || p.user?.display_name || "Player",
+                    })) || [],
                   status: currentGame.status,
-                  turnStartTime: Date.now() // This should come from the server
+                  turnStartTime: Date.now(), // This should come from the server
                 }}
                 onWordSubmit={handleWordSubmit}
                 onSkipTurn={handleSkipTurn}
@@ -397,7 +440,7 @@ export default function PartyPage() {
             )}
 
             {/* Completed State */}
-            {gameState === 'completed' && currentGame && (
+            {gameState === "completed" && currentGame && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

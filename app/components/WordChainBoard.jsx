@@ -297,7 +297,7 @@ const WordChainBoard = ({
       {isSpectator && (
         <div className="bg-gray-100 rounded-xl p-4 text-center">
           <p className="text-gray-600">
-            You're watching this game. Enjoy the word battle! 👀
+            You&apos;re watching this game. Enjoy the word battle! 👀
           </p>
         </div>
       )}
