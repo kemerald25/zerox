@@ -1,21 +1,39 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
-import { useMiniKit } from '@coinbase/onchainkit/minikit';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { WalletCheck } from './components/WalletCheck';
-import BottomNav from './components/BottomNav';
+import React, { useState, useEffect } from "react";
+import { useAccount } from "wagmi";
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { WalletCheck } from "./components/WalletCheck";
+import BottomNav from "./components/BottomNav";
+
+// Type definitions
+interface UserStats {
+  level: number;
+  totalXp: number;
+  gamesWon: number;
+  gamesPlayed: number;
+  dailyStreak: number;
+  coins: number;
+}
+
+interface DailyChallenge {
+  type: string;
+  description?: string;
+  reward?: number;
+}
 
 export default function Home() {
   const { address } = useAccount();
   const { context } = useMiniKit();
-  const [userStats, setUserStats] = useState(null);
-  const [dailyChallenge, setDailyChallenge] = useState(null);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(
+    null,
+  );
 
   // Get user info from context
-  const userName = context?.user?.username || 'Player';
+  const userName = context?.user?.username || "Player";
   const userPfp = context?.user?.pfpUrl;
 
   // Fetch user stats
@@ -33,7 +51,7 @@ export default function Home() {
         setUserStats(data);
       }
     } catch (error) {
-      console.error('Failed to fetch user stats:', error);
+      console.error("Failed to fetch user stats:", error);
     }
   };
 
@@ -44,13 +62,13 @@ export default function Home() {
 
   const fetchDailyChallenge = async () => {
     try {
-      const response = await fetch('/api/daily-challenge');
+      const response = await fetch("/api/daily-challenge");
       if (response.ok) {
         const data = await response.json();
         setDailyChallenge(data);
       }
     } catch (error) {
-      console.error('Failed to fetch daily challenge:', error);
+      console.error("Failed to fetch daily challenge:", error);
     }
   };
 
@@ -73,7 +91,8 @@ export default function Home() {
                   Chain Reaction Word Battles
                 </p>
                 <p className="text-gray-500">
-                  Build word chains where each word starts with the last letter of the previous word
+                  Build word chains where each word starts with the last letter
+                  of the previous word
                 </p>
               </motion.div>
             </div>
@@ -102,7 +121,9 @@ export default function Home() {
                       <div className="flex items-center gap-6 mt-2 text-sm text-gray-600">
                         <span>Level {userStats.level}</span>
                         <span>{userStats.totalXp} XP</span>
-                        <span>{userStats.gamesWon}/{userStats.gamesPlayed} Wins</span>
+                        <span>
+                          {userStats.gamesWon}/{userStats.gamesPlayed} Wins
+                        </span>
                         <span>{userStats.dailyStreak} Day Streak 🔥</span>
                       </div>
                     )}
@@ -274,7 +295,7 @@ export default function Home() {
               <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
                 How to Play WordWave
               </h2>
-              
+
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="text-center">
                   <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -284,10 +305,11 @@ export default function Home() {
                     Build Chains
                   </h3>
                   <p className="text-gray-600">
-                    Each word must start with the last letter of the previous word
+                    Each word must start with the last letter of the previous
+                    word
                   </p>
                 </div>
-                
+
                 <div className="text-center">
                   <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl">⚡</span>
@@ -299,7 +321,7 @@ export default function Home() {
                     You have 30 seconds per turn to submit your word
                   </p>
                 </div>
-                
+
                 <div className="text-center">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl">🏆</span>
@@ -314,15 +336,25 @@ export default function Home() {
               </div>
 
               <div className="mt-8 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl">
-                <h4 className="font-semibold text-gray-800 mb-2">Example Chain:</h4>
+                <h4 className="font-semibold text-gray-800 mb-2">
+                  Example Chain:
+                </h4>
                 <div className="flex items-center gap-2 text-lg font-mono">
-                  <span className="bg-indigo-200 px-3 py-1 rounded-full">APPLE</span>
+                  <span className="bg-indigo-200 px-3 py-1 rounded-full">
+                    APPLE
+                  </span>
                   <span className="text-gray-400">→</span>
-                  <span className="bg-purple-200 px-3 py-1 rounded-full">ELEPHANT</span>
+                  <span className="bg-purple-200 px-3 py-1 rounded-full">
+                    ELEPHANT
+                  </span>
                   <span className="text-gray-400">→</span>
-                  <span className="bg-green-200 px-3 py-1 rounded-full">TABLE</span>
+                  <span className="bg-green-200 px-3 py-1 rounded-full">
+                    TABLE
+                  </span>
                   <span className="text-gray-400">→</span>
-                  <span className="bg-yellow-200 px-3 py-1 rounded-full">ENERGY</span>
+                  <span className="bg-yellow-200 px-3 py-1 rounded-full">
+                    ENERGY
+                  </span>
                 </div>
               </div>
             </motion.div>
