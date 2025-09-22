@@ -27,26 +27,6 @@ interface GameWord {
   created_at: string;
 }
 
-// interface Game {
-//   id: string;
-//   room_code: string;
-//   game_mode: string;
-//   status: string;
-//   theme?: string;
-//   current_word?: string;
-//   current_player_id?: string;
-//   word_chain_data?: unknown[];
-//   final_chain_length?: number;
-//   words_used?: string[];
-//   max_players: number;
-//   turn_duration: number;
-//   game_duration: number;
-//   started_at?: string;
-//   ended_at?: string;
-//   participants: GameParticipant[];
-//   words: GameWord[];
-// }
-
 interface SubmitWordData {
   word: string;
   timeTaken?: number;
@@ -475,12 +455,30 @@ async function handleSubmitWord(
     return NextResponse.json({ error: "Failed to add word" }, { status: 500 });
   }
 
-  // Update participant score
+  // Get current participant data to calculate new score
+  const { data: currentParticipant } = await supabase
+    .from("game_participants")
+    .select("score, words_played")
+    .eq("game_id", gameId)
+    .eq("user_id", userId)
+    .single();
+
+  if (!currentParticipant) {
+    return NextResponse.json(
+      { error: "Participant not found" },
+      { status: 404 },
+    );
+  }
+
+  // Update participant score using calculated values
+  const newScore = currentParticipant.score + score;
+  const newWordsPlayed = currentParticipant.words_played + 1;
+
   await supabase
     .from("game_participants")
     .update({
-      score: supabase.raw("score + ?", [score]),
-      words_played: supabase.raw("words_played + 1"),
+      score: newScore,
+      words_played: newWordsPlayed,
     })
     .eq("game_id", gameId)
     .eq("user_id", userId);
@@ -527,11 +525,28 @@ async function handleSkipTurn(gameId: string, userId: string) {
     return NextResponse.json({ error: "Not your turn" }, { status: 400 });
   }
 
-  // Apply skip penalty
+  // Get current participant data to calculate penalty
+  const { data: currentParticipant } = await supabase
+    .from("game_participants")
+    .select("score")
+    .eq("game_id", gameId)
+    .eq("user_id", userId)
+    .single();
+
+  if (!currentParticipant) {
+    return NextResponse.json(
+      { error: "Participant not found" },
+      { status: 404 },
+    );
+  }
+
+  // Apply skip penalty (ensure score doesn't go below 0)
+  const newScore = Math.max(0, currentParticipant.score - 5);
+
   await supabase
     .from("game_participants")
     .update({
-      score: supabase.raw("GREATEST(0, score - 5)"),
+      score: newScore,
     })
     .eq("game_id", gameId)
     .eq("user_id", userId);
