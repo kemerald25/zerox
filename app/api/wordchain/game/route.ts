@@ -27,25 +27,25 @@ interface GameWord {
   created_at: string;
 }
 
-interface Game {
-  id: string;
-  room_code: string;
-  game_mode: string;
-  status: string;
-  theme?: string;
-  current_word?: string;
-  current_player_id?: string;
-  word_chain_data?: unknown[];
-  final_chain_length?: number;
-  words_used?: string[];
-  max_players: number;
-  turn_duration: number;
-  game_duration: number;
-  started_at?: string;
-  ended_at?: string;
-  participants: GameParticipant[];
-  words: GameWord[];
-}
+// interface Game {
+//   id: string;
+//   room_code: string;
+//   game_mode: string;
+//   status: string;
+//   theme?: string;
+//   current_word?: string;
+//   current_player_id?: string;
+//   word_chain_data?: unknown[];
+//   final_chain_length?: number;
+//   words_used?: string[];
+//   max_players: number;
+//   turn_duration: number;
+//   game_duration: number;
+//   started_at?: string;
+//   ended_at?: string;
+//   participants: GameParticipant[];
+//   words: GameWord[];
+// }
 
 interface SubmitWordData {
   word: string;
