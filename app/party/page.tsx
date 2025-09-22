@@ -146,15 +146,36 @@ export default function PartyPage(): JSX.Element {
           : process.env.NEXT_PUBLIC_URL || "";
       const shareText = `🔗 Join my WordWave battle!\n\nRoom Code: ${code}\n\nBuild word chains where each word starts with the last letter of the previous word!\n\n👉 ${appUrl}/party`;
 
-      // Use Farcaster SDK to compose cast
-      if (context?.composeCast) {
-        await context.composeCast({
-          text: shareText,
-          embeds: [appUrl],
-        });
+      // Try to use Web Share API first (mobile)
+      if (typeof navigator !== "undefined" && navigator.share) {
+        try {
+          await navigator.share({
+            title: "WordWave Battle",
+            text: shareText,
+            url: appUrl,
+          });
+          return;
+        } catch (shareError) {
+          console.log("Web Share API not available or cancelled");
+        }
+      }
+
+      // Fallback: Copy to clipboard
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(shareText);
+        // You could show a toast notification here
+        console.log("Room code and details copied to clipboard!");
+      }
+
+      // Additional fallback: Try to open Farcaster if available
+      // This is a more generic approach that works across different contexts
+      const farcasterUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}`;
+      if (typeof window !== "undefined") {
+        window.open(farcasterUrl, "_blank");
       }
     } catch (error) {
       console.error("Failed to share room code:", error);
+      // Silently fail - sharing is not critical to gameplay
     }
   };
 
